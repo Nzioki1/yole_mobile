@@ -1,0 +1,9 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Yole Pesa",
+  "helloWorld": "Bonjour le monde !",
+  "login": "Se connecter",
+  "signup": "S'inscrire",
+  "email": "E-mail",
+  "password": "Mot de passe"
+}

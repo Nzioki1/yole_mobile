@@ -1,0 +1,79 @@
+workflows:
+  ios-workflow:
+    name: iOS Workflow
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up code signing settings on Xcode project
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.example.yole-mobile" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/tmp/exportOptions.plist
+      - name: Upload ipa to App Store Connect
+        script: |
+          app-store-connect upload \
+            --path build/ios/ipa/yole_mobile.ipa
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
+
+  android-workflow:
+    name: Android Workflow
+    environment:
+      flutter: stable
+      android_signing:
+        - keystore_reference
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Run Flutter tests
+        script: flutter test
+      - name: Flutter build apk
+        script: flutter build apk --release
+      - name: Flutter build app bundle
+        script: flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/mapping.txt
+      - flutter_drive.log
+    publishing:
+      google_play:
+        track: internal
+        submit_as_draft: true
+
+  test-workflow:
+    name: Test Workflow
+    environment:
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Run Flutter tests
+        script: |
+          flutter test --coverage
+          genhtml coverage/lcov.info -o coverage/html
+      - name: Run integration tests
+        script: |
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/app_test.dart
+    artifacts:
+      - coverage/html/**
+      - test_driver/screenshots/**
+      - flutter_drive.log

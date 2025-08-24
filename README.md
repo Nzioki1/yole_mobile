@@ -1,24 +1,16 @@
-# Yole Mobile — Phase 0 Scaffold
+# yole_mobile
 
-This repository is a clean Flutter skeleton following the structure you specified.
+A new Flutter project.
 
-## Quick start
-```bash
-flutter pub get
-flutter gen-l10n --arb-dir=lib/core/i18n/arb --output-dir=lib/core/i18n/generated --output-class=S --output-localization-file=l10n.dart
-flutter run
-```
+## Getting Started
 
-### Env files
-Copy one of the examples:
-```
-cp environments/debug.env.example debug.env
-cp environments/prod.env.example prod.env
-```
-(You can later wire a proper runtime config loader.)
+This project is a starting point for a Flutter application.
 
-## Notes
-- Uses Riverpod for state management, Dio for networking.
-- Basic i18n with Flutter's gen-l10n (English & French).
-- Reusable widgets under `shared/widgets`.
-- Feature-first folders under `lib/features`.
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

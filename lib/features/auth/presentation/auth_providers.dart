@@ -113,7 +113,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await repo.refreshToken();
       await _checkAuthStatus();
-    } on Failure catch (e) {
+    } on Failure {
       // If refresh fails, user is no longer authenticated
       state = state.copyWith(isAuthenticated: false);
     }

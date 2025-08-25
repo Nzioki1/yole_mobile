@@ -8,6 +8,7 @@ pluginManagement {
     }
     settings.ext.flutterSdkPath = flutterSdkPath()
 
+    // Use Flutter's Gradle build logic
     includeBuild("${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle")
 
     repositories {
@@ -17,13 +18,20 @@ pluginManagement {
     }
 
     plugins {
+        // Flutter's Gradle plugin
         id "dev.flutter.flutter-gradle-plugin" version "1.0.0" apply false
     }
 }
 
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    id "com.android.application" version "7.3.0" apply false
+
+    // ✅ Updated to meet Flutter’s upcoming minimums
+    id "com.android.application" version "8.6.0" apply false
+    id "com.android.library"     version "8.6.0" apply false
+
+    // ✅ Kotlin per Flutter’s recommendation
+    id "org.jetbrains.kotlin.android" version "2.1.0" apply false
 }
 
 include ":app"

@@ -219,7 +219,7 @@ class _RecipientsScreenState extends ConsumerState<RecipientsScreen> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedCountryCode,
+                initialValue: selectedCountryCode,
                 decoration: const InputDecoration(
                   labelText: 'Country',
                   border: OutlineInputBorder(),

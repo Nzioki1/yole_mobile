@@ -1,0 +1,767 @@
+{
+	"info": {
+		"_postman_id": "c8143f55-fcb6-4004-be29-17a740927099",
+		"name": "Yole",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3310737"
+	},
+	"item": [
+		{
+			"name": "Forgot Password",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/password/forgot?email=test@yole.com",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"password",
+						"forgot"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "test@yole.com"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Status",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/status",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Countries",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/countries",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"countries"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "test@yole.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Test",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/login",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "test@yole.com",
+							"type": "text"
+						},
+						{
+							"key": "name",
+							"value": "John Doe",
+							"type": "text"
+						},
+						{
+							"key": "surname",
+							"value": "Smith",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Test",
+							"type": "text"
+						},
+						{
+							"key": "password_confirmation",
+							"value": "Test",
+							"type": "text"
+						},
+						{
+							"key": "country",
+							"value": "Kenya",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/register",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Validate KYC",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_number",
+							"value": "0711223344",
+							"type": "text"
+						},
+						{
+							"key": "otp_code",
+							"value": "12345",
+							"type": "text"
+						},
+						{
+							"key": "id_number",
+							"value": "1234567",
+							"type": "text"
+						},
+						{
+							"key": "id_photo",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "passport_photo",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/validate-kyc",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"validate-kyc"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send SMS OTP",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "phone_code",
+							"value": "+254",
+							"type": "text"
+						},
+						{
+							"key": "phone",
+							"value": "0700000000",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/sms/send-otp",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"sms",
+						"send-otp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Email Verification",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "TOKEN",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/email/verification-notification",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"email",
+						"verification-notification"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Refresh Token",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "TOKEN",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/refresh-token",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"refresh-token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "My Profile",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/me",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/logout",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Charges",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "amount",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "currency",
+							"value": "USD",
+							"type": "text"
+						},
+						{
+							"key": "recipient_country",
+							"value": "KE",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/charges",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"charges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Service Charge",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/yole-charges",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"yole-charges"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Transaction Status",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "order_tracking_id",
+							"value": "order_tracking_id",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/transaction/status",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"transaction",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Money",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL3lvbGVwZXNhLmxvY2FsL2FwaS9yZWZyZXNoLXRva2VuIiwiaWF0IjoxNjk1OTk1NjQ3LCJleHAiOjE2OTYzMzE1NDMsIm5iZiI6MTY5NjMyNzk0MywianRpIjoiQ0FrNjZoRGxPdUhZaDBRRCIsInN1YiI6IjMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.POvX7p8pFZxD_V3BGOb7asEdcAMErZO3BU1Q8IDBN5Y",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "sending_amount",
+							"value": "10",
+							"type": "text"
+						},
+						{
+							"key": "recipient_country",
+							"value": "CD",
+							"type": "text"
+						},
+						{
+							"key": "phone_number",
+							"value": "243711221122",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/send-money",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"send-money"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Transactions",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "TOKEN",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/x.yole.v1+json",
+						"type": "text"
+					},
+					{
+						"key": "X-API-Key",
+						"value": "8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://yolepesa.masterpiecefusion.com/api/transactions",
+					"protocol": "https",
+					"host": [
+						"yolepesa",
+						"masterpiecefusion",
+						"com"
+					],
+					"path": [
+						"api",
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -24,4 +24,25 @@ class AuthApi {
   Future<Response<dynamic>> refreshToken() {
     return dio.post('refresh-token', data: {});
   }
+
+  Future<Response<dynamic>> refreshTokenWithToken(String refreshToken) {
+    return dio.post('refresh-token', data: {'refresh_token': refreshToken});
+  }
+
+  // Additional endpoints from Postman collection
+  Future<Response<dynamic>> logout() {
+    return dio.post('logout', data: {});
+  }
+
+  Future<Response<dynamic>> getMyProfile() {
+    return dio.get('me');
+  }
+
+  Future<Response<dynamic>> validateKyc(ValidateKycRequest request) {
+    return dio.post('validate-kyc', data: FormData.fromMap(request.toJson()));
+  }
+
+  Future<Response<dynamic>> sendSmsOtp(SendSmsOtpRequest request) {
+    return dio.post('sms/send-otp', data: FormData.fromMap(request.toJson()));
+  }
 }

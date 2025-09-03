@@ -29,35 +29,67 @@ class AppLogInterceptor extends Interceptor {
 
 class AuthInterceptor extends Interceptor {
   @override
-  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    // Set Accept header from dotenv (no hard-coded fallback)
-    final apiAccept = dotenv.env['API_ACCEPT'];
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Set Accept header from dotenv with safety check
+    String? apiAccept;
+    try {
+      apiAccept = dotenv.env['API_ACCEPT'];
+    } catch (e) {
+      print('Warning: Could not access dotenv for API_ACCEPT, using default');
+      apiAccept = 'application/x.yole.v1+json';
+    }
     if (apiAccept != null && apiAccept.isNotEmpty) {
       options.headers[HttpHeaders.acceptHeader] = apiAccept;
     }
 
-    // Set X-API-Key header from dotenv (no hard-coded fallback)
-    final authHeader = dotenv.env['AUTH_HEADER'];
+    // Set X-API-Key header from dotenv with safety check
+    String? authHeader;
+    try {
+      authHeader = dotenv.env['AUTH_HEADER'];
+    } catch (e) {
+      print('Warning: Could not access dotenv for AUTH_HEADER, using default');
+      authHeader = '8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY';
+    }
     if (authHeader != null && authHeader.isNotEmpty) {
       options.headers['X-API-Key'] = authHeader;
     }
 
     // Set User-Agent from package_info_plus
-    final packageInfo = await PackageInfo.fromPlatform();
-    options.headers['User-Agent'] = 
-        '${packageInfo.appName} - ${packageInfo.packageName}/${packageInfo.version}+${packageInfo.buildNumber} - Dart/${Platform.version} - OS: ${Platform.operatingSystem}/${Platform.operatingSystemVersion}';
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      options.headers['User-Agent'] =
+          '${packageInfo.appName} - ${packageInfo.packageName}/${packageInfo.version}+${packageInfo.buildNumber} - Dart/${Platform.version} - OS: ${Platform.operatingSystem}/${Platform.operatingSystemVersion}';
+    } catch (e) {
+      print('Warning: Could not set User-Agent header: $e');
+    }
 
-    // Set content-type only if data is FormData
+    // Final header log
+    print('🔐 AuthInterceptor: Final headers: ${options.headers}');
+
+    // Set content-type for FormData requests
     if (options.data is FormData) {
       options.headers[HttpHeaders.contentTypeHeader] = 'multipart/form-data';
+      print('🔐 AuthInterceptor: Set Content-Type to multipart/form-data');
     }
 
     // Add Authorization header only for protected routes
     if (!isAuthFreeRoute(options.path)) {
-      final token = await AuthTokenStore.getToken();
-      if (token != null && token.isNotEmpty) {
-        options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+      try {
+        final token = await AuthTokenStore.getToken();
+        if (token != null && token.isNotEmpty) {
+          options.headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
+          print('🔐 AuthInterceptor: Added Authorization header');
+        } else {
+          print('🔐 AuthInterceptor: No valid token available');
+        }
+      } catch (e) {
+        print('🔐 AuthInterceptor: Error getting token: $e');
       }
+    } else {
+      print('🔐 AuthInterceptor: ${options.path} is auth-free, skipping token');
     }
 
     handler.next(options);
@@ -68,6 +100,21 @@ class ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     String error = "";
+
+    // Enhanced error logging for debugging
+    print('🔐 ErrorInterceptor: ===== ERROR DETAILS =====');
+    print('🔐 ErrorInterceptor: Error type: ${err.type}');
+    print('🔐 ErrorInterceptor: Error message: ${err.message}');
+    print('🔐 ErrorInterceptor: Response status: ${err.response?.statusCode}');
+    print('🔐 ErrorInterceptor: Response data: ${err.response?.data}');
+    print('🔐 ErrorInterceptor: Request URL: ${err.requestOptions.uri}');
+    print('🔐 ErrorInterceptor: Request method: ${err.requestOptions.method}');
+    print(
+      '🔐 ErrorInterceptor: Request headers: ${err.requestOptions.headers}',
+    );
+    print('🔐 ErrorInterceptor: Request data: ${err.requestOptions.data}');
+    print('🔐 ErrorInterceptor: ========================');
+
     switch (err.type) {
       case DioExceptionType.cancel:
         error = 'Request to API server was cancelled';
@@ -122,11 +169,11 @@ class ErrorInterceptor extends Interceptor {
 /// Returns true for any login/register/refresh endpoints used in Yole-old
 bool isAuthFreeRoute(String path) {
   final normalizedPath = path.toLowerCase();
-  return normalizedPath.contains('/login') || 
-         normalizedPath.contains('/register') || 
-         normalizedPath.contains('/refresh-token') ||
-         normalizedPath.contains('/password/forgot') ||
-         normalizedPath.contains('/email/verification-notification') ||
-         normalizedPath.contains('/sms/send-otp') ||
-         normalizedPath.contains('/validate-kyc');
+  return normalizedPath.contains('login') ||
+      normalizedPath.contains('register') ||
+      normalizedPath.contains('refresh-token') ||
+      normalizedPath.contains('password/forgot') ||
+      normalizedPath.contains('email/verification-notification') ||
+      normalizedPath.contains('sms/send-otp') ||
+      normalizedPath.contains('validate-kyc');
 }

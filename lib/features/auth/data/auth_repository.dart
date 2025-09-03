@@ -12,30 +12,67 @@ class AuthRepository {
   final IAuthTokenStore _tokenStore;
 
   AuthRepository(this.api, {IAuthTokenStore? tokenStore})
-      : _tokenStore = tokenStore ?? TokenStoreAdapter();
+    : _tokenStore = tokenStore ?? TokenStoreAdapter();
 
   Future<User> login(String email, String password) async {
     try {
+      print('🔍 AuthRepository: Starting login for email: $email');
       final request = LoginRequest(email: email, password: password);
       final response = await api.login(request);
 
+      print('🔍 AuthRepository: Login response status: ${response.statusCode}');
+      print('🔍 AuthRepository: Login response data: ${response.data}');
+
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data is! Map) throw const FormatException('Unexpected response format');
+        if (data is! Map) {
+          print(
+            '🔍 AuthRepository: Response data is not a Map, throwing FormatException',
+          );
+          throw const FormatException('Unexpected response format');
+        }
 
         final token = AuthToken.fromJson(data as Map<String, dynamic>);
-        await _tokenStore.saveToken(token.value, expiration: token.expiration);
+        print(
+          '🔍 AuthRepository: Token parsed successfully: ${token.value.substring(0, 20)}...',
+        );
 
-        return User.fromJson(data as Map<String, dynamic>);
+        await _tokenStore.saveToken(
+          token.value,
+          refreshToken: token.refreshToken,
+          expiration: token.expiration,
+        );
+        print('🔍 AuthRepository: Token saved to storage');
+
+        // Create a minimal user object since the API response doesn't contain user data
+        // We'll use the email from the login request and create a basic user
+        final user = User(
+          id: '0', // We don't have an ID from the response, use string '0'
+          email: email, // Use the email from the login request
+          kycStatus: (data['kyc_submitted'] == 1 && data['kyc_validated'] == 1)
+              ? KycStatus.kycVerified
+              : KycStatus.kycPending,
+        );
+        print('🔍 AuthRepository: User created successfully: ${user.email}');
+        return user;
       } else {
+        print(
+          '🔍 AuthRepository: Login failed with status: ${response.statusCode}',
+        );
         throw const NetworkFailure('Login failed');
       }
     } catch (e) {
+      print('🔍 AuthRepository: Login error: $e');
       throw FailureMapper.fromAny(e);
     }
   }
 
-  Future<User> register(String email, String password, String name, String phoneNumber) async {
+  Future<User> register(
+    String email,
+    String password,
+    String name,
+    String phoneNumber,
+  ) async {
     try {
       final request = RegisterRequest(
         email: email,
@@ -47,7 +84,8 @@ class AuthRepository {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data is! Map) throw const FormatException('Unexpected response format');
+        if (data is! Map)
+          throw const FormatException('Unexpected response format');
 
         final token = AuthToken.fromJson(data as Map<String, dynamic>);
         await _tokenStore.saveToken(token.value, expiration: token.expiration);
@@ -91,7 +129,8 @@ class AuthRepository {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data is! Map) throw const FormatException('Unexpected response format');
+        if (data is! Map)
+          throw const FormatException('Unexpected response format');
 
         final token = AuthToken.fromJson(data as Map<String, dynamic>);
         await _tokenStore.saveToken(token.value, expiration: token.expiration);
@@ -106,5 +145,30 @@ class AuthRepository {
 
   Future<void> logout() async => _tokenStore.clearToken();
 
-  Future<bool> isAuthenticated() async => _tokenStore.hasToken();
+  Future<bool> isAuthenticated() async {
+    try {
+      final hasToken = await _tokenStore.hasToken();
+      if (!hasToken) {
+        print('🔍 AuthRepository: No token found, not authenticated');
+        return false;
+      }
+
+      final isExpired = await _tokenStore.isTokenExpired();
+      if (isExpired) {
+        print(
+          '🔍 AuthRepository: Token is expired, clearing and not authenticated',
+        );
+        await _tokenStore.clearToken();
+        return false;
+      }
+
+      print('🔍 AuthRepository: Token is valid, user is authenticated');
+      return true;
+    } catch (e) {
+      print('🔍 AuthRepository: Error checking authentication: $e');
+      // Clear token on error to be safe
+      await _tokenStore.clearToken();
+      return false;
+    }
+  }
 }

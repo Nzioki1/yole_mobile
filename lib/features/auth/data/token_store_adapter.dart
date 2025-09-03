@@ -4,8 +4,31 @@ import 'i_auth_token_store.dart';
 
 class TokenStoreAdapter implements IAuthTokenStore {
   @override
-  Future<void> saveToken(String value, {String? expiration}) {
-    return AuthTokenStore.saveToken(value, expiration: expiration);
+  Future<void> saveToken(
+    String value, {
+    String? refreshToken,
+    String? expiration,
+  }) {
+    return AuthTokenStore.saveToken(
+      value,
+      refreshToken: refreshToken,
+      expiration: expiration,
+    );
+  }
+
+  @override
+  Future<String?> getToken() {
+    return AuthTokenStore.getToken();
+  }
+
+  @override
+  Future<String?> getRefreshToken() {
+    return AuthTokenStore.getRefreshToken();
+  }
+
+  @override
+  Future<String?> getTokenExpiration() {
+    return AuthTokenStore.getTokenExpiration();
   }
 
   @override
@@ -16,5 +39,10 @@ class TokenStoreAdapter implements IAuthTokenStore {
   @override
   Future<bool> hasToken() {
     return AuthTokenStore.hasToken();
+  }
+
+  @override
+  Future<bool> isTokenExpired() {
+    return AuthTokenStore.isTokenExpired();
   }
 }

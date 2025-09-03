@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/failure.dart';
 import '../data/recipients_repository.dart';
 import '../data/models.dart';
+import '../../../core/providers.dart';
 
 class RecipientsState {
   final List<Recipient> recipients;
@@ -33,61 +34,65 @@ class RecipientsState {
     int? currentPage,
     bool? hasMorePages,
     String? searchQuery,
-  }) =>
-      RecipientsState(
-        recipients: recipients ?? this.recipients,
-        countries: countries ?? this.countries,
-        selectedRecipient: selectedRecipient ?? this.selectedRecipient,
-        loading: loading ?? this.loading,
-        error: error,
-        currentPage: currentPage ?? this.currentPage,
-        hasMorePages: hasMorePages ?? this.hasMorePages,
-        searchQuery: searchQuery ?? this.searchQuery,
-      );
+  }) => RecipientsState(
+    recipients: recipients ?? this.recipients,
+    countries: countries ?? this.countries,
+    selectedRecipient: selectedRecipient ?? this.selectedRecipient,
+    loading: loading ?? this.loading,
+    error: error,
+    currentPage: currentPage ?? this.currentPage,
+    hasMorePages: hasMorePages ?? this.hasMorePages,
+    searchQuery: searchQuery ?? this.searchQuery,
+  );
 }
 
 class RecipientsNotifier extends StateNotifier<RecipientsState> {
   final RecipientsRepository repo;
-  
+
   RecipientsNotifier(this.repo) : super(const RecipientsState()) {
     _loadInitialData();
   }
 
   Future<void> _loadInitialData() async {
-    await Future.wait([
-      fetchRecipients(),
-      fetchCountries(),
-    ]);
+    await Future.wait([fetchRecipients(), fetchCountries()]);
   }
 
   Future<void> fetchRecipients({bool refresh = false}) async {
-    if (refresh) {
-      state = state.copyWith(loading: true, error: null, currentPage: 1);
-    } else {
-      state = state.copyWith(loading: true, error: null);
+    print('🔍 RecipientsNotifier: fetchRecipients called, refresh: $refresh');
+    if (state.loading) {
+      print('🔍 RecipientsNotifier: Already loading, skipping');
+      return;
     }
 
+    state = state.copyWith(loading: true, error: null);
+
     try {
+      print('🔍 RecipientsNotifier: Calling repository.fetchRecipients');
       final response = await repo.fetchRecipients(
-        page: refresh ? 1 : state.currentPage,
+        page: refresh ? 1 : state.currentPage + 1,
         query: state.searchQuery,
       );
 
-      final newRecipients = refresh 
-          ? response.data 
+      print('🔍 RecipientsNotifier: Repository response received');
+
+      final newRecipients = refresh
+          ? response.data
           : [...state.recipients, ...response.data];
 
       state = state.copyWith(
         recipients: newRecipients,
-        loading: false,
         currentPage: response.currentPage,
         hasMorePages: response.currentPage < response.totalPages,
+        loading: false,
       );
-    } on Failure catch (e) {
-      state = state.copyWith(error: e, loading: false);
+
+      print(
+        '🔍 RecipientsNotifier: State updated - recipients: ${newRecipients.length}, hasMorePages: ${response.currentPage < response.totalPages}',
+      );
     } catch (e) {
+      print('🔍 RecipientsNotifier: Error in fetchRecipients: $e');
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -106,22 +111,27 @@ class RecipientsNotifier extends StateNotifier<RecipientsState> {
     }
   }
 
-  Future<void> addRecipient(String name, String phoneNumber, String countryCode) async {
+  Future<void> addRecipient(
+    String name,
+    String phoneNumber,
+    String countryCode,
+  ) async {
     state = state.copyWith(loading: true, error: null);
-    
+
     try {
-      final newRecipient = await repo.addRecipient(name, phoneNumber, countryCode);
-      final updatedRecipients = [newRecipient, ...state.recipients];
-      
-      state = state.copyWith(
-        recipients: updatedRecipients,
-        loading: false,
+      final newRecipient = await repo.addRecipient(
+        name,
+        phoneNumber,
+        countryCode,
       );
+      final updatedRecipients = [newRecipient, ...state.recipients];
+
+      state = state.copyWith(recipients: updatedRecipients, loading: false);
     } on Failure catch (e) {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -151,9 +161,11 @@ class RecipientsNotifier extends StateNotifier<RecipientsState> {
   }
 }
 
-final recipientsProvider = StateNotifierProvider<RecipientsNotifier, RecipientsState>((ref) {
-  throw UnimplementedError('Provide RecipientsRepository via override at app start');
-});
+final recipientsProvider =
+    StateNotifierProvider<RecipientsNotifier, RecipientsState>((ref) {
+      final repository = ref.watch(recipientsRepositoryProvider);
+      return RecipientsNotifier(repository);
+    });
 
 final selectedRecipientProvider = Provider<Recipient?>((ref) {
   return ref.watch(recipientsProvider).selectedRecipient;

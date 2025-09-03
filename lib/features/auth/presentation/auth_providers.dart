@@ -1,33 +1,36 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/failure.dart';
-import '../data/auth_repository.dart';
 import '../data/models.dart';
+import '../data/auth_repository.dart';
+import '../../../core/providers.dart';
+import '../../../core/network/dio_client.dart';
+import '../data/auth_api.dart';
+import '../data/token_store_adapter.dart';
 
 class AuthState {
   final User? user;
   final bool loading;
   final Failure? error;
   final bool isAuthenticated;
-  
+
   const AuthState({
-    this.user, 
-    this.loading = false, 
+    this.user,
+    this.loading = false,
     this.error,
     this.isAuthenticated = false,
   });
 
   AuthState copyWith({
-    User? user, 
-    bool? loading, 
+    User? user,
+    bool? loading,
     Failure? error,
     bool? isAuthenticated,
-  }) =>
-      AuthState(
-        user: user ?? this.user, 
-        loading: loading ?? this.loading, 
-        error: error,
-        isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      );
+  }) => AuthState(
+    user: user ?? this.user,
+    loading: loading ?? this.loading,
+    error: error,
+    isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+  );
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -45,35 +48,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, error: null);
     try {
       final user = await repo.login(email, password);
-      state = state.copyWith(
-        user: user, 
-        loading: false, 
-        isAuthenticated: true,
-      );
+      state = state.copyWith(user: user, loading: false, isAuthenticated: true);
     } on Failure catch (e) {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
   }
 
-  Future<void> register(String email, String password, String name, String phoneNumber) async {
+  Future<void> register(
+    String email,
+    String password,
+    String name,
+    String phoneNumber,
+  ) async {
     state = state.copyWith(loading: true, error: null);
     try {
       final user = await repo.register(email, password, name, phoneNumber);
-      state = state.copyWith(
-        user: user, 
-        loading: false, 
-        isAuthenticated: true,
-      );
+      state = state.copyWith(user: user, loading: false, isAuthenticated: true);
     } on Failure catch (e) {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -88,7 +88,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -103,7 +103,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -124,15 +124,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await repo.logout();
       state = state.copyWith(
-        user: null, 
-        loading: false, 
+        user: null,
+        loading: false,
         isAuthenticated: false,
       );
     } on Failure catch (e) {
       state = state.copyWith(error: e, loading: false);
     } catch (e) {
       state = state.copyWith(
-        error: UnknownFailure(e.toString()), 
+        error: UnknownFailure(e.toString()),
         loading: false,
       );
     }
@@ -144,5 +144,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  throw UnimplementedError('Provide AuthRepository via override at app start');
+  try {
+    final repository = ref.watch(authRepositoryProvider);
+    return AuthNotifier(repository);
+  } catch (e) {
+    print('🔍 AuthProvider: Error creating AuthNotifier: $e');
+    // Return a default state if repository is not available
+    return AuthNotifier(
+      AuthRepository(AuthApi(DioClient().dio), tokenStore: TokenStoreAdapter()),
+    );
+  }
 });

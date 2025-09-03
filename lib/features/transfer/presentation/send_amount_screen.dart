@@ -15,7 +15,7 @@ class SendAmountScreen extends ConsumerStatefulWidget {
   final String recipientId;
   final String recipientName;
   final String recipientPhone;
-  
+
   const SendAmountScreen({
     super.key,
     required this.recipientId,
@@ -51,11 +51,13 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
       if (_amount.text.isNotEmpty) {
         final amount = double.tryParse(_amount.text);
         if (amount != null && amount > 0) {
-          ref.read(transferProvider.notifier).getQuote(
-            _amount.text,
-            'USD',
-            'CD', // Default recipient country
-          );
+          ref
+              .read(transferProvider.notifier)
+              .getQuote(
+                _amount.text,
+                'USD',
+                'CD', // Default recipient country
+              );
         }
       }
     });
@@ -65,39 +67,44 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
     if (value == null || value.isEmpty) {
       return 'Amount is required';
     }
-    
+
     final amount = double.tryParse(value);
     if (amount == null) {
       return 'Please enter a valid amount';
     }
-    
+
     if (amount <= 0) {
       return 'Amount must be greater than 0';
     }
-    
+
     if (amount > 10000) {
       return 'Amount cannot exceed \$10,000';
     }
-    
+
     return null;
   }
 
   void _proceedToReview() {
     if (_formKey.currentState!.validate()) {
       final amount = double.tryParse(_amount.text) ?? 0;
-      
-      ref.read(transferProvider.notifier).createDraft(
-        widget.recipientId,
-        amount,
-        phoneNumber: widget.recipientPhone,
-      );
-      
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => const ReviewScreen(),
-        ),
-      );
+
+      ref
+          .read(transferProvider.notifier)
+          .createDraft(
+            widget.recipientId,
+            amount,
+            phoneNumber: widget.recipientPhone,
+          );
+
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const ReviewScreen()));
     }
+  }
+
+  void _showRecipientPicker(BuildContext context) {
+    // Navigate to recipients screen to select a different recipient
+    Navigator.of(context).pushNamed('/recipients');
   }
 
   @override
@@ -111,7 +118,7 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
         appBar: AppBar(title: const Text('Send Money')),
         body: Column(
           children: [
-            if (state.error != null) 
+            if (state.error != null)
               ErrorBanner(
                 message: state.error!.message,
                 onDismiss: () => notifier.clearError(),
@@ -141,9 +148,12 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
                               ),
                               Text(
                                 widget.recipientPhone,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.outline,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outline,
+                                    ),
                               ),
                             ],
                           ),
@@ -155,14 +165,21 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
-                      AppTextField(
+                      TextFormField(
                         controller: _amount,
-                        label: 'Enter amount',
-                        prefixText: '\$',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        decoration: const InputDecoration(
+                          labelText: 'Enter amount',
+                          prefixText: '\$',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         validator: _validateAmount,
                         inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d{0,2}'),
+                          ),
                         ],
                       ),
                       if (state.quote != null) ...[
@@ -175,37 +192,51 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
                               children: [
                                 Text(
                                   'Transfer Summary',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text('Amount:'),
-                                    Text('\$${state.quote!.amount.toStringAsFixed(2)}'),
+                                    Text(
+                                      '\$${state.quote!.amount.toStringAsFixed(2)}',
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text('Fees:'),
-                                    Text('\$${(state.quote!.charges * state.quote!.amount).toStringAsFixed(2)}'),
+                                    Text(
+                                      '\$${(state.quote!.charges * state.quote!.amount).toStringAsFixed(2)}',
+                                    ),
                                   ],
                                 ),
                                 const Divider(),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Total:',
-                                      style: Theme.of(context).textTheme.titleSmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleSmall,
                                     ),
                                     Text(
                                       '\$${state.quote!.totalCost.toStringAsFixed(2)}',
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -219,7 +250,9 @@ class _SendAmountScreenState extends ConsumerState<SendAmountScreen> {
                         width: double.infinity,
                         child: PrimaryButton(
                           label: 'Continue',
-                          onPressed: state.quote != null ? _proceedToReview : null,
+                          onPressed: state.quote != null
+                              ? _proceedToReview
+                              : null,
                         ),
                       ),
                     ],

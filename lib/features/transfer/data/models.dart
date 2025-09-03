@@ -148,10 +148,7 @@ class TransferRedirect {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'order_tracking_id': orderTrackingId,
-      'redirect_url': redirectUrl,
-    };
+    return {'order_tracking_id': orderTrackingId, 'redirect_url': redirectUrl};
   }
 }
 
@@ -176,13 +173,13 @@ class Transaction {
     return Transaction(
       recipient: json['recipient'] ?? '',
       currency: json['currency'] ?? 'USD',
-      amount: json['amount'] is int 
+      amount: json['amount'] is int
           ? (json['amount'] as int).toDouble()
           : (json['amount'] ?? 0).toDouble(),
       status: json['status'] ?? '',
       date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
-      sender: json['sender'] != null 
-          ? TransactionSender.fromJson(json['sender']) 
+      sender: json['sender'] != null
+          ? TransactionSender.fromJson(json['sender'])
           : null,
     );
   }
@@ -203,10 +200,7 @@ class TransactionSender {
   final String name;
   final String phoneNumber;
 
-  const TransactionSender({
-    required this.name,
-    required this.phoneNumber,
-  });
+  const TransactionSender({required this.name, required this.phoneNumber});
 
   factory TransactionSender.fromJson(Map<String, dynamic> json) {
     return TransactionSender(
@@ -216,10 +210,7 @@ class TransactionSender {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'phone_number': phoneNumber,
-    };
+    return {'name': name, 'phone_number': phoneNumber};
   }
 }
 
@@ -269,8 +260,130 @@ class TransactionStatusRequest {
   const TransactionStatusRequest({required this.orderTrackingId});
 
   Map<String, dynamic> toJson() {
+    return {'order_tracking_id': orderTrackingId};
+  }
+}
+
+// Enhanced Pesapal models
+class PesapalOrderRequest {
+  final String id;
+  final String currency;
+  final double amount;
+  final String description;
+  final String callbackUrl;
+  final String notificationId;
+  final String billingAddress;
+  final String phoneNumber;
+  final String email;
+  final String firstName;
+  final String lastName;
+  final String line1;
+  final String line2;
+  final String city;
+  final String state;
+  final String countryCode;
+  final String zipCode;
+
+  const PesapalOrderRequest({
+    required this.id,
+    required this.currency,
+    required this.amount,
+    required this.description,
+    required this.callbackUrl,
+    required this.notificationId,
+    required this.billingAddress,
+    required this.phoneNumber,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.line1,
+    required this.line2,
+    required this.city,
+    required this.state,
+    required this.countryCode,
+    required this.zipCode,
+  });
+
+  Map<String, dynamic> toJson() {
     return {
-      'order_tracking_id': orderTrackingId,
+      'id': id,
+      'currency': currency,
+      'amount': amount,
+      'description': description,
+      'callback_url': callbackUrl,
+      'notification_id': notificationId,
+      'billing_address': {
+        'phone_number': phoneNumber,
+        'email_address': email,
+        'country_code': countryCode,
+        'first_name': firstName,
+        'last_name': lastName,
+        'line_1': line1,
+        'line_2': line2,
+        'city': city,
+        'state': state,
+        'zip_code': zipCode,
+      },
     };
+  }
+}
+
+class WebhookRequest {
+  final String url;
+  final String ipnNotificationType;
+
+  const WebhookRequest({required this.url, required this.ipnNotificationType});
+
+  Map<String, dynamic> toJson() {
+    return {'url': url, 'ipn_notification_type': ipnNotificationType};
+  }
+}
+
+class PesapalPaymentMethod {
+  final String id;
+  final String name;
+  final String description;
+  final String icon;
+  final bool isActive;
+
+  const PesapalPaymentMethod({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.isActive,
+  });
+
+  factory PesapalPaymentMethod.fromJson(Map<String, dynamic> json) {
+    return PesapalPaymentMethod(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      icon: json['icon'] ?? '',
+      isActive: json['is_active'] ?? false,
+    );
+  }
+}
+
+class PhoneValidationResponse {
+  final bool isValid;
+  final String? carrier;
+  final String? country;
+  final String? formattedNumber;
+
+  const PhoneValidationResponse({
+    required this.isValid,
+    this.carrier,
+    this.country,
+    this.formattedNumber,
+  });
+
+  factory PhoneValidationResponse.fromJson(Map<String, dynamic> json) {
+    return PhoneValidationResponse(
+      isValid: json['is_valid'] ?? false,
+      carrier: json['carrier'],
+      country: json['country'],
+      formattedNumber: json['formatted_number'],
+    );
   }
 }

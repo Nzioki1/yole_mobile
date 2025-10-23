@@ -47,10 +47,9 @@ class GlobalLocaleService extends ChangeNotifier {
     _currentLocale = newLocale;
     notifyListeners();
 
-    // Force complete app rebuild by clearing navigation stack
-    if (navigatorKey.currentState != null) {
-      navigatorKey.currentState!.popUntil((route) => false);
-    }
+    // Note: Removed navigation stack clearing as it caused black screen
+    // The MaterialApp will rebuild automatically due to ValueKey(currentLocale.languageCode)
+    // and all Consumer widgets will rebuild due to notifyListeners()
 
     try {
       final prefs = await SharedPreferences.getInstance();

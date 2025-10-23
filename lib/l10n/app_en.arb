@@ -1,0 +1,1069 @@
+{
+  "@@locale": "en",
+  "appTitle": "YOLE",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  "sendMoneyDescription": "Send money to the DRC quickly and securely",
+  "@sendMoneyDescription": {
+    "description": "Main description text on splash screen"
+  },
+  "getStarted": "Get started",
+  "@getStarted": {
+    "description": "Get started button text"
+  },
+  "logIn": "Log In",
+  "@logIn": {
+    "description": "Log in button text"
+  },
+  "english": "English",
+  "@english": {
+    "description": "English language label"
+  },
+  "french": "Français",
+  "@french": {
+    "description": "French language label"
+  },
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account button text"
+  },
+  "welcome": "Welcome",
+  "@welcome": {
+    "description": "Welcome screen title"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "firstName": "First Name",
+  "@firstName": {
+    "description": "First name field label"
+  },
+  "lastName": "Last Name",
+  "@lastName": {
+    "description": "Last name field label"
+  },
+  "confirmPassword": "Confirm Password",
+  "@confirmPassword": {
+    "description": "Confirm password field label"
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button text"
+  },
+  "verifyEmail": "Verify Email",
+  "@verifyEmail": {
+    "description": "Email verification screen title"
+  },
+  "checkYourEmail": "Check your email for a verification link",
+  "@checkYourEmail": {
+    "description": "Email verification instruction"
+  },
+  "kycVerification": "KYC Verification",
+  "@kycVerification": {
+    "description": "KYC verification screen title"
+  },
+  "phoneVerification": "Phone Verification",
+  "@phoneVerification": {
+    "description": "Phone verification screen title"
+  },
+  "enterPhoneNumber": "Enter your phone number",
+  "@enterPhoneNumber": {
+    "description": "Phone number input instruction"
+  },
+  "sendOTP": "Send OTP",
+  "@sendOTP": {
+    "description": "Send OTP button text"
+  },
+  "enterOTP": "Enter verification code",
+  "@enterOTP": {
+    "description": "OTP input instruction"
+  },
+  "verify": "Verify",
+  "@verify": {
+    "description": "Verify button text"
+  },
+  "uploadID": "Upload ID Document",
+  "@uploadID": {
+    "description": "ID document upload title"
+  },
+  "takeSelfie": "Take Selfie",
+  "@takeSelfie": {
+    "description": "Selfie capture title"
+  },
+  "verificationComplete": "Verification Complete",
+  "@verificationComplete": {
+    "description": "Verification completion title"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  "transactions": "Transactions",
+  "@transactions": {
+    "description": "Transactions tab label"
+  },
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites tab label"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+  "quickAndConvenient": "Quick and convenient",
+  "@quickAndConvenient": {
+    "description": "Welcome screen headline"
+  },
+  "sendAndReceiveMoney": "Send and receive money in minutes.",
+  "@sendAndReceiveMoney": {
+    "description": "Welcome screen subtitle"
+  },
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Sign in prompt text"
+  },
+  "signIn": "Sign in",
+  "@signIn": {
+    "description": "Sign in link text"
+  },
+  "goodAfternoon": "Good afternoon, John 👋",
+  "@goodAfternoon": {
+    "description": "Home screen greeting"
+  },
+  "sendMoney": "Send Money",
+  "@sendMoney": {
+    "description": "Send money button text"
+  },
+  "receiveMoney": "Receive Money",
+  "@receiveMoney": {
+    "description": "Receive money button text"
+  },
+  "viewAll": "View All",
+  "@viewAll": {
+    "description": "View all button text"
+  },
+  "recentTransactions": "Recent Transactions",
+  "@recentTransactions": {
+    "description": "Recent transactions section title"
+  },
+  "welcomeBack": "Welcome back",
+  "@welcomeBack": {
+    "description": "Login screen welcome message"
+  },
+  "signInToAccount": "Sign in to your account",
+  "@signInToAccount": {
+    "description": "Login screen subtitle"
+  },
+  "emailAddress": "Email address",
+  "@emailAddress": {
+    "description": "Email input label"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password input label"
+  },
+  "forgotPassword": "Forgot password?",
+  "@forgotPassword": {
+    "description": "Forgot password link"
+  },
+  "dontHaveAccount": "Don't have an account? ",
+  "@dontHaveAccount": {
+    "description": "Sign up prompt text"
+  },
+  "signUp": "Sign up",
+  "@signUp": {
+    "description": "Sign up link text"
+  },
+  "logOut": "Log Out",
+  "@logOut": {
+    "description": "Log out button text"
+  },
+  "createAccount": "Create Account",
+  "@createAccount": {
+    "description": "Create account button text"
+  },
+  "joinYoleToday": "Join Yole today",
+  "@joinYoleToday": {
+    "description": "Create account screen title"
+  },
+  "completed": "Completed",
+  "@completed": {
+    "description": "Transaction status - completed"
+  },
+  "processing": "Processing",
+  "@processing": {
+    "description": "Transaction status - processing"
+  },
+  "pending": "Pending",
+  "@pending": {
+    "description": "Transaction status - pending"
+  },
+  "failed": "Failed",
+  "@failed": {
+    "description": "Transaction status - failed"
+  },
+  "cancelled": "Cancelled",
+  "@cancelled": {
+    "description": "Transaction status - cancelled"
+  },
+  "delivered": "Delivered",
+  "@delivered": {
+    "description": "Transaction status - delivered"
+  },
+  "emailVerification": "Email Verification",
+  "@emailVerification": {
+    "description": "Email verification screen title"
+  },
+  "verifyEmail": "Verify your email",
+  "@verifyEmail": {
+    "description": "Email verification instruction"
+  },
+  "enterVerificationCode": "Enter the verification code sent to your email",
+  "@enterVerificationCode": {
+    "description": "Email verification code instruction"
+  },
+  "resendCode": "Resend Code",
+  "@resendCode": {
+    "description": "Resend verification code button"
+  },
+  "kycVerification": "KYC Verification",
+  "@kycVerification": {
+    "description": "KYC verification screen title"
+  },
+  "completeVerification": "Complete your verification",
+  "@completeVerification": {
+    "description": "KYC verification instruction"
+  },
+  "phoneVerification": "Phone Verification",
+  "@phoneVerification": {
+    "description": "Phone verification screen title"
+  },
+  "enterPhoneNumber": "Enter your phone number",
+  "@enterPhoneNumber": {
+    "description": "Phone number input instruction"
+  },
+  "sendOTP": "Send OTP",
+  "@sendOTP": {
+    "description": "Send OTP button text"
+  },
+  "idDocument": "ID Document",
+  "@idDocument": {
+    "description": "ID document screen title"
+  },
+  "uploadIdDocument": "Upload your ID document",
+  "@uploadIdDocument": {
+    "description": "ID document upload instruction"
+  },
+  "takeSelfie": "Take Selfie",
+  "@takeSelfie": {
+    "description": "Selfie screen title"
+  },
+  "takeSelfieInstruction": "Take a clear selfie for verification",
+  "@takeSelfieInstruction": {
+    "description": "Selfie instruction text"
+  },
+  "verificationComplete": "Verification Complete",
+  "@verificationComplete": {
+    "description": "Verification complete screen title"
+  },
+  "verificationSuccess": "Your verification is complete!",
+  "@verificationSuccess": {
+    "description": "Verification success message"
+  },
+  "sendMoney": "Send Money",
+  "@sendMoney": {
+    "description": "Send money screen title"
+  },
+  "enterAmount": "Enter Amount",
+  "@enterAmount": {
+    "description": "Amount input screen title"
+  },
+  "enterRecipient": "Enter Recipient",
+  "@enterRecipient": {
+    "description": "Recipient input screen title"
+  },
+  "reviewTransaction": "Review Transaction",
+  "@reviewTransaction": {
+    "description": "Transaction review screen title"
+  },
+  "paymentMethod": "Payment Method",
+  "@paymentMethod": {
+    "description": "Payment method screen title"
+  },
+  "transactionResult": "Transaction Result",
+  "@transactionResult": {
+    "description": "Transaction result screen title"
+  },
+  "forgotPassword": "Forgot Password",
+  "@forgotPassword": {
+    "description": "Forgot password screen title"
+  },
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password button text"
+  },
+  "enterEmailToReset": "Enter your email to reset password",
+  "@enterEmailToReset": {
+    "description": "Reset password instruction"
+  },
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number input label"
+  },
+  "enterOTPCode": "Enter OTP Code",
+  "@enterOTPCode": {
+    "description": "OTP input screen title"
+  },
+  "verificationCode": "Verification Code",
+  "@verificationCode": {
+    "description": "Verification code input label"
+  },
+  "verifyOTP": "Verify OTP",
+  "@verifyOTP": {
+    "description": "Verify OTP button text"
+  },
+  "captureID": "Capture ID",
+  "@captureID": {
+    "description": "ID capture screen title"
+  },
+  "captureSelfie": "Capture Selfie",
+  "@captureSelfie": {
+    "description": "Selfie capture screen title"
+  },
+  "verificationError": "Verification Error",
+  "@verificationError": {
+    "description": "Verification error screen title"
+  },
+  "verificationFailed": "Verification Failed",
+  "@verificationFailed": {
+    "description": "Verification failed message"
+  },
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button text"
+  },
+  "enterAmount": "Enter Amount",
+  "@enterAmount": {
+    "description": "Amount input screen title"
+  },
+  "amount": "Amount",
+  "@amount": {
+    "description": "Amount input label"
+  },
+  "recipient": "Recipient",
+  "@recipient": {
+    "description": "Recipient input label"
+  },
+  "paymentMethod": "Payment Method",
+  "@paymentMethod": {
+    "description": "Payment method screen title"
+  },
+  "selectPaymentMethod": "Select Payment Method",
+  "@selectPaymentMethod": {
+    "description": "Payment method selection instruction"
+  },
+  "confirmPayment": "Confirm Payment",
+  "@confirmPayment": {
+    "description": "Confirm payment button text"
+  },
+  "transactionSuccessful": "Transaction Successful",
+  "@transactionSuccessful": {
+    "description": "Transaction success message"
+  },
+  "transactionFailed": "Transaction Failed",
+  "@transactionFailed": {
+    "description": "Transaction failed message"
+  },
+  "backToHome": "Back to Home",
+  "@backToHome": {
+    "description": "Back to home button text"
+  },
+  "stepXofY": "Step {step} of {total}",
+  "@stepXofY": {
+    "description": "Step indicator text",
+    "placeholders": {
+      "step": {
+        "type": "int",
+        "description": "Current step number"
+      },
+      "total": {
+        "type": "int", 
+        "description": "Total number of steps"
+      }
+    }
+  },
+  "done": "Done",
+  "@done": {
+    "description": "Done button text"
+  },
+  "country": "Country",
+  "@country": {
+    "description": "Country label"
+  },
+  "sendResetLink": "Send reset link",
+  "@sendResetLink": {
+    "description": "Send reset link button text"
+  },
+  "rememberPassword": "Remember your password? ",
+  "@rememberPassword": {
+    "description": "Remember password text"
+  },
+  "youCanNow": "You can now:",
+  "@youCanNow": {
+    "description": "You can now text"
+  },
+  "openingInBrowser": "Opening in browser...",
+  "@openingInBrowser": {
+    "description": "Opening in browser message"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+  "emailPlaceholder": "you@example.com",
+  "@emailPlaceholder": {
+    "description": "Email input placeholder"
+  },
+  "phonePlaceholder": "123 456 7890",
+  "@phonePlaceholder": {
+    "description": "Phone input placeholder"
+  },
+  "identityVerification": "Identity Verification",
+  "@identityVerification": {
+    "description": "Identity verification title"
+  },
+  "verifyIdentityDescription": "We need to verify your identity to comply with regulations and keep your money safe.",
+  "@verifyIdentityDescription": {
+    "description": "Identity verification description"
+  },
+  "whatYouNeed": "What you'll need:",
+  "@whatYouNeed": {
+    "description": "What you need section header"
+  },
+  "governmentId": "Government-issued ID (passport, driver's license)",
+  "@governmentId": {
+    "description": "Government ID requirement"
+  },
+  "clearPhoto": "Clear photo of your face",
+  "@clearPhoto": {
+    "description": "Clear photo requirement"
+  },
+  "timeRequired": "2-3 minutes of your time",
+  "@timeRequired": {
+    "description": "Time required"
+  },
+  "documentUpload": "Document Upload",
+  "@documentUpload": {
+    "description": "Document upload section title"
+  },
+  "uploadClearPhoto": "Upload a clear photo of your government ID",
+  "@uploadClearPhoto": {
+    "description": "Upload clear photo instruction"
+  },
+  "documentUploadedSuccess": "Document uploaded successfully!",
+  "@documentUploadedSuccess": {
+    "description": "Document upload success message"
+  },
+  "verified": "Verified",
+  "@verified": {
+    "description": "Verified status"
+  },
+  "takePhoto": "Take Photo",
+  "@takePhoto": {
+    "description": "Take photo button text"
+  },
+  "uploadFromGallery": "Upload from Gallery",
+  "@uploadFromGallery": {
+    "description": "Upload from gallery button text"
+  },
+  "makeSureDocument": "Make sure your document:",
+  "@makeSureDocument": {
+    "description": "Document requirements header"
+  },
+  "clearlyVisible": "Is clearly visible and not blurry",
+  "@clearlyVisible": {
+    "description": "Document visibility requirement"
+  },
+  "showFourCorners": "Shows all four corners",
+  "@showFourCorners": {
+    "description": "Document corners requirement"
+  },
+  "notExpired": "Is not expired",
+  "@notExpired": {
+    "description": "Document expiration requirement"
+  },
+  "selfieVerification": "Selfie Verification",
+  "@selfieVerification": {
+    "description": "Selfie verification section title"
+  },
+  "takeSelfieInstruction": "Take a selfie to complete verification",
+  "@takeSelfieInstruction": {
+    "description": "Selfie instruction"
+  },
+  "selfieCapturedSuccess": "Selfie captured successfully!",
+  "@selfieCapturedSuccess": {
+    "description": "Selfie capture success message"
+  },
+  "takeSelfie": "Take Selfie",
+  "@takeSelfie": {
+    "description": "Take selfie button text"
+  },
+  "forBestResults": "For best results:",
+  "@forBestResults": {
+    "description": "Best results header"
+  },
+  "lookAtCamera": "Look directly at the camera",
+  "@lookAtCamera": {
+    "description": "Look at camera instruction"
+  },
+  "removeGlasses": "Remove glasses and hats",
+  "@removeGlasses": {
+    "description": "Remove glasses instruction"
+  },
+  "ensureGoodLighting": "Ensure good lighting",
+  "@ensureGoodLighting": {
+    "description": "Good lighting instruction"
+  },
+  "whatYouNeed": "What you'll need:",
+  "@whatYouNeed": {
+    "description": "What you need section header"
+  },
+  "governmentId": "Government-issued ID (passport, driver's license)",
+  "@governmentId": {
+    "description": "Government ID requirement"
+  },
+  "clearPhoto": "Clear photo of your face",
+  "@clearPhoto": {
+    "description": "Clear photo requirement"
+  },
+  "timeRequired": "2-3 minutes of your time",
+  "@timeRequired": {
+    "description": "Time required"
+  },
+  "documentUpload": "Document Upload",
+  "@documentUpload": {
+    "description": "Document upload section title"
+  },
+  "uploadClearPhoto": "Upload a clear photo of your government ID",
+  "@uploadClearPhoto": {
+    "description": "Upload clear photo instruction"
+  },
+  "documentUploadedSuccess": "Document uploaded successfully!",
+  "@documentUploadedSuccess": {
+    "description": "Document upload success message"
+  },
+  "verified": "Verified",
+  "@verified": {
+    "description": "Verified status"
+  },
+  "takePhoto": "Take Photo",
+  "@takePhoto": {
+    "description": "Take photo button text"
+  },
+  "uploadFromGallery": "Upload from Gallery",
+  "@uploadFromGallery": {
+    "description": "Upload from gallery button text"
+  },
+  "makeSureDocument": "Make sure your document:",
+  "@makeSureDocument": {
+    "description": "Document requirements header"
+  },
+  "clearlyVisible": "Is clearly visible and not blurry",
+  "@clearlyVisible": {
+    "description": "Document visibility requirement"
+  },
+  "showFourCorners": "Shows all four corners",
+  "@showFourCorners": {
+    "description": "Document corners requirement"
+  },
+  "notExpired": "Is not expired",
+  "@notExpired": {
+    "description": "Document expiration requirement"
+  },
+  "selfieVerification": "Selfie Verification",
+  "@selfieVerification": {
+    "description": "Selfie verification section title"
+  },
+  "takeSelfieInstruction": "Take a selfie to complete verification",
+  "@takeSelfieInstruction": {
+    "description": "Selfie instruction"
+  },
+  "selfieCapturedSuccess": "Selfie captured successfully!",
+  "@selfieCapturedSuccess": {
+    "description": "Selfie capture success message"
+  },
+  "takeSelfie": "Take Selfie",
+  "@takeSelfie": {
+    "description": "Take selfie button text"
+  },
+  "forBestResults": "For best results:",
+  "@forBestResults": {
+    "description": "Best results header"
+  },
+  "lookAtCamera": "Look directly at the camera",
+  "@lookAtCamera": {
+    "description": "Look at camera instruction"
+  },
+  "removeGlasses": "Remove glasses and hats",
+  "@removeGlasses": {
+    "description": "Remove glasses instruction"
+  },
+  "enterEmailToReset": "Enter your email to reset your password.",
+  "@enterEmailToReset": {
+    "description": "Email reset instruction"
+  },
+  "weWillSendInstructions": "We'll send you reset instructions.",
+  "@weWillSendInstructions": {
+    "description": "Reset instructions message"
+  },
+  "emailAddress": "Email address",
+  "@emailAddress": {
+    "description": "Email address label"
+  },
+  "pleaseEnterEmail": "Please enter your email",
+  "@pleaseEnterEmail": {
+    "description": "Email validation message"
+  },
+  "pleaseEnterValidEmail": "Please enter a valid email",
+  "@pleaseEnterValidEmail": {
+    "description": "Valid email validation message"
+  },
+  "signIn": "Sign in",
+  "@signIn": {
+    "description": "Sign in button text"
+  },
+  "checkYourEmail": "Check your email",
+  "@checkYourEmail": {
+    "description": "Check email instruction"
+  },
+  "checkEmailResetInstructions": "Check your email — we've sent you reset instructions.",
+  "@checkEmailResetInstructions": {
+    "description": "Check email reset instructions"
+  },
+  "followLinkToReset": "Follow the link in the email to reset your password.",
+  "@followLinkToReset": {
+    "description": "Follow link instruction"
+  },
+  "backToLogin": "Back to login",
+  "@backToLogin": {
+    "description": "Back to login button text"
+  },
+  "didntReceiveEmail": "Didn't receive the email? ",
+  "@didntReceiveEmail": {
+    "description": "Didn't receive email text"
+  },
+  "tryAgain": "Try again",
+  "@tryAgain": {
+    "description": "Try again button text"
+  },
+  "weWillSendVerificationCode": "We'll send a verification code to confirm your identity.",
+  "@weWillSendVerificationCode": {
+    "description": "Verification code instruction"
+  },
+  "selectYourCountry": "Select your country",
+  "@selectYourCountry": {
+    "description": "Country selection hint"
+  },
+  "phoneNumber": "Phone number",
+  "@phoneNumber": {
+    "description": "Phone number label"
+  },
+  "standardRatesApply": "Standard message and data rates may apply.",
+  "@standardRatesApply": {
+    "description": "Standard rates disclaimer"
+  },
+  "sendVerificationCode": "Send verification code",
+  "@sendVerificationCode": {
+    "description": "Send verification code button"
+  },
+  "enterSixDigitCode": "Enter the 6-digit code",
+  "@enterSixDigitCode": {
+    "description": "Enter 6-digit code instruction"
+  },
+  "enterSixDigitCodeSent": "Enter the 6-digit code we sent to {phoneNumber}.",
+  "@enterSixDigitCodeSent": {
+    "description": "Enter 6-digit code with phone number",
+    "placeholders": {
+      "phoneNumber": {
+        "type": "String",
+        "description": "Phone number"
+      }
+    }
+  },
+  "didntReceiveCode": "Didn't receive the code?",
+  "@didntReceiveCode": {
+    "description": "Didn't receive code text"
+  },
+  "resend": "Resend",
+  "@resend": {
+    "description": "Resend button text"
+  },
+  "verifyCode": "Verify code",
+  "@verifyCode": {
+    "description": "Verify code button text"
+  },
+  "verificationSuccessful": "Verification successful",
+  "@verificationSuccessful": {
+    "description": "Verification success message"
+  },
+  "youAreAllSet": "You're all set to start using your account.",
+  "@youAreAllSet": {
+    "description": "Account ready message"
+  },
+  "sendMoneyToDRC": "Send money to DRC",
+  "@sendMoneyToDRC": {
+    "description": "Send money to DRC feature"
+  },
+  "trackTransactions": "Track your transactions",
+  "@trackTransactions": {
+    "description": "Track transactions feature"
+  },
+  "manageFavorites": "Manage your favorites",
+  "@manageFavorites": {
+    "description": "Manage favorites feature"
+  },
+  "accessAccountSecurely": "Access your account securely",
+  "@accessAccountSecurely": {
+    "description": "Access account securely feature"
+  },
+  "welcomeToYole": "Welcome to Yole! 🎉",
+  "@welcomeToYole": {
+    "description": "Welcome to Yole message"
+  },
+  "weSentVerificationLink": "We sent a verification link to your email address. Click the link to activate your account.",
+  "@weSentVerificationLink": {
+    "description": "Verification link instruction"
+  },
+  "didntReceiveEmail": "Didn't receive the email?",
+  "@didntReceiveEmail": {
+    "description": "Didn't receive email question"
+  },
+  "sending": "Sending...",
+  "@sending": {
+    "description": "Sending status"
+  },
+  "resendIn": "Resend in",
+  "@resendIn": {
+    "description": "Resend in text"
+  },
+  "resendVerificationEmail": "Resend verification email",
+  "@resendVerificationEmail": {
+    "description": "Resend verification email button"
+  },
+  "wrongEmail": "Wrong email? ",
+  "@wrongEmail": {
+    "description": "Wrong email text"
+  },
+  "goBack": "Go back",
+  "@goBack": {
+    "description": "Go back button text"
+  },
+  "searchContacts": "Search contacts",
+  "@searchContacts": {
+    "description": "Search contacts hint text"
+  },
+  "preferences": "Preferences",
+  "@preferences": {
+    "description": "Preferences section header"
+  },
+  "darkMode": "Dark Mode",
+  "@darkMode": {
+    "description": "Dark mode setting"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting"
+  },
+  "defaultCurrency": "Default Currency",
+  "@defaultCurrency": {
+    "description": "Default currency setting"
+  },
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications setting"
+  },
+  "account": "Account",
+  "@account": {
+    "description": "Account section header"
+  },
+  "personalInformation": "Personal Information",
+  "@personalInformation": {
+    "description": "Personal information setting"
+  },
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label"
+  },
+  "history": "History",
+  "@history": {
+    "description": "History navigation label"
+  },
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites navigation label"
+  },
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile navigation label"
+  },
+  "allTransactions": "All Transactions",
+  "@allTransactions": {
+    "description": "All transactions header"
+  },
+  "comingSoon": "Coming soon",
+  "@comingSoon": {
+    "description": "Coming soon message"
+  },
+  "routeNotFound": "Route not found",
+  "@routeNotFound": {
+    "description": "Route not found message"
+  },
+  "navigationTest": "Navigation Test",
+  "@navigationTest": {
+    "description": "Navigation test screen title"
+  },
+  "goToHome": "Go to Home",
+  "@goToHome": {
+    "description": "Go to home button text"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  "logOut": "Log Out",
+  "@logOut": {
+    "description": "Log out button text"
+  },
+  "didntReceiveEmail": "Didn't receive the email?",
+  "@didntReceiveEmail": {
+    "description": "Didn't receive email question"
+  },
+  "resendVerificationEmail": "Resend verification email",
+  "@resendVerificationEmail": {
+    "description": "Resend verification email button"
+  },
+  "wrongEmail": "Wrong email? ",
+  "@wrongEmail": {
+    "description": "Wrong email text"
+  },
+  "resendIn": "Resend in",
+  "@resendIn": {
+    "description": "Resend in text"
+  },
+  "sending": "Sending...",
+  "@sending": {
+    "description": "Sending status"
+  },
+  "goBack": "Go back",
+  "@goBack": {
+    "description": "Go back button text"
+  },
+  "selfieVerification": "Selfie Verification",
+  "@selfieVerification": {
+    "description": "Selfie verification section title"
+  },
+  "takeSelfieInstruction": "Take a selfie to complete verification",
+  "@takeSelfieInstruction": {
+    "description": "Selfie instruction"
+  },
+  "selfieCapturedSuccess": "Selfie captured successfully!",
+  "@selfieCapturedSuccess": {
+    "description": "Selfie capture success message"
+  },
+  "takeSelfie": "Take Selfie",
+  "@takeSelfie": {
+    "description": "Take selfie button text"
+  },
+  "forBestResults": "For best results:",
+  "@forBestResults": {
+    "description": "Best results header"
+  },
+  "lookAtCamera": "Look directly at the camera",
+  "@lookAtCamera": {
+    "description": "Look at camera instruction"
+  },
+  "removeGlasses": "Remove glasses and hats",
+  "@removeGlasses": {
+    "description": "Remove glasses instruction"
+  },
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number setting"
+  },
+  "emailAddress": "Email Address",
+  "@emailAddress": {
+    "description": "Email address setting"
+  },
+  "changePassword": "Change Password",
+  "@changePassword": {
+    "description": "Change password setting"
+  },
+  "biometricLogin": "Biometric Login",
+  "@biometricLogin": {
+    "description": "Biometric login setting"
+  },
+  "twoFactorAuthentication": "Two-Factor Authentication",
+  "@twoFactorAuthentication": {
+    "description": "Two-factor authentication setting"
+  },
+  "helpCenter": "Help Center",
+  "@helpCenter": {
+    "description": "Help center setting"
+  },
+  "termsAndConditions": "Terms & Conditions",
+  "@termsAndConditions": {
+    "description": "Terms and conditions setting"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy setting"
+  },
+  "security": "Security",
+  "@security": {
+    "description": "Security section header"
+  },
+  "support": "Support",
+  "@support": {
+    "description": "Support section header"
+  },
+  "createAccountDescription": "Create your account to start sending money",
+  "@createAccountDescription": {
+    "description": "Create account description text"
+  },
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+  "emailPlaceholder": "you@example.com",
+  "@emailPlaceholder": {
+    "description": "Email field placeholder"
+  },
+  "firstName": "First Name",
+  "@firstName": {
+    "description": "First name field label"
+  },
+  "firstNamePlaceholder": "First Name",
+  "@firstNamePlaceholder": {
+    "description": "First name field placeholder"
+  },
+  "lastName": "Last Name",
+  "@lastName": {
+    "description": "Last name field label"
+  },
+  "lastNamePlaceholder": "Last Name",
+  "@lastNamePlaceholder": {
+    "description": "Last name field placeholder"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+  "passwordPlaceholder": "Create a password",
+  "@passwordPlaceholder": {
+    "description": "Password field placeholder"
+  },
+  "country": "Country",
+  "@country": {
+    "description": "Country field label"
+  },
+  "selectYourCountry": "Select your country",
+  "@selectYourCountry": {
+    "description": "Country selection placeholder"
+  },
+  "pleaseSelectCountry": "Please select a country",
+  "@pleaseSelectCountry": {
+    "description": "Country validation message"
+  },
+  "createAccount": "Create account",
+  "@createAccount": {
+    "description": "Create account button text"
+  },
+  "thisFieldRequired": "This field is required",
+  "@thisFieldRequired": {
+    "description": "Required field validation message"
+  },
+  "emailRequired": "Email is required",
+  "@emailRequired": {
+    "description": "Email required validation message"
+  },
+  "enterValidEmail": "Enter a valid email address",
+  "@enterValidEmail": {
+    "description": "Valid email validation message"
+  },
+  "passwordRequired": "Password is required",
+  "@passwordRequired": {
+    "description": "Password required validation message"
+  },
+  "useAtLeast6Characters": "Use at least 6 characters",
+  "@useAtLeast6Characters": {
+    "description": "Password length validation message"
+  },
+  "alreadyHaveAccount": "Already have an account? ",
+  "@alreadyHaveAccount": {
+    "description": "Already have account text"
+  },
+  "signIn": "Sign in",
+  "@signIn": {
+    "description": "Sign in button text"
+  },
+  "phoneNumber": "Phone number",
+  "@phoneNumber": {
+    "description": "Phone number field label"
+  },
+  "standardMessageRates": "Standard message and data rates may apply.",
+  "@standardMessageRates": {
+    "description": "Standard message and data rates disclaimer"
+  },
+  "sendVerificationCode": "Send verification code",
+  "@sendVerificationCode": {
+    "description": "Send verification code button text"
+  },
+  "enterSixDigitCodeWeSentTo": "Enter the 6-digit code we sent to {phoneNumber}",
+  "@enterSixDigitCodeWeSentTo": {
+    "description": "OTP verification message with phone number",
+    "placeholders": {
+      "phoneNumber": {
+        "type": "String",
+        "description": "The phone number where the code was sent"
+      }
+    }
+  },
+  "didntReceiveCode": "Didn't receive the code?",
+  "@didntReceiveCode": {
+    "description": "Didn't receive code question"
+  },
+  "verifyCode": "Verify code",
+  "@verifyCode": {
+    "description": "Verify code button text"
+  },
+  "resend": "Resend",
+  "@resend": {
+    "description": "Resend code button text"
+  },
+  "sendMoneyToDRC": "Send money to DRC",
+  "@sendMoneyToDRC": {
+    "description": "Send money to DRC feature item"
+  },
+  "trackYourTransactions": "Track your transactions",
+  "@trackYourTransactions": {
+    "description": "Track transactions feature item"
+  },
+  "manageYourFavorites": "Manage your favorites",
+  "@manageYourFavorites": {
+    "description": "Manage favorites feature item"
+  },
+  "accessYourAccountSecurely": "Access your account securely",
+  "@accessYourAccountSecurely": {
+    "description": "Access account securely feature item"
+  },
+  "welcomeToYole": "Welcome to Yole! 🎉",
+  "@welcomeToYole": {
+    "description": "Welcome message with celebration emoji"
+  }
+}

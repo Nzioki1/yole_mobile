@@ -7,6 +7,7 @@ import '../providers/favorites_provider.dart';
 import '../providers/contacts_provider.dart';
 import '../utils/contacts_permission.dart';
 import '../l10n/app_localizations.dart';
+// import '../router_types.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
   const FavoritesScreen({super.key});
@@ -81,15 +82,57 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       _FavTile(
                         key: ValueKey(c.id),
                         contact: c,
-                        onSend: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Send money to ${c.label}')),
-                          );
+                        onSend: () async {
+                          // Multiple numbers → let user pick
+                          if (c.phones.length > 1) {
+                            final selectedPhone =
+                                await _showPhoneSelector(context, c.phones);
+                            if (selectedPhone != null && context.mounted) {
+                              Navigator.of(context).pop({
+                                'recipient': c.label,
+                                'recipientPhone': selectedPhone,
+                                'recipientCountry': c.countryCode,
+                              });
+                            }
+                          } else if (c.phones.isNotEmpty) {
+                            // Single number → return directly
+                            Navigator.of(context).pop({
+                              'recipient': c.label,
+                              'recipientPhone': c.phones.first,
+                              'recipientCountry': c.countryCode,
+                            });
+                          } else {
+                            // No stored numbers
+                            final l10n = AppLocalizations.of(context)!;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.noPhoneNumber)),
+                            );
+                          }
                         },
                         onDelete: () => notifier.remove(c.id),
                       ),
                   ],
                 ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _showPhoneSelector(
+      BuildContext context, List<String> phones) {
+    final l10n = AppLocalizations.of(context)!;
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.selectPhoneNumber),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: phones
+              .map((phone) => ListTile(
+                    title: Text(phone),
+                    onTap: () => Navigator.pop(context, phone),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -110,16 +153,25 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 
     if (!mounted || picked == null) return;
 
+    // Extract phone numbers from picked contact
+    final phoneNumbers = picked.phones
+        .map((p) => p.number)
+        .where((n) => n.trim().isNotEmpty)
+        .toList();
+
     ref.read(favoritesProvider.notifier).add(
           FavoriteContact(
             id: picked.id,
             label: picked.displayName,
             initials: _initials(picked.displayName),
+            phones: phoneNumbers,
+            countryCode: null,
           ),
         );
 
+    final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added ${picked.displayName} to favorites')),
+      SnackBar(content: Text(l10n.addedToFavorites(picked.displayName))),
     );
   }
 
@@ -258,11 +310,13 @@ class _AppBarPillButton extends StatelessWidget {
 class _PickedContact {
   final String id;
   final String displayName;
-  const _PickedContact({required this.id, required this.displayName});
+  final List<Phone> phones;
+  const _PickedContact(
+      {required this.id, required this.displayName, required this.phones});
 }
 
 class _FastContactPicker extends StatefulWidget {
-  const _FastContactPicker({required this.ref, super.key});
+  const _FastContactPicker({required this.ref});
   final WidgetRef ref;
 
   @override
@@ -300,13 +354,20 @@ class _FastContactPickerState extends State<_FastContactPicker> {
     if (!mounted) return;
 
     if (full == null || full.phones.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This contact has no phone number')),
+        SnackBar(content: Text(l10n.noPhoneNumber)),
       );
       return;
     }
     Navigator.pop(
-        context, _PickedContact(id: c.id, displayName: c.displayName));
+      context,
+      _PickedContact(
+        id: c.id,
+        displayName: c.displayName,
+        phones: full.phones,
+      ),
+    );
   }
 
   String _initialsLocal(String name) {

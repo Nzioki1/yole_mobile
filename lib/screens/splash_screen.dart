@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/sparkles_core.dart';
 import '../providers/global_locale_provider.dart';
+import '../widgets/yole_logo.dart';
 
 /// ======================= API (1:1 with your React props) =======================
 /// - variant: 'dark' | 'light'
@@ -25,8 +26,8 @@ class SplashScreen extends ConsumerWidget {
       variant: isDark ? SplashVariant.dark : SplashVariant.light,
       sparklesEnabled: true,
       locale: currentLocale.languageCode,
-      onGetStarted: () => Navigator.pushNamed(context, '/welcome'),
-      onLogin: () => Navigator.pushNamed(context, '/login'),
+      onGetStarted: () => Navigator.pushReplacementNamed(context, '/welcome'),
+      onLogin: () => Navigator.pushReplacementNamed(context, '/login'),
       onLanguage: () => localeService.toggleLanguage(),
     );
   }
@@ -105,18 +106,9 @@ class SplashScreenFlutter extends ConsumerWidget {
                     durationMs: 800,
                     beginOffset: const Offset(0, 30),
                     child: Center(
-                      child: Text(
-                        'YOLE',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 56, // text-6xl
-                          fontWeight: FontWeight.w800,
-                          height: 1.0,
-                          letterSpacing: 2.0,
-                          fontFamily: 'Inter', // Clean, modern sans-serif
-                          color:
-                              isDark ? Colors.white : const Color(0xFF0F172A),
-                        ),
+                      child: YoleLogo(
+                        isDarkTheme: isDark,
+                        height: 80.0,
                       ),
                     ),
                   ),
@@ -260,10 +252,17 @@ class SplashScreenFlutter extends ConsumerWidget {
                                 return FadeTransition(
                                     opacity: animation, child: child);
                               },
-                              child: Text(
-                                locale == 'en' ? '🇺🇸' : '🇫🇷',
-                                key: ValueKey(locale),
-                                style: const TextStyle(fontSize: 16),
+                              child: Builder(
+                                builder: (context) {
+                                  final currentLocale =
+                                      ref.watch(currentLocaleProvider);
+                                  final localeCode = currentLocale.languageCode;
+                                  return Text(
+                                    localeCode == 'en' ? '🇺🇸' : '🇫🇷',
+                                    key: ValueKey(localeCode),
+                                    style: const TextStyle(fontSize: 16),
+                                  );
+                                },
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -274,19 +273,28 @@ class SplashScreenFlutter extends ConsumerWidget {
                                 return FadeTransition(
                                     opacity: animation, child: child);
                               },
-                              child: Text(
-                                locale == 'en' ? l10n.english : l10n.french,
-                                key: ValueKey(locale == 'en'
-                                    ? l10n.english
-                                    : l10n.french),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.90)
-                                      : const Color(
-                                          0xFF64748B), // text-slate-500->700 hover
-                                ),
+                              child: Builder(
+                                builder: (context) {
+                                  final currentLocale =
+                                      ref.watch(currentLocaleProvider);
+                                  final localeCode = currentLocale.languageCode;
+                                  return Text(
+                                    localeCode == 'en'
+                                        ? l10n.english
+                                        : l10n.french,
+                                    key: ValueKey(localeCode == 'en'
+                                        ? l10n.english
+                                        : l10n.french),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.90)
+                                          : const Color(
+                                              0xFF64748B), // text-slate-500->700 hover
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                           ],

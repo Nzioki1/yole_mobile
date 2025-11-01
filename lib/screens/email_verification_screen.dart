@@ -346,7 +346,7 @@ class _EmailVerificationScreenState
                                     if (widget.onContinue != null) {
                                       widget.onContinue!();
                                     } else {
-                                      Navigator.pushReplacementNamed(
+                                      Navigator.pushNamed(
                                           context, RouteNames.kyc);
                                     }
                                   },

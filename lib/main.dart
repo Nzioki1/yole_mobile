@@ -4,9 +4,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'app_router.dart';
 import 'providers/global_locale_provider.dart';
-
-// Global theme provider - true = dark, false = light
-final themeProvider = StateProvider<bool>((ref) => true);
+import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 
 // Global navigator key for forcing navigation stack rebuild
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -26,14 +25,23 @@ class YoleApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeProvider);
+    final themeState = ref.watch(themeProvider);
+    final isDarkMode = themeState.isDarkMode;
     final currentLocale = ref.watch(currentLocaleProvider);
     final localeService = ref.watch(globalLocaleServiceProvider);
+    final authState = ref.watch(authProvider);
 
     // Initialize the locale service if not already initialized
     if (!localeService.isInitialized) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         localeService.initialize();
+      });
+    }
+
+    // Initialize authentication if not already initialized
+    if (!authState.isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(authProvider.notifier).initializeAuth();
       });
     }
 

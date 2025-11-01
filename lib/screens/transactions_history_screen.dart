@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_provider.dart';
+import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
+import '../models/api/transaction.dart' as ApiTransaction;
 import '../widgets/status_chip.dart';
 import '../l10n/app_localizations.dart';
 
@@ -38,77 +40,295 @@ String statusText(TransactionStatus s, AppLocalizations l10n) {
   }
 }
 
-class TransactionsHistorySimple extends ConsumerWidget {
+class TransactionsHistorySimple extends ConsumerStatefulWidget {
   const TransactionsHistorySimple({super.key});
 
-  // Mock transactions data - replace with actual data source
-  static final List<TransactionModel> _mockTransactions = [
-    TransactionModel(
-      id: 'tx_001',
-      recipientName: 'Marie Koffi',
-      counterpart: '+243123456789',
-      amount: 100.0,
-      currency: 'USD',
-      status: TransactionStatus.delivered,
-      date: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    TransactionModel(
-      id: 'tx_002',
-      recipientName: 'Jean Mukendi',
-      counterpart: '+243987654321',
-      amount: 75.0,
-      currency: 'EUR',
-      status: TransactionStatus.processing,
-      date: DateTime.now().subtract(const Duration(hours: 8)),
-    ),
-    TransactionModel(
-      id: 'tx_003',
-      recipientName: 'Grace Mbuyi',
-      counterpart: '+243456789123',
-      amount: 200.0,
-      currency: 'USD',
-      status: TransactionStatus.delivered,
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    TransactionModel(
-      id: 'tx_004',
-      recipientName: 'Pierre Kasongo',
-      counterpart: '+243789123456',
-      amount: 50.0,
-      currency: 'EUR',
-      status: TransactionStatus.failed,
-      date: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-  ];
+  @override
+  ConsumerState<TransactionsHistorySimple> createState() =>
+      _TransactionsHistorySimpleState();
+}
+
+class _TransactionsHistorySimpleState
+    extends ConsumerState<TransactionsHistorySimple> {
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  Future<void> _loadTransactions() async {
+    await ref
+        .read(transactionsListProvider.notifier)
+        .loadTransactions(refresh: true);
+  }
+
+  TransactionStatus _mapApiStatusToTransactionStatus(String apiStatus) {
+    switch (apiStatus.toLowerCase()) {
+      case 'completed':
+      case 'success':
+        return TransactionStatus.success;
+      case 'pending':
+        return TransactionStatus.pending;
+      case 'processing':
+        return TransactionStatus.processing;
+      case 'failed':
+        return TransactionStatus.failed;
+      case 'cancelled':
+        return TransactionStatus.cancelled;
+      case 'delivered':
+        return TransactionStatus.delivered;
+      default:
+        return TransactionStatus.pending;
+    }
+  }
+
+  Widget _buildLoadingState(ThemeData theme, AppState appState) {
+    return Scaffold(
+      backgroundColor: appState.isDark ? null : Colors.white,
+      body: Container(
+        decoration: appState.isDark
+            ? const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
+                ),
+              )
+            : null,
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(ThemeData theme, AppState appState, String error) {
+    return Scaffold(
+      backgroundColor: appState.isDark ? null : Colors.white,
+      body: Container(
+        decoration: appState.isDark
+            ? const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
+                ),
+              )
+            : null,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: appState.isDark ? Colors.white : Colors.grey[600],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading transactions',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: appState.isDark ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: appState.isDark ? Colors.white70 : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadTransactions,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionsList(
+      ThemeData theme,
+      AppState appState,
+      AppLocalizations l10n,
+      List<TransactionModel> transactions,
+      TransactionsState transactionsState) {
+    return Scaffold(
+      backgroundColor: appState.isDark ? null : Colors.white,
+      body: Container(
+        decoration: appState.isDark
+            ? const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
+                ),
+              )
+            : null,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(theme, appState, l10n),
+              Expanded(
+                child: transactions.isEmpty
+                    ? _buildEmptyState(theme, appState, l10n)
+                    : _buildTransactionsListView(
+                        theme, appState, l10n, transactions, transactionsState),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionsListView(
+      ThemeData theme,
+      AppState appState,
+      AppLocalizations l10n,
+      List<TransactionModel> transactions,
+      TransactionsState transactionsState) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        final transaction = transactions[index];
+        return _buildTransactionTile(theme, appState, l10n, transaction);
+      },
+    );
+  }
+
+  Widget _buildTransactionTile(ThemeData theme, AppState appState,
+      AppLocalizations l10n, TransactionModel transaction) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:
+            appState.isDark ? Colors.white.withOpacity(0.1) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: appState.isDark
+              ? Colors.white.withOpacity(0.1)
+              : Colors.grey[200]!,
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          _buildAvatar(transaction.recipientName ?? 'Unknown'),
+          const SizedBox(width: 12),
+          // Transaction details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaction.recipientName ?? 'Unknown',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: appState.isDark ? Colors.white : Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  transaction.recipientPhone,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: appState.isDark ? Colors.white70 : Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatDate(transaction.date),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: appState.isDark ? Colors.white60 : Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Amount and status
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${transaction.currency == 'USD' ? '\$' : '€'}${transaction.amount.toStringAsFixed(2)}',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: appState.isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              StatusChip(
+                text: _getStatusText(transaction.status),
+                variant: mapStatus(transaction.status),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   String _formatDate(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
 
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return '1 day ago';
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
     } else {
-      return '${difference.inDays} days ago';
+      return 'Just now';
+    }
+  }
+
+  String _getStatusText(TransactionStatus status) {
+    switch (status) {
+      case TransactionStatus.success:
+      case TransactionStatus.delivered:
+        return 'Completed';
+      case TransactionStatus.pending:
+      case TransactionStatus.processing:
+        return 'Processing';
+      case TransactionStatus.failed:
+        return 'Failed';
+      case TransactionStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  StatusChipVariant mapStatus(TransactionStatus status) {
+    switch (status) {
+      case TransactionStatus.success:
+      case TransactionStatus.delivered:
+        return StatusChipVariant.success;
+      case TransactionStatus.pending:
+      case TransactionStatus.processing:
+        return StatusChipVariant.warning;
+      case TransactionStatus.failed:
+        return StatusChipVariant.error;
+      case TransactionStatus.cancelled:
+        return StatusChipVariant.neutral;
     }
   }
 
   Widget _buildAvatar(String name) {
-    final initials = name
-        .split(' ')
-        .map((n) => n.isNotEmpty ? n[0] : '')
-        .take(2)
-        .join()
-        .toUpperCase();
+    final initials = name.isNotEmpty
+        ? name.split(' ').map((word) => word[0]).take(2).join().toUpperCase()
+        : '?';
 
     return Container(
       width: 48,
       height: 48,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
-        ),
+        color: Color(0xFF3B82F6),
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -125,173 +345,66 @@ class TransactionsHistorySimple extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final appState = ref.watch(appProvider);
+    final transactionsState = ref.watch(transactionsListProvider);
     final l10n = AppLocalizations.of(context)!;
-    final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Column(
+    // Convert API transactions to UI model or use fallback
+    final List<TransactionModel> transactions;
+
+    if (transactionsState.isLoading && transactionsState.transactions.isEmpty) {
+      // Show loading state
+      return _buildLoadingState(theme, appState);
+    } else if (transactionsState.error != null &&
+        transactionsState.transactions.isEmpty) {
+      // Show error state with fallback data
+      return _buildErrorState(theme, appState, transactionsState.error!);
+    } else {
+      // Use API data or fallback to mock data
+      if (transactionsState.transactions.isNotEmpty) {
+        transactions = transactionsState.transactions.map((apiTransaction) {
+          return TransactionModel(
+            id: apiTransaction.id,
+            recipientName: apiTransaction.recipientName ?? 'Unknown',
+            counterpart: apiTransaction.recipientPhone,
+            amount: apiTransaction.amount,
+            currency: apiTransaction.currency,
+            status: _mapApiStatusToTransactionStatus(apiTransaction.status),
+            date: apiTransaction.createdAt,
+          );
+        }).toList();
+      } else {
+        // Fallback to mock data
+        transactions = _getMockTransactions();
+      }
+    }
+
+    return _buildTransactionsList(
+        theme, appState, l10n, transactions, transactionsState);
+  }
+
+  Widget _buildHeader(
+      ThemeData theme, AppState appState, AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
         children: [
-          // Header - Fixed to use theme colors
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 60, 20, 24),
-            decoration: BoxDecoration(
-              color: theme.scaffoldBackgroundColor,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark
-                      ? const Color(0xFF2B2F58)
-                      : const Color(0xFFE5E7EB),
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: theme.cardTheme.color,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF2B2F58)
-                            : const Color(0xFFE5E7EB),
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_rounded,
-                      color: theme.colorScheme.onSurface,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  l10n.allTransactions,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: appState.isDark ? Colors.white : Colors.black,
             ),
           ),
-
-          // Transaction List - Updated to use theme colors
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _mockTransactions.length,
-              itemBuilder: (context, index) {
-                final transaction = _mockTransactions[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: theme.cardTheme.color,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF2B2F58)
-                          : const Color(0xFFE5E7EB),
-                    ),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        // TODO: Navigate to transaction details
-                      },
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            _buildAvatar(transaction.recipientName ?? ''),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    transaction.recipientName ?? '',
-                                    style: TextStyle(
-                                      color: theme.colorScheme.onSurface,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.access_time_rounded,
-                                        size: 14,
-                                        color: theme.colorScheme.onSurface
-                                            .withOpacity(0.6),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        _formatDate(transaction.timestamp),
-                                        style: TextStyle(
-                                          color: theme.colorScheme.onSurface
-                                              .withOpacity(0.6),
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '-\$${transaction.amount.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(transaction.status)
-                                        .withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color: _getStatusColor(transaction.status)
-                                          .withOpacity(0.6),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    statusText(transaction.status, l10n),
-                                    style: TextStyle(
-                                      color:
-                                          _getStatusColor(transaction.status),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            child: Text(
+              l10n.allTransactions,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: appState.isDark ? Colors.white : Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -299,18 +412,74 @@ class TransactionsHistorySimple extends ConsumerWidget {
     );
   }
 
-  Color _getStatusColor(TransactionStatus status) {
-    switch (status) {
-      case TransactionStatus.delivered:
-      case TransactionStatus.success:
-        return const Color(0xFF0C7A53);
-      case TransactionStatus.processing:
-      case TransactionStatus.pending:
-        return const Color(0xFF165BAA);
-      case TransactionStatus.failed:
-        return const Color(0xFF912D2D);
-      case TransactionStatus.cancelled:
-        return const Color(0xFFB45309);
-    }
+  Widget _buildEmptyState(
+      ThemeData theme, AppState appState, AppLocalizations l10n) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 80,
+            color: appState.isDark ? Colors.white38 : Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No transactions yet',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: appState.isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Your transaction history will appear here',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: appState.isDark ? Colors.white70 : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<TransactionModel> _getMockTransactions() {
+    return [
+      TransactionModel(
+        id: 'tx_001',
+        recipientName: 'Marie Koffi',
+        counterpart: '+243123456789',
+        amount: 100.0,
+        currency: 'USD',
+        status: TransactionStatus.delivered,
+        date: DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      TransactionModel(
+        id: 'tx_002',
+        recipientName: 'Jean Mukendi',
+        counterpart: '+243987654321',
+        amount: 75.0,
+        currency: 'EUR',
+        status: TransactionStatus.processing,
+        date: DateTime.now().subtract(const Duration(hours: 8)),
+      ),
+      TransactionModel(
+        id: 'tx_003',
+        recipientName: 'Grace Mbuyi',
+        counterpart: '+243456789123',
+        amount: 200.0,
+        currency: 'USD',
+        status: TransactionStatus.delivered,
+        date: DateTime.now().subtract(const Duration(days: 1)),
+      ),
+      TransactionModel(
+        id: 'tx_004',
+        recipientName: 'Pierre Kasongo',
+        counterpart: '+243789123456',
+        amount: 50.0,
+        currency: 'EUR',
+        status: TransactionStatus.failed,
+        date: DateTime.now().subtract(const Duration(days: 3)),
+      ),
+    ];
   }
 }

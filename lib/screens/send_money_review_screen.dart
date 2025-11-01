@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_provider.dart';
+import '../providers/transaction_provider.dart';
+import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
+import '../router_types.dart';
 
 class SendMoneyReviewScreen extends ConsumerStatefulWidget {
   const SendMoneyReviewScreen({super.key});
@@ -12,76 +15,72 @@ class SendMoneyReviewScreen extends ConsumerStatefulWidget {
 }
 
 class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
-  bool _isLoadingFees = false;
-  double _feeAmount = 0.0;
-  String? _feesError;
+  bool _hasLoadedFees = false;
 
   @override
   void initState() {
     super.initState();
-    _loadFees();
+    print('=== REVIEW SCREEN INIT START ===');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasLoadedFees) {
+      _hasLoadedFees = true;
+      _loadFees();
+    }
   }
 
   Future<void> _loadFees() async {
-    setState(() {
-      _isLoadingFees = true;
-      _feesError = null;
-    });
+    print('=== REVIEW SCREEN _loadFees called ===');
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    print('Review screen args: $args');
 
-    try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Mock fees calculation
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null) {
-        final amount = args['amount'] as double;
-        _feeAmount = amount * 0.025; // 2.5% fee
-      }
-
-      setState(() {
-        _isLoadingFees = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingFees = false;
-        _feesError = 'We couldn\'t load fees. Try again.';
-      });
+    if (args == null) {
+      print('ERROR: Review screen args are NULL - returning');
+      return;
     }
+
+    final calculatedCharges = args['calculatedCharges'] as double?;
+    print('Pre-calculated charges from Enter Details: $calculatedCharges');
+
+    // Don't call API - just use pre-calculated charges
+    // If charges are null, display will show 0.0
+    return;
   }
 
   @override
   Widget build(BuildContext context) {
+    print('=== REVIEW SCREEN build called ===');
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
     final appState = ref.watch(appProvider);
+    final chargesState = ref.watch(chargesProvider);
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
     if (args == null) {
+      print('ERROR: Review screen args NULL in build - popping back');
       Navigator.pop(context);
       return const SizedBox.shrink();
     }
 
+    print('Review screen building with args');
     final amount = args['amount'] as double;
     final currency = args['currency'] as String;
     final recipient = args['recipient'] as String;
     final note = args['note'] as String?;
-    final totalAmount = amount + _feeAmount;
+
+    // Always use pre-calculated charges, never from chargesProvider
+    final calculatedCharges = args['calculatedCharges'] as double?;
+    final calculatedTotal = args['totalAmount'] as double?;
+    final feeAmount = calculatedCharges ?? 0.0;
+    final totalAmount = calculatedTotal ?? amount;
 
     return Scaffold(
-      backgroundColor: appState.isDark ? null : Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: appState.isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : null,
         child: SafeArea(
           child: Column(
             children: [
@@ -96,10 +95,11 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                       _buildReviewCard(
                           theme, appState, amount, currency, recipient, note),
                       const SizedBox(height: 24),
-                      _buildFeesSection(
-                          theme, appState, amount, currency, totalAmount),
+                      _buildFeesSection(theme, appState, amount, currency,
+                          feeAmount, totalAmount, chargesState),
                       const SizedBox(height: 48),
-                      _buildContinueButton(theme, appState, args),
+                      _buildContinueButton(
+                          theme, appState, args, feeAmount, totalAmount),
                     ],
                   ),
                 ),
@@ -120,14 +120,14 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             onPressed: () => Navigator.pop(context),
             icon: Icon(
               Icons.arrow_back_ios,
-              color: appState.isDark ? Colors.white : Colors.black,
+              color: theme.appBarTheme.foregroundColor ?? theme.colorScheme.onSurface,
             ),
           ),
           Expanded(
             child: Text(
               'Review & Fees',
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: appState.isDark ? Colors.white : Colors.black,
+                color: theme.appBarTheme.titleTextStyle?.color ?? theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -138,9 +138,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             child: Text(
               'Edit',
               style: TextStyle(
-                color: appState.isDark
-                    ? const Color(0xFF3B82F6)
-                    : const Color(0xFF3B82F6),
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -155,13 +153,10 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color:
-            appState.isDark ? Colors.white.withOpacity(0.1) : Colors.grey[50],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: appState.isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.grey[200]!,
+          color: theme.colorScheme.outline.withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -170,7 +165,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
           Text(
             'Transfer Details',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: appState.isDark ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -201,7 +196,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             child: Text(
               label,
               style: TextStyle(
-                color: appState.isDark ? Colors.white70 : Colors.grey[600],
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
                 fontSize: 14,
               ),
             ),
@@ -210,7 +205,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             child: Text(
               value,
               style: TextStyle(
-                color: appState.isDark ? Colors.white : Colors.black,
+                color: theme.colorScheme.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -221,18 +216,21 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildFeesSection(ThemeData theme, AppState appState, double amount,
-      String currency, double totalAmount) {
+  Widget _buildFeesSection(
+      ThemeData theme,
+      AppState appState,
+      double amount,
+      String currency,
+      double feeAmount,
+      double totalAmount,
+      ChargesState chargesState) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color:
-            appState.isDark ? Colors.white.withOpacity(0.1) : Colors.grey[50],
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: appState.isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.grey[200]!,
+          color: theme.colorScheme.outline.withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -249,11 +247,11 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                   ),
                 ),
               ),
-              if (_feesError != null || _isLoadingFees)
+              if (chargesState.error != null || chargesState.isLoading)
                 TextButton(
-                  onPressed: _isLoadingFees ? null : _loadFees,
+                  onPressed: chargesState.isLoading ? null : _loadFees,
                   child: Text(
-                    _isLoadingFees ? 'Loading...' : 'Refresh fees',
+                    chargesState.isLoading ? 'Loading...' : 'Refresh fees',
                     style: TextStyle(
                       color: appState.isDark
                           ? const Color(0xFF3B82F6)
@@ -265,21 +263,21 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (_isLoadingFees)
+          if (chargesState.isLoading)
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(20),
                 child: CircularProgressIndicator(),
               ),
             )
-          else if (_feesError != null)
+          else if (chargesState.error != null)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     Text(
-                      _feesError!,
+                      chargesState.error!,
                       style: TextStyle(
                         color:
                             appState.isDark ? Colors.red[300] : Colors.red[600],
@@ -290,7 +288,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                     const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: _loadFees,
-                      child: Text(l10n.retry),
+                      child: Text(AppLocalizations.of(context)!.retry),
                     ),
                   ],
                 ),
@@ -304,7 +302,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                 appState),
             _buildFeeRow(
                 'Fees',
-                '${currency == 'USD' ? '\$' : '€'}${_feeAmount.toStringAsFixed(2)} $currency',
+                '${currency == 'USD' ? '\$' : '€'}${feeAmount.toStringAsFixed(2)} $currency',
                 theme,
                 appState),
             const Divider(),
@@ -340,7 +338,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
           Text(
             label,
             style: TextStyle(
-              color: appState.isDark ? Colors.white70 : Colors.grey[600],
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -348,7 +346,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
           Text(
             value,
             style: TextStyle(
-              color: appState.isDark ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.w500,
             ),
@@ -358,41 +356,36 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildContinueButton(
-      ThemeData theme, AppState appState, Map<String, dynamic> args) {
-    final canContinue = !_isLoadingFees && _feesError == null;
-
+  Widget _buildContinueButton(ThemeData theme, AppState appState,
+      Map<String, dynamic> args, double feeAmount, double totalAmount) {
     return SizedBox(
       height: 48,
-      child: ElevatedButton(
-        onPressed: canContinue
-            ? () {
-                // Navigate to payment method selection
-                Navigator.pushNamed(
-                  context,
-                  '/send-money-payment',
-                  arguments: {
-                    ...args,
-                    'feeAmount': _feeAmount,
-                    'totalAmount': args['amount'] + _feeAmount,
-                  },
-                );
-              }
-            : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canContinue ? const Color(0xFF3B82F6) : Colors.grey,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Text(
-          'Continue',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
+      child: GradientButton(
+        onPressed: () {
+          // Logging for debugging navigation arguments
+          print('=== REVIEW: NAVIGATE TO CHECKOUT ===');
+          print('Base args: $args');
+          print('Fee amount: $feeAmount');
+          print('Total amount: $totalAmount');
+
+          final checkoutArgs = {
+            ...args,
+            'feeAmount': feeAmount,
+            'totalAmount': totalAmount,
+          };
+
+          print('Checkout args to send: $checkoutArgs');
+          print('Checkout args keys: ${checkoutArgs.keys.toList()}');
+
+          // Navigate to payment processing (checkout)
+          Navigator.pushNamed(
+            context,
+            RouteNames.sendMoneyCheckout,
+            arguments: checkoutArgs,
+          );
+          print('Navigation call completed');
+        },
+        child: const Text('Proceed to Payment'),
       ),
     );
   }

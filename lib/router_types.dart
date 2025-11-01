@@ -25,4 +25,15 @@ class RouteNames {
   static const String kycIdCapture = '/kyc-id-capture';
   static const String kycSelfie = '/kyc-selfie';
   static const String kycSuccess = '/kyc-success';
+
+  // Send Money Flow Routes
+  static const String sendMoneyEnterDetails =
+      '/send-money-enter-details'; // 1. Enter details + calculate charges + select payment method
+  static const String sendMoneyReview =
+      '/send-money-review'; // 2. Checkout (review details + fees)
+  // sendMoneyPayment REMOVED - payment method selection now done in Enter Details
+  static const String sendMoneyCheckout =
+      '/send-money-checkout'; // 3. Payment processing (PesaPal/mobile money)
+  static const String sendMoneyResult =
+      '/send-money-result'; // 4. Result + transaction status
 }

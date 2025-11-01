@@ -31,6 +31,24 @@ dependencies:
 
   # Local storage
   shared_preferences: ^2.2.2
+  
+  # Image picking for KYC
+  image_picker: ^1.0.4
+
+  # PesaPal API integration
+  webview_flutter: ^4.4.4  # For PesaPal iframe
+  http: ^1.1.2              # For API calls
+  crypto: ^3.0.3            # For authentication
+  url_launcher: ^6.2.2      # For opening PesaPal in browser
+  
+  # Secure storage for tokens
+  flutter_secure_storage: ^9.0.0
+  
+  # SVG rendering for pixel-perfect logos
+  flutter_svg: ^2.0.9
+  
+  # Cached network images for better performance
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:

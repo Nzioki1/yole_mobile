@@ -4,6 +4,9 @@ import '../router_types.dart';
 import '../widgets/yole_logo.dart';
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../theme/register_spacing.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
@@ -19,7 +22,9 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
   bool _showPassword = false;
+  bool _showConfirmPassword = false;
   String? _countryCode;
 
   @override
@@ -28,31 +33,39 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _passwordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final themeState = ref.watch(themeProvider);
+    final isDark = themeState.isDarkMode;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Container(
-        decoration: isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : null,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              theme.scaffoldBackgroundColor,
+              theme.scaffoldBackgroundColor,
+            ],
+          ),
+        ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(
+                horizontal: RegisterSpacing.screenPX,
+                vertical: RegisterSpacing.headerPY),
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 384),
+                constraints:
+                    const BoxConstraints(maxWidth: RegisterSpacing.contentMaxW),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -61,7 +74,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                       children: [
                         IconButton(
                           icon: Icon(Icons.arrow_back_ios_new_rounded,
-                              color: isDark ? Colors.white : Colors.black),
+                              color: theme.appBarTheme.foregroundColor),
                           onPressed: () => Navigator.pop(context),
                         ),
                         const Spacer(),
@@ -70,18 +83,21 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color:
-                                isDark ? Colors.white : const Color(0xFF1A1A1A),
+                            color: theme.appBarTheme.titleTextStyle?.color,
                           ),
                         ),
                         const Spacer(),
-                        const SizedBox(width: 48),
+                        const SizedBox(width: RegisterSpacing.inputPRIcon),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
-                    YoleLogo(isDarkTheme: isDark, height: 64),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: RegisterSpacing.logoMB),
+                    YoleLogo(
+                      isDarkTheme: isDark,
+                      height: RegisterSpacing.logoH,
+                      color: theme.textTheme.displayLarge?.color,
+                    ),
+                    const SizedBox(height: RegisterSpacing.logoMB),
 
                     // Title
                     Text(
@@ -90,17 +106,17 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                        color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: RegisterSpacing.subtitleMB),
                     Text(
                       l10n.createAccountDescription,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
                         color:
-                            isDark ? Colors.white70 : const Color(0xFF64748B),
+                            theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                       ),
                     ),
 
@@ -108,16 +124,22 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
                     // Card
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.fromLTRB(
+                          RegisterSpacing.cardPX,
+                          RegisterSpacing.cardPT,
+                          RegisterSpacing.cardPX,
+                          RegisterSpacing.cardPB),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.08)
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        color: theme.cardTheme.color,
+                        borderRadius:
+                            BorderRadius.circular(RegisterSpacing.cardRadius),
                         border: Border.all(
-                          color: isDark
-                              ? Colors.white10
-                              : const Color(0xFF94A3B8).withOpacity(0.3),
+                          color: theme.cardTheme.shape is RoundedRectangleBorder
+                              ? (theme.cardTheme.shape
+                                      as RoundedRectangleBorder)
+                                  .side
+                                  .color
+                              : theme.dividerColor.withOpacity(0.3),
                         ),
                       ),
                       child: Form(
@@ -127,106 +149,121 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                           children: [
                             _LabeledField(
                               label: l10n.email,
-                              isDark: isDark,
                               child: TextFormField(
                                 controller: _emailCtrl,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
-                                decoration: _inputDecoration(
-                                    isDark, l10n.emailPlaceholder),
+                                decoration:
+                                    _inputDecoration(l10n.emailPlaceholder),
                                 validator: _validateEmail,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1A1A1A),
+                                  color: theme.textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: RegisterSpacing.stackGap),
                             _LabeledField(
                               label: l10n.firstName,
-                              isDark: isDark,
                               child: TextFormField(
                                 controller: _firstNameCtrl,
                                 textInputAction: TextInputAction.next,
                                 textCapitalization: TextCapitalization.words,
-                                decoration: _inputDecoration(
-                                    isDark, l10n.firstNamePlaceholder),
+                                decoration:
+                                    _inputDecoration(l10n.firstNamePlaceholder),
                                 validator: _validateRequired,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1A1A1A),
+                                  color: theme.textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: RegisterSpacing.stackGap),
                             _LabeledField(
                               label: l10n.lastName,
-                              isDark: isDark,
                               child: TextFormField(
                                 controller: _lastNameCtrl,
                                 textInputAction: TextInputAction.next,
                                 textCapitalization: TextCapitalization.words,
-                                decoration: _inputDecoration(
-                                    isDark, l10n.lastNamePlaceholder),
+                                decoration:
+                                    _inputDecoration(l10n.lastNamePlaceholder),
                                 validator: _validateRequired,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1A1A1A),
+                                  color: theme.textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: RegisterSpacing.stackGap),
                             _LabeledField(
                               label: l10n.password,
-                              isDark: isDark,
                               child: TextFormField(
                                 controller: _passwordCtrl,
                                 obscureText: !_showPassword,
                                 textInputAction: TextInputAction.done,
                                 decoration: _inputDecoration(
-                                  isDark,
                                   l10n.passwordPlaceholder,
                                   suffix: IconButton(
                                     icon: Icon(
                                       _showPassword
                                           ? Icons.visibility_off
                                           : Icons.visibility,
-                                      size: 20,
-                                      color: isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF64748B),
+                                      size: RegisterSpacing.pwdIcon,
+                                      color: theme.textTheme.bodyMedium?.color
+                                          ?.withOpacity(0.7),
                                     ),
                                     onPressed: () => setState(
                                         () => _showPassword = !_showPassword),
                                   ),
                                 ),
-                                validator: _validatePassword,
+                                // Password validation removed for UI/UX testing
+                                validator: (value) => null,
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1A1A1A),
+                                  color: theme.textTheme.bodyLarge?.color,
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: RegisterSpacing.stackGap),
+                            _LabeledField(
+                              label: l10n.confirmPassword,
+                              child: TextFormField(
+                                controller: _confirmPasswordCtrl,
+                                obscureText: !_showConfirmPassword,
+                                textInputAction: TextInputAction.next,
+                                decoration: _inputDecoration(
+                                  l10n.confirmPassword,
+                                  suffix: IconButton(
+                                    icon: Icon(
+                                      _showConfirmPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
+                                      size: RegisterSpacing.pwdIcon,
+                                      color: theme.textTheme.bodyMedium?.color
+                                          ?.withOpacity(0.7),
+                                    ),
+                                    onPressed: () => setState(() =>
+                                        _showConfirmPassword =
+                                            !_showConfirmPassword),
+                                  ),
+                                ),
+                                validator: (value) => null,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: theme.textTheme.bodyLarge?.color,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: RegisterSpacing.stackGap),
                             _LabeledField(
                               label: l10n.country,
-                              isDark: isDark,
                               child: DropdownButtonFormField<String>(
                                 value: _countryCode,
-                                decoration: _inputDecoration(
-                                    isDark, l10n.selectYourCountry),
+                                decoration:
+                                    _inputDecoration(l10n.selectYourCountry),
                                 icon: Icon(Icons.keyboard_arrow_down,
-                                    color: isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF64748B)),
+                                    color: theme.textTheme.bodyMedium?.color
+                                        ?.withOpacity(0.7)),
                                 items: const [
                                   DropdownMenuItem(
                                       value: 'KE', child: Text('🇰🇪 Kenya')),
@@ -259,17 +296,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                     : null,
                               ),
                             ),
-                            const SizedBox(height: 28),
+                            const SizedBox(
+                                height: RegisterSpacing.ctaSectionPT),
                             GradientButton(
-                              height: 48,
-                              borderRadius: 16,
+                              height: RegisterSpacing.ctaBtnH,
+                              borderRadius: RegisterSpacing.cardRadius,
                               onPressed: _onCreateAccount,
                               child: Text(
                                 l10n.createAccount,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.white,
+                                  color: theme.textTheme.titleLarge?.color,
                                 ),
                               ),
                             ),
@@ -277,9 +315,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: RegisterSpacing.footerPB),
                     _FooterSignIn(
-                      isDark: isDark,
                       onTap: () => Navigator.pushReplacementNamed(
                           context, RouteNames.login),
                     ),
@@ -293,9 +330,35 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     );
   }
 
-  void _onCreateAccount() {
+  Future<void> _onCreateAccount() async {
     if (_formKey.currentState?.validate() ?? false) {
-      Navigator.pushReplacementNamed(context, RouteNames.emailVerification);
+      try {
+        // Attempt registration with auth provider
+        final success = await ref.read(authProvider.notifier).register(
+              email: _emailCtrl.text.trim(),
+              name: _firstNameCtrl.text.trim(),
+              surname: _lastNameCtrl.text.trim(),
+              password: _passwordCtrl.text.trim(),
+              passwordConfirmation: _passwordCtrl.text.trim(),
+              country: _countryCode ?? 'CD',
+            );
+
+        if (success && mounted) {
+          // Navigate to email verification on successful registration
+          Navigator.pushNamed(context, RouteNames.emailVerification);
+        }
+      } catch (e) {
+        // Show error message if registration fails
+        if (mounted) {
+          final errorTheme = Theme.of(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Registration failed: $e'),
+              backgroundColor: errorTheme.colorScheme.error,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -311,35 +374,38 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     return null;
   }
 
-  String? _validatePassword(String? v) {
-    if (v == null || v.isEmpty)
-      return AppLocalizations.of(context)!.passwordRequired;
-    if (v.length < 6)
-      return AppLocalizations.of(context)!.useAtLeast6Characters;
-    return null;
-  }
+  // Password validation removed for UI/UX testing
+  // String? _validatePassword(String? v) {
+  //   if (v == null || v.isEmpty)
+  //     return AppLocalizations.of(context)!.passwordRequired;
+  //   if (v.length < 6)
+  //     return AppLocalizations.of(context)!.useAtLeast6Characters;
+  //   return null;
+  // }
 
-  InputDecoration _inputDecoration(bool isDark, String hint, {Widget? suffix}) {
+  InputDecoration _inputDecoration(String hint, {Widget? suffix}) {
+    final theme = Theme.of(context);
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(
           fontSize: 16,
-          color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5)),
       filled: true,
-      fillColor:
-          isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFF8FAFC),
+      fillColor: theme.inputDecorationTheme.fillColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       suffixIcon: suffix,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-            color: isDark
-                ? Colors.white24
-                : const Color(0xFF94A3B8).withOpacity(0.3)),
+            color: theme.inputDecorationTheme.enabledBorder?.borderSide.color ??
+                theme.dividerColor.withOpacity(0.3)),
       ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: Color(0xFF3B82F6), width: 2),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+            color: theme.inputDecorationTheme.focusedBorder?.borderSide.color ??
+                theme.colorScheme.primary,
+            width: 2),
       ),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
@@ -348,14 +414,13 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
 // Label wrapper
 class _LabeledField extends StatelessWidget {
-  const _LabeledField(
-      {required this.label, required this.isDark, required this.child});
+  const _LabeledField({required this.label, required this.child});
   final String label;
-  final bool isDark;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,13 +430,11 @@ class _LabeledField extends StatelessWidget {
             fontSize: 16,
             fontWeight: FontWeight.w600,
             height: 1.5,
-            color: isDark
-                ? Colors.white.withOpacity(0.9)
-                : const Color(0xFF1A1A1A),
+            color: theme.textTheme.titleMedium?.color,
           ),
         ),
-        const SizedBox(height: 8),
-        SizedBox(height: 48, child: child),
+        const SizedBox(height: RegisterSpacing.labelToInputGap),
+        child,
       ],
     );
   }
@@ -379,13 +442,13 @@ class _LabeledField extends StatelessWidget {
 
 // Footer sign-in
 class _FooterSignIn extends StatelessWidget {
-  const _FooterSignIn({required this.isDark, required this.onTap});
-  final bool isDark;
+  const _FooterSignIn({required this.onTap});
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return Text.rich(
       TextSpan(
         children: [
@@ -393,7 +456,7 @@ class _FooterSignIn extends StatelessWidget {
             text: l10n.alreadyHaveAccount,
             style: TextStyle(
                 fontSize: 14,
-                color: isDark ? Colors.white60 : const Color(0xFF64748B)),
+                color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
           ),
           WidgetSpan(
             child: GestureDetector(
@@ -403,7 +466,7 @@ class _FooterSignIn extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4DA3FF)),
+                    color: theme.colorScheme.primary),
               ),
             ),
           ),

@@ -236,7 +236,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get verificationError => 'Erreur de vérification';
 
   @override
-  String get verificationFailed => 'Vérification échouée';
+  String get verificationFailed => 'Échec de la vérification';
 
   @override
   String get tryAgain => 'Réessayer';
@@ -248,7 +248,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recipient => 'Destinataire';
 
   @override
-  String get selectPaymentMethod => 'Sélectionner la méthode de paiement';
+  String get selectPaymentMethod => 'Sélectionner le mode de paiement';
 
   @override
   String get confirmPayment => 'Confirmer le paiement';
@@ -506,22 +506,22 @@ class AppLocalizationsFr extends AppLocalizations {
   String get cancel => 'Annuler';
 
   @override
-  String get changePassword => 'Changer le Mot de Passe';
+  String get changePassword => 'Changer le mot de passe';
 
   @override
-  String get biometricLogin => 'Connexion Biométrique';
+  String get biometricLogin => 'Connexion biométrique';
 
   @override
-  String get twoFactorAuthentication => 'Authentification à Deux Facteurs';
+  String get twoFactorAuthentication => 'Authentification à deux facteurs';
 
   @override
-  String get helpCenter => 'Centre d\'Aide';
+  String get helpCenter => 'Centre d\'aide';
 
   @override
   String get termsAndConditions => 'Conditions Générales';
 
   @override
-  String get privacyPolicy => 'Politique de Confidentialité';
+  String get privacyPolicy => 'Politique de confidentialité';
 
   @override
   String get security => 'Sécurité';
@@ -578,4 +578,232 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get accessYourAccountSecurely =>
       'Accéder à votre compte en toute sécurité';
+
+  @override
+  String get idVerification => 'Vérification d\'identité';
+
+  @override
+  String get uploadYourIdDocument => 'Téléchargez votre document d\'identité';
+
+  @override
+  String get takeClearPhotoOfId =>
+      'Prenez une photo claire de votre pièce d\'identité.';
+
+  @override
+  String get selectDocumentType => 'Sélectionnez le type de document :';
+
+  @override
+  String get nationalId => 'Carte d\'identité nationale';
+
+  @override
+  String get governmentIssuedIdCard => 'Carte d\'identité officielle';
+
+  @override
+  String get internationalPassport => 'Passeport international';
+
+  @override
+  String get passport => 'Passeport';
+
+  @override
+  String get frontSide => 'Recto';
+
+  @override
+  String get backSide => 'Verso';
+
+  @override
+  String get takeSelfieSoWeCanVerify =>
+      'Prenez un selfie pour que nous puissions vérifier que c\'est vous.';
+
+  @override
+  String get positionYourFaceInFrame =>
+      'Positionnez votre visage dans le cadre';
+
+  @override
+  String get capturing => 'Capture...';
+
+  @override
+  String get keepYourFaceCentered => 'Gardez votre visage centré';
+
+  @override
+  String get completeVerificationButton => 'Terminer la vérification';
+
+  @override
+  String get continueButtonKYC => 'Continuer';
+
+  @override
+  String get tipsForSuccess => 'Conseils pour réussir :';
+
+  @override
+  String get contactSupport => 'Contacter le support';
+
+  @override
+  String get documentVerificationFailed =>
+      'Échec de la vérification du document';
+
+  @override
+  String get documentVerificationFailedSubtitle =>
+      'Nous n\'avons pas pu vérifier votre document d\'identité. Veuillez réessayer avec une photo plus claire.';
+
+  @override
+  String get selfieVerificationFailed => 'Échec de la vérification du selfie';
+
+  @override
+  String get selfieVerificationFailedSubtitle =>
+      'Nous n\'avons pas pu faire correspondre votre selfie avec votre pièce d\'identité. Veuillez réessayer.';
+
+  @override
+  String get verificationFailedSubtitle =>
+      'Nous n\'avons pas pu vérifier vos informations. Veuillez réessayer.';
+
+  @override
+  String get supportComingSoon =>
+      'Fonctionnalité de contact support bientôt disponible';
+
+  @override
+  String get ensureAllCornersVisible =>
+      'Assurez-vous que tous les coins du document sont visibles';
+
+  @override
+  String get takePhotoGoodLighting => 'Prenez la photo avec un bon éclairage';
+
+  @override
+  String get makeSureDocumentNotBlurry =>
+      'Assurez-vous que le document n\'est pas flou';
+
+  @override
+  String get checkDocumentNotExpired =>
+      'Vérifiez que le document n\'est pas expiré';
+
+  @override
+  String get lookDirectlyAtCamera => 'Regardez directement la caméra';
+
+  @override
+  String get removeGlassesHatsCoverings =>
+      'Retirez les lunettes, chapeaux ou masques';
+
+  @override
+  String get ensureFaceWellLitCentered =>
+      'Assurez-vous que votre visage est bien éclairé et centré';
+
+  @override
+  String get makeSureMatchPersonInId =>
+      'Assurez-vous de correspondre à la personne sur votre pièce d\'identité';
+
+  @override
+  String get checkInternetConnection => 'Vérifiez votre connexion internet';
+
+  @override
+  String get ensureAllInformationAccurate =>
+      'Assurez-vous que toutes les informations sont exactes';
+
+  @override
+  String get tryAgainInFewMinutes => 'Réessayez dans quelques minutes';
+
+  @override
+  String get selectPhoneNumber => 'Sélectionner le numéro de téléphone';
+
+  @override
+  String addedToFavorites(String name) {
+    return '$name ajouté aux favoris';
+  }
+
+  @override
+  String get noPhoneNumber => 'Ce contact n\'a pas de numéro de téléphone';
+
+  @override
+  String get loadingCountries => 'Chargement des pays...';
+
+  @override
+  String get errorLoadingCountries => 'Erreur lors du chargement des pays';
+
+  @override
+  String get noCountriesAvailable => 'Aucun pays disponible';
+
+  @override
+  String get mobileMoney => 'Argent mobile';
+
+  @override
+  String get pesapalCardPayment => 'PesaPal (Paiement par carte)';
+
+  @override
+  String get checkAllFields => 'Veuillez vérifier tous les champs et réessayer';
+
+  @override
+  String get couldNotOpenPaymentPage =>
+      'Impossible d\'ouvrir la page de paiement';
+
+  @override
+  String errorOpeningPayment(String error) {
+    return 'Erreur lors de l\'ouverture du paiement : $error';
+  }
+
+  @override
+  String get selectCurrency => 'Sélectionner la devise';
+
+  @override
+  String get usDollar => 'Dollar américain';
+
+  @override
+  String get euro => 'Euro';
+
+  @override
+  String get britishPound => 'Livre sterling';
+
+  @override
+  String get signInToYoleAccount => 'Connectez-vous à votre compte Yole';
+
+  @override
+  String get passwordHint => 'Entrez votre mot de passe';
+
+  @override
+  String get selectLanguage => 'Sélectionner la langue';
+
+  @override
+  String get termsConditions => 'Termes et conditions';
+
+  @override
+  String get areYouSureLogOut =>
+      'Êtes-vous sûr de vouloir vous déconnecter de votre compte ?';
+
+  @override
+  String get currency => 'Devise';
+
+  @override
+  String get selectRecipient => 'Sélectionner le bénéficiaire';
+
+  @override
+  String get recipientCountry => 'Pays du bénéficiaire';
+
+  @override
+  String get selectRecipientCountry => 'Sélectionner le pays du bénéficiaire';
+
+  @override
+  String get noteOptional => 'Note (Optionnel)';
+
+  @override
+  String get addMessageForRecipient =>
+      'Ajouter un message pour le bénéficiaire';
+
+  @override
+  String get amountMustBeGreaterThanZero =>
+      'Le montant doit être supérieur à 0';
+
+  @override
+  String get pleaseEnterValidAmount => 'Veuillez saisir un montant valide';
+
+  @override
+  String get pleaseSelectRecipientCountry =>
+      'Veuillez sélectionner le pays du bénéficiaire';
+
+  @override
+  String get calculatingCharges => 'Calcul des frais...';
+
+  @override
+  String get summary => 'Résumé';
+
+  @override
+  String get fees => 'Frais';
+
+  @override
+  String get total => 'Total';
 }

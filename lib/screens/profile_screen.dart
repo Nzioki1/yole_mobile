@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Create a theme provider for light/dark mode
-final themeProvider =
-    StateProvider<bool>((ref) => true); // true = dark, false = light
+import '../providers/theme_provider.dart';
+import '../providers/auth_provider.dart';
+import '../l10n/app_localizations.dart';
+import '../providers/global_locale_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final themeState = ref.watch(themeProvider);
+    final isDarkMode = themeState.isDarkMode;
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor:
-          isDarkMode ? const Color(0xFF0E1230) : const Color(0xFFF7F8FC),
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              backgroundColor: isDarkMode
-                  ? const Color(0xFF0E1230)
-                  : const Color(0xFFF7F8FC),
+              backgroundColor: theme.scaffoldBackgroundColor,
               elevation: 0,
               pinned: true,
               expandedHeight: 160,
@@ -30,9 +29,10 @@ class ProfileScreen extends ConsumerWidget {
                 background: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: isDarkMode
-                          ? [const Color(0xFF4DA3FF), const Color(0xFF7B4DFF)]
-                          : [const Color(0xFF3B82F6), const Color(0xFF8B5CF6)],
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.secondary,
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -40,7 +40,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
               title: Text(
-                'Profile',
+                l10n.profile,
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
@@ -58,14 +58,14 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
 
                 // Preferences Section
-                _SectionHeader(title: 'Preferences', isDarkMode: isDarkMode),
+                _SectionHeader(title: l10n.preferences, isDarkMode: isDarkMode),
                 _ProfileTile(
                   icon: Icons.dark_mode_rounded,
-                  title: 'Dark Mode',
+                  title: l10n.darkMode,
                   trailing: Switch(
                     value: isDarkMode,
                     onChanged: (value) =>
-                        ref.read(themeProvider.notifier).state = value,
+                        ref.read(themeProvider.notifier).setThemeMode(value),
                     activeColor: const Color(0xFF4DA3FF),
                   ),
                   onTap: () {},
@@ -73,57 +73,57 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 _ProfileTile(
                   icon: Icons.language_rounded,
-                  title: 'Language',
-                  subtitle: 'English',
+                  title: l10n.language,
+                  subtitle: _getCurrentLanguageName(ref),
                   onTap: () => _showLanguageOptions(context, ref),
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.currency_exchange_rounded,
-                  title: 'Default Currency',
+                  title: l10n.defaultCurrency,
                   subtitle: 'USD',
                   onTap: () => _showCurrencyOptions(context, ref),
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.notifications_none_rounded,
-                  title: 'Notifications',
+                  title: l10n.notifications,
                   onTap: () {},
                   isDarkMode: isDarkMode,
                 ),
 
                 // Account Section
-                _SectionHeader(title: 'Account', isDarkMode: isDarkMode),
+                _SectionHeader(title: l10n.account, isDarkMode: isDarkMode),
                 _ProfileTile(
                   icon: Icons.person_outline_rounded,
-                  title: 'Personal Information',
+                  title: l10n.personalInformation,
                   onTap: () => _showPersonalInfo(context),
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.phone_rounded,
-                  title: 'Phone Number',
+                  title: l10n.phoneNumber,
                   onTap: () => _showPhoneNumber(context),
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.email_outlined,
-                  title: 'Email Address',
+                  title: l10n.emailAddress,
                   onTap: () => _showEmailAddress(context),
                   isDarkMode: isDarkMode,
                 ),
 
                 // Security Section
-                _SectionHeader(title: 'Security', isDarkMode: isDarkMode),
+                _SectionHeader(title: l10n.security, isDarkMode: isDarkMode),
                 _ProfileTile(
                   icon: Icons.lock_outline_rounded,
-                  title: 'Change Password',
+                  title: l10n.changePassword,
                   onTap: () => _showChangePassword(context),
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.fingerprint_rounded,
-                  title: 'Biometric Login',
+                  title: l10n.biometricLogin,
                   trailing: Switch(
                     value: true,
                     onChanged: (_) {},
@@ -134,7 +134,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 _ProfileTile(
                   icon: Icons.security_outlined,
-                  title: 'Two-Factor Authentication',
+                  title: l10n.twoFactorAuthentication,
                   trailing: Switch(
                     value: false,
                     onChanged: (_) {},
@@ -145,22 +145,22 @@ class ProfileScreen extends ConsumerWidget {
                 ),
 
                 // Support Section
-                _SectionHeader(title: 'Support', isDarkMode: isDarkMode),
+                _SectionHeader(title: l10n.support, isDarkMode: isDarkMode),
                 _ProfileTile(
                   icon: Icons.help_outline_rounded,
-                  title: 'Help Center',
+                  title: l10n.helpCenter,
                   onTap: () {},
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.description_outlined,
-                  title: 'Terms & Conditions',
+                  title: l10n.termsConditions,
                   onTap: () {},
                   isDarkMode: isDarkMode,
                 ),
                 _ProfileTile(
                   icon: Icons.privacy_tip_outlined,
-                  title: 'Privacy Policy',
+                  title: l10n.privacyPolicy,
                   onTap: () {},
                   isDarkMode: isDarkMode,
                 ),
@@ -172,7 +172,7 @@ class ProfileScreen extends ConsumerWidget {
                   child: SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
-                      onPressed: () => _showLogoutConfirmation(context),
+                      onPressed: () => _showLogoutConfirmation(context, ref),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
@@ -181,9 +181,9 @@ class ProfileScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Log Out',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      child: Text(
+                        l10n.logOut,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -197,18 +197,33 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  /// Get current language display name based on locale
+  String _getCurrentLanguageName(WidgetRef ref) {
+    final currentLocale = ref.watch(currentLocaleProvider);
+    if (currentLocale.languageCode == 'en') {
+      return 'English';
+    } else if (currentLocale.languageCode == 'fr') {
+      return 'Français';
+    }
+    return 'English';
+  }
+
   // Dialog methods for various options
   void _showLanguageOptions(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final currentLocale = ref.watch(currentLocaleProvider);
+    final localeService = ref.read(globalLocaleServiceProvider);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor:
-            ref.watch(themeProvider) ? const Color(0xFF11163A) : Colors.white,
+        backgroundColor: theme.cardTheme.color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Select Language',
+          l10n.selectLanguage,
           style: TextStyle(
-            color: ref.watch(themeProvider) ? Colors.white : Colors.black,
+            color: theme.textTheme.titleLarge?.color,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -217,16 +232,18 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             _LanguageOption(
                 title: 'English',
-                isSelected: true,
-                onTap: () => Navigator.pop(context)),
+                isSelected: currentLocale.languageCode == 'en',
+                onTap: () {
+                  localeService.setLanguage('en');
+                  Navigator.pop(context);
+                }),
             _LanguageOption(
-                title: 'French',
-                isSelected: false,
-                onTap: () => Navigator.pop(context)),
-            _LanguageOption(
-                title: 'Spanish',
-                isSelected: false,
-                onTap: () => Navigator.pop(context)),
+                title: l10n.french,
+                isSelected: currentLocale.languageCode == 'fr',
+                onTap: () {
+                  localeService.setLanguage('fr');
+                  Navigator.pop(context);
+                }),
           ],
         ),
       ),
@@ -234,16 +251,17 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showCurrencyOptions(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor:
-            ref.watch(themeProvider) ? const Color(0xFF11163A) : Colors.white,
+        backgroundColor: theme.cardTheme.color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Select Currency',
+          l10n.selectCurrency,
           style: TextStyle(
-            color: ref.watch(themeProvider) ? Colors.white : Colors.black,
+            color: theme.textTheme.titleLarge?.color,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -253,19 +271,19 @@ class ProfileScreen extends ConsumerWidget {
             _CurrencyOption(
                 symbol: '\$',
                 code: 'USD',
-                name: 'US Dollar',
+                name: l10n.usDollar,
                 isSelected: true,
                 onTap: () => Navigator.pop(context)),
             _CurrencyOption(
                 symbol: '€',
                 code: 'EUR',
-                name: 'Euro',
+                name: l10n.euro,
                 isSelected: false,
                 onTap: () => Navigator.pop(context)),
             _CurrencyOption(
                 symbol: '£',
                 code: 'GBP',
-                name: 'British Pound',
+                name: l10n.britishPound,
                 isSelected: false,
                 onTap: () => Navigator.pop(context)),
           ],
@@ -290,33 +308,52 @@ class ProfileScreen extends ConsumerWidget {
     // TODO: Implement change password screen
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
+  /// Perform logout and navigate to login screen - optimized for speed
+  Future<void> _performLogout(BuildContext context, WidgetRef ref) async {
+    // Clear state immediately for fast response
+    ref.read(authProvider.notifier).logout();
+
+    // Navigate immediately without waiting for async operations
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false, // Remove all previous routes
+      );
+    }
+  }
+
+  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF11163A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Log Out',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          l10n.logOut,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
         content: Text(
-          'Are you sure you want to log out of your account?',
-          style: TextStyle(color: Colors.white70),
+          l10n.areYouSureLogOut,
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: Colors.white70),
+            ),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              // TODO: Implement logout logic
+              await _performLogout(context, ref);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Log Out'),
+            child: Text(l10n.logOut),
           ),
         ],
       ),
@@ -439,7 +476,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _ProfileTile extends StatelessWidget {
+class _ProfileTile extends ConsumerWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
@@ -457,7 +494,7 @@ class _ProfileTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
       decoration: BoxDecoration(

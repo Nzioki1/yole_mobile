@@ -4,6 +4,7 @@ import '../widgets/gradient_button.dart';
 import '../widgets/status_chip.dart';
 import '../providers/app_provider.dart';
 import '../router_types.dart';
+import '../l10n/app_localizations.dart';
 
 class KYCSelfieScreen extends ConsumerStatefulWidget {
   const KYCSelfieScreen({super.key});
@@ -114,6 +115,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildHeader(AppState appState, AppNotifier appNotifier) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -139,9 +141,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           ),
           Expanded(
             child: Text(
-              appState.locale == 'en'
-                  ? 'Selfie Verification'
-                  : 'Vérification par selfie',
+              l10n.selfieVerification,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: appState.isDark ? Colors.white : null,
@@ -157,6 +157,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
 
   Widget _buildProgress(AppState appState) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -166,7 +167,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                appState.locale == 'en' ? 'Step 4 of 4' : 'Étape 4 sur 4',
+                l10n.stepXofY(4, 4),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: appState.isDark
                       ? Colors.white.withOpacity(0.7)
@@ -226,12 +227,13 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildHeaderContent(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 320),
       child: Column(
         children: [
           Text(
-            appState.locale == 'en' ? 'Take a selfie' : 'Prenez un selfie',
+            l10n.takeSelfie,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: appState.isDark ? Colors.white : null,
@@ -240,9 +242,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            appState.locale == 'en'
-                ? 'Take a selfie so we can verify it\'s you.'
-                : 'Prenez un selfie pour que nous puissions vérifier que c\'est vous.',
+            l10n.takeSelfieSoWeCanVerify,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: appState.isDark
                   ? Colors.white.withOpacity(0.7)
@@ -276,6 +276,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildSuccessState(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Container(
@@ -296,9 +297,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
         ),
         const SizedBox(height: 16),
         Text(
-          appState.locale == 'en'
-              ? 'Selfie captured successfully!'
-              : 'Selfie capturé avec succès !',
+          l10n.selfieCapturedSuccess,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: Colors.green,
             fontWeight: FontWeight.w500,
@@ -307,7 +306,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
         ),
         const SizedBox(height: 16),
         StatusChip(
-          text: appState.locale == 'en' ? 'Verified' : 'Vérifié',
+          text: l10n.verified,
           variant: StatusChipVariant.success,
         ),
       ],
@@ -315,6 +314,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildCaptureInterface(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         // Camera Preview Area
@@ -350,7 +350,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
                 const Icon(Icons.camera_alt, size: 20, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
-                  appState.locale == 'en' ? 'Take Selfie' : 'Prendre un selfie',
+                  l10n.takeSelfie,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
@@ -364,6 +364,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildCapturingState(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -396,7 +397,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            appState.locale == 'en' ? 'Capturing...' : 'Capture...',
+            l10n.capturing,
             style: theme.textTheme.bodySmall?.copyWith(
               color: appState.isDark
                   ? Colors.white.withOpacity(0.7)
@@ -409,6 +410,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildIdleState(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -422,9 +424,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            appState.locale == 'en'
-                ? 'Position your face in the frame'
-                : 'Positionnez votre visage dans le cadre',
+            l10n.positionYourFaceInFrame,
             style: theme.textTheme.bodySmall?.copyWith(
               color: appState.isDark
                   ? Colors.white.withOpacity(0.6)
@@ -438,19 +438,12 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildInstructions(AppState appState, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     final instructions = [
-      appState.locale == 'en'
-          ? 'Look directly at the camera'
-          : 'Regardez directement la caméra',
-      appState.locale == 'en'
-          ? 'Remove glasses and hats'
-          : 'Retirez les lunettes et chapeaux',
-      appState.locale == 'en'
-          ? 'Ensure good lighting'
-          : 'Assurez-vous d\'un bon éclairage',
-      appState.locale == 'en'
-          ? 'Keep your face centered'
-          : 'Gardez votre visage centré',
+      l10n.lookAtCamera,
+      l10n.removeGlasses,
+      l10n.ensureGoodLighting,
+      l10n.keepYourFaceCentered,
     ];
 
     return AnimatedOpacity(
@@ -470,9 +463,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                appState.locale == 'en'
-                    ? 'For best results:'
-                    : 'Pour de meilleurs résultats :',
+                l10n.forBestResults,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w500,
                   color: appState.isDark
@@ -516,18 +507,16 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   }
 
   Widget _buildContinueButton(AppState appState, AppNotifier appNotifier) {
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedOpacity(
       opacity: selfieCaptured ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 600),
       child: GradientButton(
         onPressed: selfieCaptured
-            ? () =>
-                Navigator.pushReplacementNamed(context, RouteNames.kycSuccess)
+            ? () => Navigator.pushNamed(context, RouteNames.kycSuccess)
             : null,
         child: Text(
-          appState.locale == 'en'
-              ? 'Complete Verification'
-              : 'Terminer la vérification',
+          l10n.completeVerificationButton,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,

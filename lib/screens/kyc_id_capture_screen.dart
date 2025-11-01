@@ -4,6 +4,7 @@ import '../widgets/gradient_button.dart';
 import '../widgets/status_chip.dart';
 import '../providers/app_provider.dart';
 import '../router_types.dart';
+import '../l10n/app_localizations.dart';
 
 enum DocumentType { nationalId, passport }
 
@@ -100,6 +101,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
   }
 
   Widget _buildHeader(AppState appState, AppNotifier appNotifier) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -125,9 +127,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
           ),
           Expanded(
             child: Text(
-              appState.locale == 'en'
-                  ? 'ID Verification'
-                  : 'Vérification d\'identité',
+              l10n.idVerification,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: appState.isDark ? Colors.white : null,
@@ -143,6 +143,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildProgress(AppState appState) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -152,7 +153,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                appState.locale == 'en' ? 'Step 3 of 4' : 'Étape 3 sur 4',
+                l10n.stepXofY(3, 4),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: appState.isDark
                       ? Colors.white.withOpacity(0.7)
@@ -185,6 +186,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildHeaderContent(AppState appState) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -193,9 +195,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
         child: Column(
           children: [
             Text(
-              appState.locale == 'en'
-                  ? 'Upload your ID document'
-                  : 'Téléchargez votre document d\'identité',
+              l10n.uploadYourIdDocument,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: appState.isDark ? Colors.white : null,
@@ -204,9 +204,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              appState.locale == 'en'
-                  ? 'Take a clear photo of your ID.'
-                  : 'Prenez une photo claire de votre pièce d\'identité.',
+              l10n.takeClearPhotoOfId,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: appState.isDark
                     ? Colors.white.withOpacity(0.7)
@@ -223,25 +221,20 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
   Widget _buildDocumentTypeSelection(AppState appState) {
     final theme = Theme.of(context);
 
+    final l10n = AppLocalizations.of(context)!;
     final documentTypes = [
       {
         'id': DocumentType.nationalId,
         'icon': Icons.credit_card,
-        'title': appState.locale == 'en'
-            ? 'National ID'
-            : 'Carte d\'identité nationale',
-        'subtitle': appState.locale == 'en'
-            ? 'Government-issued ID card'
-            : 'Carte d\'identité officielle',
+        'title': l10n.nationalId,
+        'subtitle': l10n.governmentIssuedIdCard,
         'requiresBothSides': true,
       },
       {
         'id': DocumentType.passport,
         'icon': Icons.description,
-        'title': appState.locale == 'en' ? 'Passport' : 'Passeport',
-        'subtitle': appState.locale == 'en'
-            ? 'International passport'
-            : 'Passeport international',
+        'title': l10n.passport,
+        'subtitle': l10n.internationalPassport,
         'requiresBothSides': false,
       },
     ];
@@ -254,9 +247,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              appState.locale == 'en'
-                  ? 'Select document type:'
-                  : 'Sélectionnez le type de document :',
+              l10n.selectDocumentType,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: appState.isDark ? Colors.white : null,
@@ -346,12 +337,10 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildDocumentUploadInterface(AppState appState) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final docType = selectedDocType!;
-    final docTypeName = docType == DocumentType.nationalId
-        ? (appState.locale == 'en'
-            ? 'National ID'
-            : 'Carte d\'identité nationale')
-        : (appState.locale == 'en' ? 'Passport' : 'Passeport');
+    final docTypeName =
+        docType == DocumentType.nationalId ? l10n.nationalId : l10n.passport;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -389,7 +378,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             // Front Side Upload
             _buildUploadCard(
               appState,
-              appState.locale == 'en' ? 'Front side' : 'Recto',
+              l10n.frontSide,
               'front',
             ),
             const SizedBox(height: 16),
@@ -398,7 +387,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             if (docType == DocumentType.nationalId) ...[
               _buildUploadCard(
                 appState,
-                appState.locale == 'en' ? 'Back side' : 'Verso',
+                l10n.backSide,
                 'back',
               ),
               const SizedBox(height: 24),
@@ -414,6 +403,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildUploadCard(AppState appState, String title, String side) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isUploaded = uploadedSides[side] ?? false;
 
     return Card(
@@ -448,9 +438,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                appState.locale == 'en'
-                    ? 'Document uploaded successfully!'
-                    : 'Document téléchargé avec succès !',
+                l10n.documentUploadedSuccess,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.green,
                   fontWeight: FontWeight.w500,
@@ -459,7 +447,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
               ),
               const SizedBox(height: 12),
               StatusChip(
-                text: appState.locale == 'en' ? 'Verified' : 'Vérifié',
+                text: l10n.verified,
                 variant: StatusChipVariant.success,
               ),
             ] else ...[
@@ -491,9 +479,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                         const Icon(Icons.camera_alt, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          appState.locale == 'en'
-                              ? 'Take Photo'
-                              : 'Prendre une photo',
+                          l10n.takePhoto,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -514,9 +500,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                         const Icon(Icons.photo_library, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          appState.locale == 'en'
-                              ? 'Upload from Gallery'
-                              : 'Télécharger depuis la galerie',
+                          l10n.uploadFromGallery,
                         ),
                       ],
                     ),
@@ -532,16 +516,13 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildRequirements(AppState appState) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     final requirements = [
-      appState.locale == 'en'
-          ? 'Is clearly visible and not blurry'
-          : 'Est clairement visible et pas flou',
-      appState.locale == 'en'
-          ? 'Shows all four corners'
-          : 'Montre les quatre coins',
-      appState.locale == 'en' ? 'Is not expired' : 'N\'est pas expiré',
-      appState.locale == 'en' ? 'Has good lighting' : 'A un bon éclairage',
+      l10n.clearlyVisible,
+      l10n.showFourCorners,
+      l10n.notExpired,
+      l10n.ensureGoodLighting,
     ];
 
     return Container(
@@ -556,9 +537,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            appState.locale == 'en'
-                ? 'Make sure your document:'
-                : 'Assurez-vous que votre document :',
+            l10n.makeSureDocument,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
               color: appState.isDark
@@ -599,17 +578,17 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
   }
 
   Widget _buildContinueButton(AppState appState) {
+    final l10n = AppLocalizations.of(context)!;
     final isComplete = _isDocumentUploadComplete();
 
     return Container(
       padding: const EdgeInsets.all(24),
       child: GradientButton(
         onPressed: isComplete
-            ? () =>
-                Navigator.pushReplacementNamed(context, RouteNames.kycSelfie)
+            ? () => Navigator.pushNamed(context, RouteNames.kycSelfie)
             : null,
         child: Text(
-          appState.locale == 'en' ? 'Continue' : 'Continuer',
+          l10n.continueButtonKYC,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,

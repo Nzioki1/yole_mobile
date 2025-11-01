@@ -1065,5 +1065,353 @@
   "welcomeToYole": "Welcome to Yole! 🎉",
   "@welcomeToYole": {
     "description": "Welcome message with celebration emoji"
+  },
+  "idVerification": "ID Verification",
+  "@idVerification": {
+    "description": "ID verification screen title"
+  },
+  "uploadYourIdDocument": "Upload your ID document",
+  "@uploadYourIdDocument": {
+    "description": "Upload ID document instruction"
+  },
+  "takeClearPhotoOfId": "Take a clear photo of your ID.",
+  "@takeClearPhotoOfId": {
+    "description": "Take clear photo instruction"
+  },
+  "selectDocumentType": "Select document type:",
+  "@selectDocumentType": {
+    "description": "Select document type label"
+  },
+  "nationalId": "National ID",
+  "@nationalId": {
+    "description": "National ID document type"
+  },
+  "governmentIssuedIdCard": "Government-issued ID card",
+  "@governmentIssuedIdCard": {
+    "description": "Government-issued ID card description"
+  },
+  "internationalPassport": "International passport",
+  "@internationalPassport": {
+    "description": "International passport description"
+  },
+  "passport": "Passport",
+  "@passport": {
+    "description": "Passport document type"
+  },
+  "frontSide": "Front side",
+  "@frontSide": {
+    "description": "Front side of document"
+  },
+  "backSide": "Back side",
+  "@backSide": {
+    "description": "Back side of document"
+  },
+  "takeSelfieSoWeCanVerify": "Take a selfie so we can verify it's you.",
+  "@takeSelfieSoWeCanVerify": {
+    "description": "Selfie verification instruction"
+  },
+  "positionYourFaceInFrame": "Position your face in the frame",
+  "@positionYourFaceInFrame": {
+    "description": "Position face instruction"
+  },
+  "capturing": "Capturing...",
+  "@capturing": {
+    "description": "Capturing status"
+  },
+  "keepYourFaceCentered": "Keep your face centered",
+  "@keepYourFaceCentered": {
+    "description": "Keep face centered instruction"
+  },
+  "completeVerificationButton": "Complete Verification",
+  "@completeVerificationButton": {
+    "description": "Complete verification button text"
+  },
+  "continueButtonKYC": "Continue",
+  "@continueButtonKYC": {
+    "description": "Continue button for KYC screens"
+  },
+  "tipsForSuccess": "Tips for success:",
+  "@tipsForSuccess": {
+    "description": "Tips header for KYC error screen"
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+  "contactSupport": "Contact Support",
+  "@contactSupport": {
+    "description": "Contact support button text"
+  },
+  "backToLogin": "Back to login",
+  "@backToLogin": {
+    "description": "Back to login button text"
+  },
+  "documentVerificationFailed": "Document verification failed",
+  "@documentVerificationFailed": {
+    "description": "Document verification failed title"
+  },
+  "documentVerificationFailedSubtitle": "We couldn't verify your ID document. Please try again with a clearer photo.",
+  "@documentVerificationFailedSubtitle": {
+    "description": "Document verification failed subtitle"
+  },
+  "selfieVerificationFailed": "Selfie verification failed",
+  "@selfieVerificationFailed": {
+    "description": "Selfie verification failed title"
+  },
+  "selfieVerificationFailedSubtitle": "We couldn't match your selfie with your ID. Please try again.",
+  "@selfieVerificationFailedSubtitle": {
+    "description": "Selfie verification failed subtitle"
+  },
+  "verificationFailed": "Verification failed",
+  "@verificationFailed": {
+    "description": "General verification failed title"
+  },
+  "verificationFailedSubtitle": "We couldn't verify your details. Please try again.",
+  "@verificationFailedSubtitle": {
+    "description": "General verification failed subtitle"
+  },
+  "supportComingSoon": "Support contact feature coming soon",
+  "@supportComingSoon": {
+    "description": "Support coming soon message"
+  },
+  "ensureAllCornersVisible": "Ensure all corners of the document are visible",
+  "@ensureAllCornersVisible": {
+    "description": "Document verification tip"
+  },
+  "takePhotoGoodLighting": "Take the photo in good lighting",
+  "@takePhotoGoodLighting": {
+    "description": "Document verification tip"
+  },
+  "makeSureDocumentNotBlurry": "Make sure the document is not blurry",
+  "@makeSureDocumentNotBlurry": {
+    "description": "Document verification tip"
+  },
+  "checkDocumentNotExpired": "Check that the document is not expired",
+  "@checkDocumentNotExpired": {
+    "description": "Document verification tip"
+  },
+  "lookDirectlyAtCamera": "Look directly at the camera",
+  "@lookDirectlyAtCamera": {
+    "description": "Selfie verification tip"
+  },
+  "removeGlassesHatsCoverings": "Remove glasses, hats, or face coverings",
+  "@removeGlassesHatsCoverings": {
+    "description": "Selfie verification tip"
+  },
+  "ensureFaceWellLitCentered": "Ensure your face is well-lit and centered",
+  "@ensureFaceWellLitCentered": {
+    "description": "Selfie verification tip"
+  },
+  "makeSureMatchPersonInId": "Make sure you match the person in your ID",
+  "@makeSureMatchPersonInId": {
+    "description": "Selfie verification tip"
+  },
+  "checkInternetConnection": "Check your internet connection",
+  "@checkInternetConnection": {
+    "description": "General verification tip"
+  },
+  "ensureAllInformationAccurate": "Ensure all information is accurate",
+  "@ensureAllInformationAccurate": {
+    "description": "General verification tip"
+  },
+  "tryAgainInFewMinutes": "Try again in a few minutes",
+  "@tryAgainInFewMinutes": {
+    "description": "General verification tip"
+  },
+  "selectPhoneNumber": "Select Phone Number",
+  "@selectPhoneNumber": {
+    "description": "Select phone number dialog title"
+  },
+  "addedToFavorites": "Added {name} to favorites",
+  "@addedToFavorites": {
+    "description": "Added to favorites message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Contact name"
+      }
+    }
+  },
+  "noPhoneNumber": "This contact has no phone number",
+  "@noPhoneNumber": {
+    "description": "No phone number error message"
+  },
+  "loadingCountries": "Loading countries...",
+  "@loadingCountries": {
+    "description": "Loading countries message"
+  },
+  "errorLoadingCountries": "Error loading countries",
+  "@errorLoadingCountries": {
+    "description": "Error loading countries message"
+  },
+  "noCountriesAvailable": "No countries available",
+  "@noCountriesAvailable": {
+    "description": "No countries available message"
+  },
+  "mobileMoney": "Mobile Money",
+  "@mobileMoney": {
+    "description": "Mobile money payment method"
+  },
+  "pesapalCardPayment": "PesaPal (Card Payment)",
+  "@pesapalCardPayment": {
+    "description": "PesaPal payment method"
+  },
+  "checkAllFields": "Please check all fields and try again",
+  "@checkAllFields": {
+    "description": "Form validation error message"
+  },
+  "couldNotOpenPaymentPage": "Could not open payment page",
+  "@couldNotOpenPaymentPage": {
+    "description": "Payment page error"
+  },
+  "errorOpeningPayment": "Error opening payment: {error}",
+  "@errorOpeningPayment": {
+    "description": "Payment opening error",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error message"
+      }
+    }
+  },
+  "selectCurrency": "Select Currency",
+  "@selectCurrency": {
+    "description": "Currency selection dialog title"
+  },
+  "usDollar": "US Dollar",
+  "@usDollar": {
+    "description": "US Dollar currency name"
+  },
+  "euro": "Euro",
+  "@euro": {
+    "description": "Euro currency name"
+  },
+  "britishPound": "British Pound",
+  "@britishPound": {
+    "description": "British Pound currency name"
+  },
+  "signInToYoleAccount": "Sign in to your Yole account",
+  "@signInToYoleAccount": {
+    "description": "Login screen subtitle with Yole branding"
+  },
+  "passwordHint": "Enter your password",
+  "@passwordHint": {
+    "description": "Password field hint/placeholder for login"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "Language setting label"
+  },
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Language selection dialog title"
+  },
+  "french": "Français",
+  "@french": {
+    "description": "French language name"
+  },
+  "security": "Security",
+  "@security": {
+    "description": "Security section header"
+  },
+  "support": "Support",
+  "@support": {
+    "description": "Support section header"
+  },
+  "changePassword": "Change Password",
+  "@changePassword": {
+    "description": "Change password setting label"
+  },
+  "biometricLogin": "Biometric Login",
+  "@biometricLogin": {
+    "description": "Biometric login setting label"
+  },
+  "twoFactorAuthentication": "Two-Factor Authentication",
+  "@twoFactorAuthentication": {
+    "description": "Two-factor authentication setting label"
+  },
+  "helpCenter": "Help Center",
+  "@helpCenter": {
+    "description": "Help center link"
+  },
+  "termsConditions": "Terms & Conditions",
+  "@termsConditions": {
+    "description": "Terms and conditions link"
+  },
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy link"
+  },
+  "areYouSureLogOut": "Are you sure you want to log out of your account?",
+  "@areYouSureLogOut": {
+    "description": "Logout confirmation message"
+  },
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+  "currency": "Currency",
+  "@currency": {
+    "description": "Currency section header"
+  },
+  "selectRecipient": "Select recipient",
+  "@selectRecipient": {
+    "description": "Select recipient placeholder text"
+  },
+  "recipientCountry": "Recipient Country",
+  "@recipientCountry": {
+    "description": "Recipient country section header"
+  },
+  "selectRecipientCountry": "Select recipient country",
+  "@selectRecipientCountry": {
+    "description": "Select recipient country placeholder"
+  },
+  "selectPaymentMethod": "Select payment method",
+  "@selectPaymentMethod": {
+    "description": "Select payment method placeholder"
+  },
+  "noteOptional": "Note (Optional)",
+  "@noteOptional": {
+    "description": "Note section header with optional label"
+  },
+  "addMessageForRecipient": "Add a message for the recipient",
+  "@addMessageForRecipient": {
+    "description": "Note field hint text"
+  },
+  "continueButton": "Continue",
+  "@continueButton": {
+    "description": "Continue button text"
+  },
+  "amount": "Amount",
+  "@amount": {
+    "description": "Amount section header"
+  },
+  "amountMustBeGreaterThanZero": "Amount must be greater than 0",
+  "@amountMustBeGreaterThanZero": {
+    "description": "Amount validation error message"
+  },
+  "pleaseEnterValidAmount": "Please enter a valid amount",
+  "@pleaseEnterValidAmount": {
+    "description": "Amount format validation error"
+  },
+  "pleaseSelectRecipientCountry": "Please select recipient country",
+  "@pleaseSelectRecipientCountry": {
+    "description": "Recipient country validation error"
+  },
+  "calculatingCharges": "Calculating charges...",
+  "@calculatingCharges": {
+    "description": "Calculating charges loading message"
+  },
+  "summary": "Summary",
+  "@summary": {
+    "description": "Charges summary section title"
+  },
+  "fees": "Fees",
+  "@fees": {
+    "description": "Fees label in summary"
+  },
+  "total": "Total",
+  "@total": {
+    "description": "Total label in summary"
   }
 }

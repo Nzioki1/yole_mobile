@@ -128,7 +128,7 @@ abstract class AppLocalizations {
   /// **'English'**
   String get english;
 
-  /// French language label
+  /// French language name
   ///
   /// In en, this message translates to:
   /// **'Français'**
@@ -542,10 +542,10 @@ abstract class AppLocalizations {
   /// **'Verification Error'**
   String get verificationError;
 
-  /// Verification failed message
+  /// General verification failed title
   ///
   /// In en, this message translates to:
-  /// **'Verification Failed'**
+  /// **'Verification failed'**
   String get verificationFailed;
 
   /// Try again button text
@@ -554,7 +554,7 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get tryAgain;
 
-  /// Amount input label
+  /// Amount section header
   ///
   /// In en, this message translates to:
   /// **'Amount'**
@@ -566,10 +566,10 @@ abstract class AppLocalizations {
   /// **'Recipient'**
   String get recipient;
 
-  /// Payment method selection instruction
+  /// Select payment method placeholder
   ///
   /// In en, this message translates to:
-  /// **'Select Payment Method'**
+  /// **'Select payment method'**
   String get selectPaymentMethod;
 
   /// Confirm payment button text
@@ -980,7 +980,7 @@ abstract class AppLocalizations {
   /// **'Dark Mode'**
   String get darkMode;
 
-  /// Language setting
+  /// Language setting label
   ///
   /// In en, this message translates to:
   /// **'Language'**
@@ -1052,25 +1052,25 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
-  /// Change password setting
+  /// Change password setting label
   ///
   /// In en, this message translates to:
   /// **'Change Password'**
   String get changePassword;
 
-  /// Biometric login setting
+  /// Biometric login setting label
   ///
   /// In en, this message translates to:
   /// **'Biometric Login'**
   String get biometricLogin;
 
-  /// Two-factor authentication setting
+  /// Two-factor authentication setting label
   ///
   /// In en, this message translates to:
   /// **'Two-Factor Authentication'**
   String get twoFactorAuthentication;
 
-  /// Help center setting
+  /// Help center link
   ///
   /// In en, this message translates to:
   /// **'Help Center'**
@@ -1082,7 +1082,7 @@ abstract class AppLocalizations {
   /// **'Terms & Conditions'**
   String get termsAndConditions;
 
-  /// Privacy policy setting
+  /// Privacy policy link
   ///
   /// In en, this message translates to:
   /// **'Privacy Policy'**
@@ -1189,6 +1189,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Access your account securely'**
   String get accessYourAccountSecurely;
+
+  /// ID verification screen title
+  ///
+  /// In en, this message translates to:
+  /// **'ID Verification'**
+  String get idVerification;
+
+  /// Upload ID document instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your ID document'**
+  String get uploadYourIdDocument;
+
+  /// Take clear photo instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Take a clear photo of your ID.'**
+  String get takeClearPhotoOfId;
+
+  /// Select document type label
+  ///
+  /// In en, this message translates to:
+  /// **'Select document type:'**
+  String get selectDocumentType;
+
+  /// National ID document type
+  ///
+  /// In en, this message translates to:
+  /// **'National ID'**
+  String get nationalId;
+
+  /// Government-issued ID card description
+  ///
+  /// In en, this message translates to:
+  /// **'Government-issued ID card'**
+  String get governmentIssuedIdCard;
+
+  /// International passport description
+  ///
+  /// In en, this message translates to:
+  /// **'International passport'**
+  String get internationalPassport;
+
+  /// Passport document type
+  ///
+  /// In en, this message translates to:
+  /// **'Passport'**
+  String get passport;
+
+  /// Front side of document
+  ///
+  /// In en, this message translates to:
+  /// **'Front side'**
+  String get frontSide;
+
+  /// Back side of document
+  ///
+  /// In en, this message translates to:
+  /// **'Back side'**
+  String get backSide;
+
+  /// Selfie verification instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Take a selfie so we can verify it\'s you.'**
+  String get takeSelfieSoWeCanVerify;
+
+  /// Position face instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Position your face in the frame'**
+  String get positionYourFaceInFrame;
+
+  /// Capturing status
+  ///
+  /// In en, this message translates to:
+  /// **'Capturing...'**
+  String get capturing;
+
+  /// Keep face centered instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Keep your face centered'**
+  String get keepYourFaceCentered;
+
+  /// Complete verification button text
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Verification'**
+  String get completeVerificationButton;
+
+  /// Continue button for KYC screens
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButtonKYC;
+
+  /// Tips header for KYC error screen
+  ///
+  /// In en, this message translates to:
+  /// **'Tips for success:'**
+  String get tipsForSuccess;
+
+  /// Contact support button text
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Support'**
+  String get contactSupport;
+
+  /// Document verification failed title
+  ///
+  /// In en, this message translates to:
+  /// **'Document verification failed'**
+  String get documentVerificationFailed;
+
+  /// Document verification failed subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t verify your ID document. Please try again with a clearer photo.'**
+  String get documentVerificationFailedSubtitle;
+
+  /// Selfie verification failed title
+  ///
+  /// In en, this message translates to:
+  /// **'Selfie verification failed'**
+  String get selfieVerificationFailed;
+
+  /// Selfie verification failed subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t match your selfie with your ID. Please try again.'**
+  String get selfieVerificationFailedSubtitle;
+
+  /// General verification failed subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t verify your details. Please try again.'**
+  String get verificationFailedSubtitle;
+
+  /// Support coming soon message
+  ///
+  /// In en, this message translates to:
+  /// **'Support contact feature coming soon'**
+  String get supportComingSoon;
+
+  /// Document verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure all corners of the document are visible'**
+  String get ensureAllCornersVisible;
+
+  /// Document verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Take the photo in good lighting'**
+  String get takePhotoGoodLighting;
+
+  /// Document verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure the document is not blurry'**
+  String get makeSureDocumentNotBlurry;
+
+  /// Document verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Check that the document is not expired'**
+  String get checkDocumentNotExpired;
+
+  /// Selfie verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Look directly at the camera'**
+  String get lookDirectlyAtCamera;
+
+  /// Selfie verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Remove glasses, hats, or face coverings'**
+  String get removeGlassesHatsCoverings;
+
+  /// Selfie verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure your face is well-lit and centered'**
+  String get ensureFaceWellLitCentered;
+
+  /// Selfie verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Make sure you match the person in your ID'**
+  String get makeSureMatchPersonInId;
+
+  /// General verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection'**
+  String get checkInternetConnection;
+
+  /// General verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Ensure all information is accurate'**
+  String get ensureAllInformationAccurate;
+
+  /// General verification tip
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in a few minutes'**
+  String get tryAgainInFewMinutes;
+
+  /// Select phone number dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Phone Number'**
+  String get selectPhoneNumber;
+
+  /// Added to favorites message
+  ///
+  /// In en, this message translates to:
+  /// **'Added {name} to favorites'**
+  String addedToFavorites(String name);
+
+  /// No phone number error message
+  ///
+  /// In en, this message translates to:
+  /// **'This contact has no phone number'**
+  String get noPhoneNumber;
+
+  /// Loading countries message
+  ///
+  /// In en, this message translates to:
+  /// **'Loading countries...'**
+  String get loadingCountries;
+
+  /// Error loading countries message
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading countries'**
+  String get errorLoadingCountries;
+
+  /// No countries available message
+  ///
+  /// In en, this message translates to:
+  /// **'No countries available'**
+  String get noCountriesAvailable;
+
+  /// Mobile money payment method
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Money'**
+  String get mobileMoney;
+
+  /// PesaPal payment method
+  ///
+  /// In en, this message translates to:
+  /// **'PesaPal (Card Payment)'**
+  String get pesapalCardPayment;
+
+  /// Form validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Please check all fields and try again'**
+  String get checkAllFields;
+
+  /// Payment page error
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open payment page'**
+  String get couldNotOpenPaymentPage;
+
+  /// Payment opening error
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening payment: {error}'**
+  String errorOpeningPayment(String error);
+
+  /// Currency selection dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Currency'**
+  String get selectCurrency;
+
+  /// US Dollar currency name
+  ///
+  /// In en, this message translates to:
+  /// **'US Dollar'**
+  String get usDollar;
+
+  /// Euro currency name
+  ///
+  /// In en, this message translates to:
+  /// **'Euro'**
+  String get euro;
+
+  /// British Pound currency name
+  ///
+  /// In en, this message translates to:
+  /// **'British Pound'**
+  String get britishPound;
+
+  /// Login screen subtitle with Yole branding
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to your Yole account'**
+  String get signInToYoleAccount;
+
+  /// Password field hint/placeholder for login
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get passwordHint;
+
+  /// Language selection dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get selectLanguage;
+
+  /// Terms and conditions link
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get termsConditions;
+
+  /// Logout confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out of your account?'**
+  String get areYouSureLogOut;
+
+  /// Currency section header
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get currency;
+
+  /// Select recipient placeholder text
+  ///
+  /// In en, this message translates to:
+  /// **'Select recipient'**
+  String get selectRecipient;
+
+  /// Recipient country section header
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient Country'**
+  String get recipientCountry;
+
+  /// Select recipient country placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Select recipient country'**
+  String get selectRecipientCountry;
+
+  /// Note section header with optional label
+  ///
+  /// In en, this message translates to:
+  /// **'Note (Optional)'**
+  String get noteOptional;
+
+  /// Note field hint text
+  ///
+  /// In en, this message translates to:
+  /// **'Add a message for the recipient'**
+  String get addMessageForRecipient;
+
+  /// Amount validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than 0'**
+  String get amountMustBeGreaterThanZero;
+
+  /// Amount format validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid amount'**
+  String get pleaseEnterValidAmount;
+
+  /// Recipient country validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Please select recipient country'**
+  String get pleaseSelectRecipientCountry;
+
+  /// Calculating charges loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating charges...'**
+  String get calculatingCharges;
+
+  /// Charges summary section title
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get summary;
+
+  /// Fees label in summary
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get fees;
+
+  /// Total label in summary
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
 }
 
 class _AppLocalizationsDelegate

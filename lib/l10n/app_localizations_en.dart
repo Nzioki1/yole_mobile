@@ -233,7 +233,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationError => 'Verification Error';
 
   @override
-  String get verificationFailed => 'Verification Failed';
+  String get verificationFailed => 'Verification failed';
 
   @override
   String get tryAgain => 'Try again';
@@ -245,7 +245,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipient => 'Recipient';
 
   @override
-  String get selectPaymentMethod => 'Select Payment Method';
+  String get selectPaymentMethod => 'Select payment method';
 
   @override
   String get confirmPayment => 'Confirm Payment';
@@ -569,4 +569,224 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accessYourAccountSecurely => 'Access your account securely';
+
+  @override
+  String get idVerification => 'ID Verification';
+
+  @override
+  String get uploadYourIdDocument => 'Upload your ID document';
+
+  @override
+  String get takeClearPhotoOfId => 'Take a clear photo of your ID.';
+
+  @override
+  String get selectDocumentType => 'Select document type:';
+
+  @override
+  String get nationalId => 'National ID';
+
+  @override
+  String get governmentIssuedIdCard => 'Government-issued ID card';
+
+  @override
+  String get internationalPassport => 'International passport';
+
+  @override
+  String get passport => 'Passport';
+
+  @override
+  String get frontSide => 'Front side';
+
+  @override
+  String get backSide => 'Back side';
+
+  @override
+  String get takeSelfieSoWeCanVerify =>
+      'Take a selfie so we can verify it\'s you.';
+
+  @override
+  String get positionYourFaceInFrame => 'Position your face in the frame';
+
+  @override
+  String get capturing => 'Capturing...';
+
+  @override
+  String get keepYourFaceCentered => 'Keep your face centered';
+
+  @override
+  String get completeVerificationButton => 'Complete Verification';
+
+  @override
+  String get continueButtonKYC => 'Continue';
+
+  @override
+  String get tipsForSuccess => 'Tips for success:';
+
+  @override
+  String get contactSupport => 'Contact Support';
+
+  @override
+  String get documentVerificationFailed => 'Document verification failed';
+
+  @override
+  String get documentVerificationFailedSubtitle =>
+      'We couldn\'t verify your ID document. Please try again with a clearer photo.';
+
+  @override
+  String get selfieVerificationFailed => 'Selfie verification failed';
+
+  @override
+  String get selfieVerificationFailedSubtitle =>
+      'We couldn\'t match your selfie with your ID. Please try again.';
+
+  @override
+  String get verificationFailedSubtitle =>
+      'We couldn\'t verify your details. Please try again.';
+
+  @override
+  String get supportComingSoon => 'Support contact feature coming soon';
+
+  @override
+  String get ensureAllCornersVisible =>
+      'Ensure all corners of the document are visible';
+
+  @override
+  String get takePhotoGoodLighting => 'Take the photo in good lighting';
+
+  @override
+  String get makeSureDocumentNotBlurry =>
+      'Make sure the document is not blurry';
+
+  @override
+  String get checkDocumentNotExpired =>
+      'Check that the document is not expired';
+
+  @override
+  String get lookDirectlyAtCamera => 'Look directly at the camera';
+
+  @override
+  String get removeGlassesHatsCoverings =>
+      'Remove glasses, hats, or face coverings';
+
+  @override
+  String get ensureFaceWellLitCentered =>
+      'Ensure your face is well-lit and centered';
+
+  @override
+  String get makeSureMatchPersonInId =>
+      'Make sure you match the person in your ID';
+
+  @override
+  String get checkInternetConnection => 'Check your internet connection';
+
+  @override
+  String get ensureAllInformationAccurate =>
+      'Ensure all information is accurate';
+
+  @override
+  String get tryAgainInFewMinutes => 'Try again in a few minutes';
+
+  @override
+  String get selectPhoneNumber => 'Select Phone Number';
+
+  @override
+  String addedToFavorites(String name) {
+    return 'Added $name to favorites';
+  }
+
+  @override
+  String get noPhoneNumber => 'This contact has no phone number';
+
+  @override
+  String get loadingCountries => 'Loading countries...';
+
+  @override
+  String get errorLoadingCountries => 'Error loading countries';
+
+  @override
+  String get noCountriesAvailable => 'No countries available';
+
+  @override
+  String get mobileMoney => 'Mobile Money';
+
+  @override
+  String get pesapalCardPayment => 'PesaPal (Card Payment)';
+
+  @override
+  String get checkAllFields => 'Please check all fields and try again';
+
+  @override
+  String get couldNotOpenPaymentPage => 'Could not open payment page';
+
+  @override
+  String errorOpeningPayment(String error) {
+    return 'Error opening payment: $error';
+  }
+
+  @override
+  String get selectCurrency => 'Select Currency';
+
+  @override
+  String get usDollar => 'US Dollar';
+
+  @override
+  String get euro => 'Euro';
+
+  @override
+  String get britishPound => 'British Pound';
+
+  @override
+  String get signInToYoleAccount => 'Sign in to your Yole account';
+
+  @override
+  String get passwordHint => 'Enter your password';
+
+  @override
+  String get selectLanguage => 'Select Language';
+
+  @override
+  String get termsConditions => 'Terms & Conditions';
+
+  @override
+  String get areYouSureLogOut =>
+      'Are you sure you want to log out of your account?';
+
+  @override
+  String get currency => 'Currency';
+
+  @override
+  String get selectRecipient => 'Select recipient';
+
+  @override
+  String get recipientCountry => 'Recipient Country';
+
+  @override
+  String get selectRecipientCountry => 'Select recipient country';
+
+  @override
+  String get noteOptional => 'Note (Optional)';
+
+  @override
+  String get addMessageForRecipient => 'Add a message for the recipient';
+
+  @override
+  String get amountMustBeGreaterThanZero => 'Amount must be greater than 0';
+
+  @override
+  String get pleaseEnterValidAmount => 'Please enter a valid amount';
+
+  @override
+  String get pleaseSelectRecipientCountry => 'Please select recipient country';
+
+  @override
+  String get calculatingCharges => 'Calculating charges...';
+
+  @override
+  String get summary => 'Summary';
+
+  @override
+  String get fees => 'Fees';
+
+  @override
+  String get total => 'Total';
 }

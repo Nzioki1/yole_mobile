@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
@@ -44,7 +45,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
       'code': '+243',
       'country': 'CD',
       'flag': '🇨🇩',
-      'name': 'Democratic Republic of Congo'
+      'name': 'Democratic Republic of Congo',
     },
     {'code': '+233', 'country': 'GH', 'flag': '🇬🇭', 'name': 'Ghana'},
     {'code': '+254', 'country': 'KE', 'flag': '🇰🇪', 'name': 'Kenya'},
@@ -73,29 +74,18 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _iconController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _iconController, curve: Curves.elasticOut),
+    );
 
     _animationController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -113,8 +103,11 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
 
   Map<String, String>? get _selectedCountryData {
     return _countryCodes
-        .where((country) =>
-            '${country['code']}-${country['country']}' == _selectedCountryCode)
+        .where(
+          (country) =>
+              '${country['code']}-${country['country']}' ==
+              _selectedCountryCode,
+        )
         .firstOrNull;
   }
 
@@ -137,7 +130,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
       if (widget.onSendOTP != null) {
         widget.onSendOTP!();
       } else {
-        Navigator.pushReplacementNamed(context, RouteNames.kycOtp);
+        Navigator.pushNamed(context, RouteNames.kycOtp);
       }
     }
   }
@@ -149,489 +142,551 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
     final isDark = widget.isDarkTheme || theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : const BoxDecoration(color: Colors.white),
-        child: Column(
-          children: [
-            // Header
-            SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : theme.colorScheme.outline.withOpacity(0.3),
-                      width: 1,
-                    ),
+      resizeToAvoidBottomInset: true,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          decoration: isDark
+              ? const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
                   ),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        if (widget.onBack != null) {
-                          widget.onBack!();
-                        } else {
-                          Navigator.pop(context);
-                        }
-                      },
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color:
-                            isDark ? Colors.white : theme.colorScheme.onSurface,
+                )
+              : const BoxDecoration(color: Colors.white),
+          child: Column(
+            children: [
+              // Header
+              SafeArea(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : theme.colorScheme.outline.withOpacity(0.3),
+                        width: 1,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        l10n.phoneVerification,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          if (widget.onBack != null) {
+                            widget.onBack!();
+                          } else {
+                            Navigator.pop(context);
+                          }
+                        },
+                        icon: Icon(
+                          Icons.arrow_back,
                           color: isDark
                               ? Colors.white
                               : theme.colorScheme.onSurface,
                         ),
                       ),
+                      Expanded(
+                        child: Text(
+                          l10n.phoneVerification,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: isDark
+                                ? Colors.white
+                                : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // Balance for back button
+                    ],
+                  ),
+                ),
+              ),
+
+              // Progress
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          l10n.stepXofY(1, 4),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.7)
+                                : theme.colorScheme.onSurface.withOpacity(0.7),
+                          ),
+                        ),
+                        Text(
+                          '25%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? Colors.white
+                                : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 48), // Balance for back button
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: 0.25,
+                      backgroundColor: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : theme.colorScheme.outline.withOpacity(0.3),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF3B82F6),
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ],
                 ),
               ),
-            ),
 
-            // Progress
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.stepXofY(1, 4),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.7)
-                              : theme.colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                      ),
-                      Text(
-                        '25%',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: 0.25,
-                    backgroundColor: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : theme.colorScheme.outline.withOpacity(0.3),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ],
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  children: [
-                    // Top Section - Icon & Content
-                    Expanded(
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: SlideTransition(
-                          position: _slideAnimation,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Phone Icon
-                              ScaleTransition(
-                                scale: _scaleAnimation,
-                                child: Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    gradient: isDark
-                                        ? null
-                                        : const LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              Color(0xFF3B82F6),
-                                              Color(0xFF8B5CF6)
-                                            ],
-                                          ),
-                                    color: isDark
-                                        ? Colors.white.withOpacity(0.1)
-                                        : null,
-                                    borderRadius: BorderRadius.circular(40),
-                                    border: isDark
-                                        ? Border.all(
-                                            color:
-                                                Colors.white.withOpacity(0.2),
-                                            width: 1,
-                                          )
-                                        : null,
-                                  ),
-                                  child: const Icon(
-                                    Icons.phone,
-                                    size: 40,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 32),
-
-                              // Content
-                              ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 320),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      l10n.enterPhoneNumber,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      l10n.weWillSendVerificationCode,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.7)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.7),
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              const SizedBox(height: 32),
-
-                              // Form
-                              Container(
-                                width: double.infinity,
-                                constraints:
-                                    const BoxConstraints(maxWidth: 320),
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.08)
-                                      : theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isDark
-                                        ? Colors.white.withOpacity(0.1)
-                                        : theme.colorScheme.outline
-                                            .withOpacity(0.3),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Country Code Selector
-                                    Text(
-                                      l10n.country,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.9)
-                                            : theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    DropdownButtonFormField<String>(
-                                      initialValue: _selectedCountryCode.isEmpty
+              // Content (make scrollable and avoid overlap)
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        // Top Section - Icon & Content
+                        FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: SlideTransition(
+                            position: _slideAnimation,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Phone Icon
+                                ScaleTransition(
+                                  scale: _scaleAnimation,
+                                  child: Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      gradient: isDark
                                           ? null
-                                          : _selectedCountryCode,
-                                      decoration: InputDecoration(
-                                        hintText: l10n.selectYourCountry,
-                                        hintStyle: TextStyle(
+                                          : const LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                Color(0xFF3B82F6),
+                                                Color(0xFF8B5CF6),
+                                              ],
+                                            ),
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.1)
+                                          : null,
+                                      borderRadius: BorderRadius.circular(40),
+                                      border: isDark
+                                          ? Border.all(
+                                              color: Colors.white.withOpacity(
+                                                0.2,
+                                              ),
+                                              width: 1,
+                                            )
+                                          : null,
+                                    ),
+                                    child: const Icon(
+                                      Icons.phone,
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 24),
+
+                                // Content
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 320,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        l10n.enterPhoneNumber,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
                                           color: isDark
-                                              ? Colors.white.withOpacity(0.5)
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        l10n.weWillSendVerificationCode,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.7)
                                               : theme.colorScheme.onSurface
-                                                  .withOpacity(0.5),
-                                        ),
-                                        filled: true,
-                                        fillColor: isDark
-                                            ? Colors.white.withOpacity(0.05)
-                                            : theme
-                                                .inputDecorationTheme.fillColor,
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.2)
-                                                : theme.colorScheme.outline,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          borderSide: BorderSide(
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.2)
-                                                : theme.colorScheme.outline,
-                                          ),
+                                                  .withOpacity(0.7),
+                                          height: 1.5,
                                         ),
                                       ),
-                                      dropdownColor: isDark
-                                          ? const Color(0xFF19173D)
-                                          : theme.colorScheme.surface,
-                                      style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.onSurface,
-                                      ),
-                                      items: _countryCodes.map((country) {
-                                        return DropdownMenuItem<String>(
-                                          value:
-                                              '${country['code']}-${country['country']}',
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                country['flag']!,
-                                                style: const TextStyle(
-                                                    fontSize: 16),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  country['name']!,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                country['code']!,
-                                                style: TextStyle(
-                                                  color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(0.6)
-                                                      : theme
-                                                          .colorScheme.onSurface
-                                                          .withOpacity(0.6),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _selectedCountryCode = value ?? '';
-                                        });
-                                      },
-                                    ),
+                                    ],
+                                  ),
+                                ),
 
-                                    const SizedBox(height: 16),
+                                const SizedBox(height: 24),
 
-                                    // Phone Number
-                                    Text(
-                                      l10n.phoneNumber,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.9)
-                                            : theme.colorScheme.onSurface,
-                                      ),
+                                // Form
+                                Container(
+                                  width: double.infinity,
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 320,
+                                  ),
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.08)
+                                        : theme.colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.1)
+                                          : theme.colorScheme.outline
+                                              .withOpacity(
+                                              0.3,
+                                            ),
                                     ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        if (_selectedCountryData != null)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 16),
-                                            decoration: BoxDecoration(
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Country Code Selector
+                                      Text(
+                                        l10n.country,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.9)
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      DropdownButtonFormField<String>(
+                                        initialValue:
+                                            _selectedCountryCode.isEmpty
+                                                ? null
+                                                : _selectedCountryCode,
+                                        decoration: InputDecoration(
+                                          hintText: l10n.selectYourCountry,
+                                          hintStyle: TextStyle(
+                                            color: isDark
+                                                ? Colors.white.withOpacity(0.5)
+                                                : theme.colorScheme.onSurface
+                                                    .withOpacity(0.5),
+                                          ),
+                                          filled: true,
+                                          fillColor: isDark
+                                              ? Colors.white.withOpacity(0.05)
+                                              : theme.inputDecorationTheme
+                                                  .fillColor,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
                                               color: isDark
                                                   ? Colors.white
-                                                      .withOpacity(0.05)
-                                                  : theme.colorScheme.outline
-                                                      .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
+                                                      .withOpacity(0.2)
+                                                  : theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: isDark
+                                                  ? Colors.white
+                                                      .withOpacity(0.2)
+                                                  : theme.colorScheme.outline,
+                                            ),
+                                          ),
+                                        ),
+                                        dropdownColor: isDark
+                                            ? const Color(0xFF19173D)
+                                            : theme.colorScheme.surface,
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                        items: _countryCodes.map((country) {
+                                          return DropdownMenuItem<String>(
+                                            value:
+                                                '${country['code']}-${country['country']}',
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  country['flag']!,
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    country['name']!,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  country['code']!,
+                                                  style: TextStyle(
+                                                    color: isDark
+                                                        ? Colors.white
+                                                            .withOpacity(0.6)
+                                                        : theme.colorScheme
+                                                            .onSurface
+                                                            .withOpacity(0.6),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedCountryCode = value ?? '';
+                                          });
+                                        },
+                                      ),
+
+                                      const SizedBox(height: 16),
+
+                                      // Phone Number
+                                      Text(
+                                        l10n.phoneNumber,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.9)
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          if (_selectedCountryData != null)
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 16,
+                                              ),
+                                              decoration: BoxDecoration(
                                                 color: isDark
-                                                    ? Colors.white
-                                                        .withOpacity(0.2)
-                                                    : theme.colorScheme.outline,
+                                                    ? Colors.white.withOpacity(
+                                                        0.05,
+                                                      )
+                                                    : theme.colorScheme.outline
+                                                        .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: isDark
+                                                      ? Colors.white
+                                                          .withOpacity(
+                                                          0.2,
+                                                        )
+                                                      : theme
+                                                          .colorScheme.outline,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                _selectedCountryData!['code']!,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: isDark
+                                                      ? Colors.white
+                                                      : theme.colorScheme
+                                                          .onSurface,
+                                                ),
                                               ),
                                             ),
-                                            child: Text(
-                                              _selectedCountryData!['code']!,
+                                          if (_selectedCountryData != null)
+                                            const SizedBox(width: 8),
+                                          Expanded(
+                                            child: TextFormField(
+                                              controller: _phoneController,
+                                              keyboardType: TextInputType.phone,
+                                              textInputAction:
+                                                  TextInputAction.done,
+                                              onFieldSubmitted: (_) =>
+                                                  FocusScope.of(context)
+                                                      .unfocus(),
+                                              onChanged: (value) {
+                                                // Optionally dismiss when likely complete (heuristic)
+                                                if (value.length >= 9) {
+                                                  // Uncomment to auto-dismiss as users finish typing
+                                                  // FocusScope.of(context).unfocus();
+                                                }
+                                                setState(
+                                                    () {}); // update button state
+                                              },
+                                              enabled:
+                                                  _selectedCountryData != null,
                                               style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
                                                 color: isDark
                                                     ? Colors.white
                                                     : theme
                                                         .colorScheme.onSurface,
                                               ),
-                                            ),
-                                          ),
-                                        if (_selectedCountryData != null)
-                                          const SizedBox(width: 8),
-                                        Expanded(
-                                          child: TextFormField(
-                                            controller: _phoneController,
-                                            keyboardType: TextInputType.phone,
-                                            enabled:
-                                                _selectedCountryData != null,
-                                            style: TextStyle(
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : theme.colorScheme.onSurface,
-                                            ),
-                                            decoration: InputDecoration(
-                                              hintText: l10n.phonePlaceholder,
-                                              hintStyle: TextStyle(
-                                                color: isDark
-                                                    ? Colors.white
-                                                        .withOpacity(0.5)
-                                                    : theme
-                                                        .colorScheme.onSurface
-                                                        .withOpacity(0.5),
-                                              ),
-                                              filled: true,
-                                              fillColor: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.05)
-                                                  : theme.inputDecorationTheme
-                                                      .fillColor,
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
+                                              decoration: InputDecoration(
+                                                hintText: l10n.phonePlaceholder,
+                                                hintStyle: TextStyle(
                                                   color: isDark
                                                       ? Colors.white
-                                                          .withOpacity(0.2)
+                                                          .withOpacity(
+                                                          0.5,
+                                                        )
                                                       : theme
-                                                          .colorScheme.outline,
+                                                          .colorScheme.onSurface
+                                                          .withOpacity(0.5),
                                                 ),
-                                              ),
-                                              enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                  color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(0.2)
-                                                      : theme
-                                                          .colorScheme.outline,
+                                                filled: true,
+                                                fillColor: isDark
+                                                    ? Colors.white.withOpacity(
+                                                        0.05,
+                                                      )
+                                                    : theme.inputDecorationTheme
+                                                        .fillColor,
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                    color: isDark
+                                                        ? Colors.white
+                                                            .withOpacity(0.2)
+                                                        : theme.colorScheme
+                                                            .outline,
+                                                  ),
+                                                ),
+                                                enabledBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                    color: isDark
+                                                        ? Colors.white
+                                                            .withOpacity(0.2)
+                                                        : theme.colorScheme
+                                                            .outline,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 16),
+
+                                      // Info
+                                      Text(
+                                        l10n.standardMessageRates,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.6)
+                                              : theme.colorScheme.onSurface
+                                                  .withOpacity(0.6),
                                         ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 16),
-
-                                    // Info
-                                    Text(
-                                      l10n.standardMessageRates,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.6)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Bottom Section - Actions
-                    AnimatedBuilder(
-                      animation: _fadeAnimation,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
-                          child: Opacity(
-                            opacity: _fadeAnimation.value,
-                            child: GradientButton(
-                              onPressed: (_phoneController.text.isNotEmpty &&
-                                      _selectedCountryCode.isNotEmpty &&
-                                      !_isLoading)
-                                  ? _handleSendOTP
-                                  : null,
-                              enabled: _phoneController.text.isNotEmpty &&
-                                  _selectedCountryCode.isNotEmpty &&
-                                  !_isLoading,
-                              child: _isLoading
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
-                                      ),
-                                    )
-                                  : Text(
-                                      l10n.sendVerificationCode,
-                                    ),
+                                // Ensure extra space so CTA is not obscured
+                                const SizedBox(height: 120),
+                              ],
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ),
+      // Fixed bottom CTA with keyboard-aware padding to avoid blocking selection
+      bottomNavigationBar: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        padding: EdgeInsets.fromLTRB(
+          24,
+          12,
+          24,
+          math.max(MediaQuery.of(context).viewInsets.bottom, 16),
+        ),
+        color: Colors.transparent,
+        child: SafeArea(
+          top: false,
+          child: AnimatedBuilder(
+            animation: _fadeAnimation,
+            builder: (context, child) {
+              final canSend = _phoneController.text.isNotEmpty &&
+                  _selectedCountryCode.isNotEmpty &&
+                  !_isLoading;
+              return Transform.translate(
+                offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                child: Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: GradientButton(
+                    onPressed: canSend ? _handleSendOTP : null,
+                    enabled: canSend,
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            AppLocalizations.of(context)!.sendVerificationCode,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

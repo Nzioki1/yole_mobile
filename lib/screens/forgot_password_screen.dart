@@ -10,14 +10,12 @@ import '../l10n/app_localizations.dart';
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   final VoidCallback? onSendResetLink;
   final VoidCallback? onBackToLogin;
-  final String locale;
   final bool isDarkTheme;
 
   const ForgotPasswordScreen({
     super.key,
     this.onSendResetLink,
     this.onBackToLogin,
-    this.locale = 'en',
     this.isDarkTheme = false,
   });
 
@@ -96,10 +94,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     super.dispose();
   }
 
-  String _getLocalizedText(String englishText, String frenchText) {
-    return widget.locale == 'en' ? englishText : frenchText;
-  }
-
   Future<void> _handleSendResetLink() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -150,6 +144,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF19173D) : Colors.white,
+      resizeToAvoidBottomInset: true,
       body: Container(
         decoration: isDark
             ? const BoxDecoration(
@@ -205,9 +200,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
               ),
             ),
 
-            // Content
+            // Content - Now scrollable
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: _step == 'request'
@@ -222,469 +217,479 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
   }
 
   Widget _buildRequestStep(bool isDark, ThemeData theme) {
-    return Column(
-      children: [
-        // Top Section - Logo & Content
-        Expanded(
-          flex: 2,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  YoleLogo(
-                    height: 64,
-                    isDarkTheme: isDark,
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Mail Icon
-                  AnimatedBuilder(
-                    animation: _iconScaleAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _iconScaleAnimation.value,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: isDark
-                                ? null
-                                : const LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Color(0xFF3B82F6),
-                                      Color(0xFF8B5CF6)
-                                    ],
-                                  ),
-                            color:
-                                isDark ? Colors.white.withOpacity(0.1) : null,
-                            borderRadius: BorderRadius.circular(40),
-                            border: isDark
-                                ? Border.all(
-                                    color: Colors.white.withOpacity(0.2),
-                                    width: 1,
-                                  )
-                                : null,
-                          ),
-                          child: const Icon(
-                            Icons.mail_outline,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Content
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 320),
-                    child: Column(
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.enterEmailToReset,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          AppLocalizations.of(context)!.weWillSendInstructions,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            height: 1.5,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.7)
-                                : theme.colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Form
-                  AnimatedBuilder(
-                    animation: _animationController,
-                    builder: (context, child) {
-                      final l10n = AppLocalizations.of(context)!;
-                      return Transform.translate(
-                        offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
-                        child: Opacity(
-                          opacity: _fadeAnimation.value,
-                          child: Container(
-                            constraints: const BoxConstraints(maxWidth: 320),
-                            padding: isDark
-                                ? const EdgeInsets.all(24)
-                                : EdgeInsets.zero,
-                            decoration: isDark
-                                ? BoxDecoration(
-                                    color: Colors.white.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.1),
-                                      width: 1,
-                                    ),
-                                  )
-                                : null,
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    l10n.emailAddress,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: isDark
-                                          ? Colors.white.withOpacity(0.9)
-                                          : theme.colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
-                                    textInputAction: TextInputAction.done,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white
-                                          : theme.colorScheme.onSurface,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: l10n.emailPlaceholder,
-                                      hintStyle: TextStyle(
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.5)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.5),
-                                      ),
-                                      filled: true,
-                                      fillColor: isDark
-                                          ? Colors.white.withOpacity(0.05)
-                                          : theme
-                                              .inputDecorationTheme.fillColor,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.2)
-                                              : theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.2)
-                                              : theme.colorScheme.outline,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF3B82F6),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 16),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return _getLocalizedText(
-                                            'Please enter your email',
-                                            'Veuillez saisir votre email');
-                                      }
-                                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                          .hasMatch(value)) {
-                                        return _getLocalizedText(
-                                            'Please enter a valid email',
-                                            'Veuillez saisir un email valide');
-                                      }
-                                      return null;
-                                    },
-                                    onFieldSubmitted: (_) =>
-                                        _handleSendResetLink(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Bottom Section - Actions
-        AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            final l10n = AppLocalizations.of(context)!;
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
-              child: Opacity(
-                opacity: _fadeAnimation.value,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            const SizedBox(height: 32),
+            // Top Section - Logo & Content
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    GradientButton(
-                      onPressed: _isLoading ? null : _handleSendResetLink,
-                      enabled: !_isLoading && _emailController.text.isNotEmpty,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              l10n.sendResetLink,
-                            ),
+                    // Logo
+                    YoleLogo(
+                      height: 64,
+                      isDarkTheme: isDark,
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    // Back to login
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          l10n.rememberPassword,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.6)
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _handleBackToLogin,
-                          child: Text(
-                            _getLocalizedText('Sign in', 'Se connecter'),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: isDark
-                                  ? const Color(0xFF3B82F6)
-                                  : theme.colorScheme.primary,
+                    // Mail Icon
+                    AnimatedBuilder(
+                      animation: _iconScaleAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _iconScaleAnimation.value,
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              gradient: isDark
+                                  ? null
+                                  : const LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Color(0xFF3B82F6),
+                                        Color(0xFF8B5CF6)
+                                      ],
+                                    ),
+                              color:
+                                  isDark ? Colors.white.withOpacity(0.1) : null,
+                              borderRadius: BorderRadius.circular(40),
+                              border: isDark
+                                  ? Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
+                                    )
+                                  : null,
+                            ),
+                            child: const Icon(
+                              Icons.mail_outline,
+                              size: 40,
+                              color: Colors.white,
                             ),
                           ),
-                        ),
-                      ],
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Content
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: Column(
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.enterEmailToReset,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppLocalizations.of(context)!
+                                .weWillSendInstructions,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              height: 1.5,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.7)
+                                  : theme.colorScheme.onSurface
+                                      .withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Form
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        final l10n = AppLocalizations.of(context)!;
+                        return Transform.translate(
+                          offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                          child: Opacity(
+                            opacity: _fadeAnimation.value,
+                            child: Container(
+                              constraints: const BoxConstraints(maxWidth: 320),
+                              padding: isDark
+                                  ? const EdgeInsets.all(24)
+                                  : EdgeInsets.zero,
+                              decoration: isDark
+                                  ? BoxDecoration(
+                                      color: Colors.white.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.1),
+                                        width: 1,
+                                      ),
+                                    )
+                                  : null,
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.emailAddress,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.9)
+                                            : theme.colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _emailController,
+                                      keyboardType: TextInputType.emailAddress,
+                                      textInputAction: TextInputAction.done,
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? Colors.white
+                                            : theme.colorScheme.onSurface,
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: l10n.emailPlaceholder,
+                                        hintStyle: TextStyle(
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.5)
+                                              : theme.colorScheme.onSurface
+                                                  .withOpacity(0.5),
+                                        ),
+                                        filled: true,
+                                        fillColor: isDark
+                                            ? Colors.white.withOpacity(0.05)
+                                            : theme
+                                                .inputDecorationTheme.fillColor,
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: isDark
+                                                ? Colors.white.withOpacity(0.2)
+                                                : theme.colorScheme.outline,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: isDark
+                                                ? Colors.white.withOpacity(0.2)
+                                                : theme.colorScheme.outline,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF3B82F6),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 16),
+                                      ),
+                                      validator: (value) {
+                                        final l10n =
+                                            AppLocalizations.of(context)!;
+                                        if (value == null || value.isEmpty) {
+                                          return l10n.pleaseEnterEmail;
+                                        }
+                                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                                            .hasMatch(value)) {
+                                          return l10n.pleaseEnterValidEmail;
+                                        }
+                                        return null;
+                                      },
+                                      onFieldSubmitted: (_) =>
+                                          _handleSendResetLink(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
-      ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Bottom Section - Actions
+            AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                final l10n = AppLocalizations.of(context)!;
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                  child: Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: Column(
+                      children: [
+                        GradientButton(
+                          onPressed: _isLoading ? null : _handleSendResetLink,
+                          enabled:
+                              !_isLoading && _emailController.text.isNotEmpty,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : Text(
+                                  l10n.sendResetLink,
+                                ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Back to login
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.rememberPassword,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.6)
+                                    : theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _handleBackToLogin,
+                              child: Text(
+                                l10n.signIn,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? const Color(0xFF3B82F6)
+                                      : theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildSuccessStep(bool isDark, ThemeData theme) {
-    return Column(
-      children: [
-        // Success State
-        Expanded(
-          flex: 2,
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Logo
-                  YoleLogo(
-                    height: 64,
-                    isDarkTheme: isDark,
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Column(
+          children: [
+            const SizedBox(height: 32),
+            // Success State
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Logo
+                    YoleLogo(
+                      height: 64,
+                      isDarkTheme: isDark,
+                    ),
 
-                  const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                  // Success Icon
-                  AnimatedBuilder(
-                    animation: _iconScaleAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: _iconScaleAnimation.value,
-                        child: Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? const Color(0xFF10B981).withOpacity(0.2)
-                                : const Color(0xFF10B981).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(48),
-                            border: Border.all(
+                    // Success Icon
+                    AnimatedBuilder(
+                      animation: _iconScaleAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _iconScaleAnimation.value,
+                          child: Container(
+                            width: 96,
+                            height: 96,
+                            decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF10B981).withOpacity(0.3)
-                                  : const Color(0xFF10B981).withOpacity(0.2),
-                              width: 1,
+                                  ? const Color(0xFF10B981).withOpacity(0.2)
+                                  : const Color(0xFF10B981).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(48),
+                              border: Border.all(
+                                color: isDark
+                                    ? const Color(0xFF10B981).withOpacity(0.3)
+                                    : const Color(0xFF10B981).withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.check_circle_outline,
+                              size: 48,
+                              color: Color(0xFF10B981),
                             ),
                           ),
-                          child: const Icon(
-                            Icons.check_circle_outline,
-                            size: 48,
-                            color: Color(0xFF10B981),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Content
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 320),
-                    child: Column(
-                      children: [
-                        Text(
-                          _getLocalizedText(
-                              'Check your email', 'Vérifiez votre email'),
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _getLocalizedText(
-                              'Check your email — we\'ve sent you reset instructions.',
-                              'Vérifiez votre email — nous vous avons envoyé les instructions de réinitialisation.'),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            height: 1.5,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.7)
-                                : theme.colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          _getLocalizedText(
-                              'Follow the link in the email to reset your password.',
-                              'Suivez le lien dans l\'email pour réinitialiser votre mot de passe.'),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.6)
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        // Bottom Actions
-        AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            final l10n = AppLocalizations.of(context)!;
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
-              child: Opacity(
-                opacity: _fadeAnimation.value,
-                child: Column(
-                  children: [
-                    GradientButton(
-                      onPressed: _handleBackToLogin,
-                      child: Text(
-                        _getLocalizedText(
-                            'Back to login', 'Retour à la connexion'),
-                      ),
+                        );
+                      },
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
 
-                    // Try again
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _getLocalizedText('Didn\'t receive the email? ',
-                              'Vous n\'avez pas reçu l\'email ? '),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.6)
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
+                    // Content
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: Column(
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.checkYourEmail,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
+                            ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _step = 'request';
-                              _emailController.clear();
-                            });
-                            _animationController.reset();
-                            _iconAnimationController.reset();
-                            _animationController.forward();
-                            Future.delayed(const Duration(milliseconds: 300),
-                                () {
-                              if (mounted) {
-                                _iconAnimationController.forward();
-                              }
-                            });
-                          },
-                          child: Text(
-                            _getLocalizedText('Try again', 'Réessayer'),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppLocalizations.of(context)!
+                                .checkEmailResetInstructions,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              height: 1.5,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.7)
+                                  : theme.colorScheme.onSurface
+                                      .withOpacity(0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            AppLocalizations.of(context)!.followLinkToReset,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              height: 1.5,
                               color: isDark
-                                  ? const Color(0xFF3B82F6)
-                                  : theme.colorScheme.primary,
+                                  ? Colors.white.withOpacity(0.6)
+                                  : theme.colorScheme.onSurface
+                                      .withOpacity(0.6),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
-      ],
+            ),
+
+            const SizedBox(height: 32),
+
+            // Bottom Actions
+            AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                final l10n = AppLocalizations.of(context)!;
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
+                  child: Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: Column(
+                      children: [
+                        GradientButton(
+                          onPressed: _handleBackToLogin,
+                          child: Text(
+                            l10n.backToLogin,
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Try again
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.didntReceiveEmail,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.6)
+                                    : theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _step = 'request';
+                                  _emailController.clear();
+                                });
+                                _animationController.reset();
+                                _iconAnimationController.reset();
+                                _animationController.forward();
+                                Future.delayed(
+                                    const Duration(milliseconds: 300), () {
+                                  if (mounted) {
+                                    _iconAnimationController.forward();
+                                  }
+                                });
+                              },
+                              child: Text(
+                                l10n.tryAgain,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? const Color(0xFF3B82F6)
+                                      : theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

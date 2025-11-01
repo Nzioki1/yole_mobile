@@ -89,7 +89,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
       if (widget.onComplete != null) {
         widget.onComplete!();
       } else {
-        Navigator.pushReplacementNamed(context, RouteNames.kycPhone);
+        Navigator.pushNamed(context, RouteNames.kycPhone);
       }
     }
   }

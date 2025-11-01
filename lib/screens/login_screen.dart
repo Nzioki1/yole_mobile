@@ -2,6 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/yole_logo.dart';
+import '../providers/theme_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
@@ -34,305 +37,399 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final authState = ref.watch(authProvider);
+    final theme = Theme.of(context);
+    final themeState = ref.watch(themeProvider);
+    final isDark = themeState.isDarkMode;
 
-    const bgTop = Color(0xFF0D1222);
-    const bgBottom = Color(0xFF0A0E1A);
-    const cardColor = Color(0xFF1C1F2D);
-    const borderColor = Color(0xFF3B3F57);
-    const accentBlue = Color(0xFF4DA3FF);
-    const gradientStart = Color(0xFF3E8BFF);
-    const gradientEnd = Color(0xFF7B4DFF);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenHeight = constraints.maxHeight;
+        final screenWidth = constraints.maxWidth;
+        final horizontalPadding = (screenWidth * 0.06).clamp(20.0, 40.0);
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        centerTitle: true,
-        title: Text(
-          l10n.logIn,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [bgTop, bgBottom],
+        return Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+          appBar: AppBar(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new_rounded,
+                  color: theme.appBarTheme.foregroundColor),
+              onPressed: () => Navigator.maybePop(context),
+            ),
+            centerTitle: true,
+            title: Text(
+              l10n.logIn,
+              style: TextStyle(
+                  color: theme.appBarTheme.titleTextStyle?.color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 32),
-
-                  // Logo
-                  Text(
-                    'YOLE',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 6,
-                      color: Colors.white.withOpacity(0.95),
-                    ),
+          body: Container(
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                physics: ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: screenHeight,
                   ),
-
-                  const SizedBox(height: 28),
-
-                  Text(
-                    l10n.welcomeBack,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.signInToAccount,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 15,
-                        height: 1.45,
-                        color: Colors.white.withOpacity(0.78)),
-                  ),
-
-                  const SizedBox(height: 36),
-
-                  // Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: cardColor.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: borderColor.withOpacity(0.6), width: 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.35),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
+                  child: Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          l10n.emailAddress,
-                          style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600),
+                        const SizedBox(height: 32),
+
+                        // Prominent YOLE Logo - Much larger and dominant
+                        YoleLogo(
+                          isDarkTheme: isDark,
+                          height:
+                              80.0, // Increased from 48 to 80 for prominence
                         ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 15),
-                          decoration: InputDecoration(
-                            hintText: 'you@example.com',
-                            hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.55)),
-                            filled: true,
-                            fillColor: const Color(0xFF1B1F2E).withOpacity(0.9),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                  color: borderColor.withOpacity(0.6)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                  color: accentBlue, width: 1.2),
-                            ),
+
+                        const SizedBox(height: 24),
+
+                        // Welcome back title - Secondary emphasis
+                        Text(
+                          l10n.welcomeBack,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                            color: theme.textTheme.displayLarge?.color,
                           ),
                         ),
 
-                        const SizedBox(height: 18),
-                        Text(
-                          l10n.password,
-                          style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600),
-                        ),
                         const SizedBox(height: 8),
-                        TextField(
-                          controller: _pwdCtrl,
-                          obscureText: _obscurePassword,
-                          textInputAction: TextInputAction.done,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 15),
-                          decoration: InputDecoration(
-                            hintText: 'Enter your password',
-                            hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.55)),
-                            filled: true,
-                            fillColor: const Color(0xFF1B1F2E).withOpacity(0.9),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                  color: borderColor.withOpacity(0.6)),
+
+                        // Sign in subtitle - Description text
+                        Text(
+                          l10n.signInToYoleAccount,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: theme.textTheme.bodyLarge?.color
+                                ?.withOpacity(0.7),
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Error message display
+                        if (authState.error != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color:
+                                      theme.colorScheme.error.withOpacity(0.3)),
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                  color: accentBlue, width: 1.2),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline,
+                                    color: theme.colorScheme.error, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    authState.error!,
+                                    style: TextStyle(
+                                        color: theme.colorScheme.error,
+                                        fontSize: 14),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close,
+                                      color: theme.colorScheme.error, size: 18),
+                                  onPressed: () => ref
+                                      .read(authProvider.notifier)
+                                      .clearError(),
+                                ),
+                              ],
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: Colors.white.withOpacity(0.7),
+                          ),
+                        ],
+
+                        // Email field - Enhanced visibility
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.email,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textTheme.bodyLarge?.color,
                               ),
-                              onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword),
                             ),
-                          ),
-                          onSubmitted: (_) => _handleLogin(context),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _emailCtrl,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              style: TextStyle(
+                                color: theme.textTheme.bodyLarge?.color,
+                                fontSize: 16,
+                              ),
+                              validator: (value) => null,
+                              decoration: InputDecoration(
+                                hintText: l10n.emailPlaceholder,
+                                filled: true,
+                                fillColor: isDark
+                                    ? theme.cardColor.withOpacity(0.3)
+                                    : Colors.grey.shade100,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                hintStyle: TextStyle(
+                                  color: theme.textTheme.bodyLarge?.color
+                                      ?.withOpacity(0.5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
 
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
 
+                        // Password field - Enhanced visibility
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.password,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: theme.textTheme.bodyLarge?.color,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              controller: _pwdCtrl,
+                              obscureText: _obscurePassword,
+                              textInputAction: TextInputAction.done,
+                              style: TextStyle(
+                                color: theme.textTheme.bodyLarge?.color,
+                                fontSize: 16,
+                              ),
+                              validator: (value) => null,
+                              decoration: InputDecoration(
+                                hintText: l10n.passwordHint,
+                                filled: true,
+                                fillColor: isDark
+                                    ? theme.cardColor.withOpacity(0.3)
+                                    : Colors.grey.shade100,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                                hintStyle: TextStyle(
+                                  color: theme.textTheme.bodyLarge?.color
+                                      ?.withOpacity(0.5),
+                                  fontSize: 16,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    color: theme.textTheme.bodyLarge?.color
+                                        ?.withOpacity(0.7),
+                                    size: 20,
+                                  ),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Forgot password link
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: GestureDetector(
-                            onTap: () => Navigator.of(context)
+                          child: TextButton(
+                            onPressed: () => Navigator.of(context)
                                 .pushNamed(widget.forgotPasswordRoute),
                             child: Text(
                               l10n.forgotPassword,
-                              style: const TextStyle(
-                                  color: accentBlue,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
                           ),
                         ),
 
                         const SizedBox(height: 24),
 
-                        // Log In button
-                        _GradientButton(
-                          borderRadius: 24,
-                          gradient: const LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [gradientStart, gradientEnd],
-                          ),
-                          onPressed: () => _handleLogin(context),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Text(
-                              l10n.logIn,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white),
+                        // Horizontal divider line
+                        Container(
+                          height: 1,
+                          color: theme.dividerColor.withOpacity(0.3),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Log In button - Enhanced prominence
+                        SizedBox(
+                          height:
+                              48, // Reduced height to match LoginSpacing.loginBtnH
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onPressed: authState.isLoading
+                                ? null
+                                : () => _handleLogin(context),
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.secondary,
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.primary
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: authState.isLoading
+                                    ? const SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : Text(
+                                        l10n.logIn,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
 
-                  const SizedBox(height: 22),
+                        const SizedBox(height: 32),
 
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(
-                          fontSize: 15, color: Colors.white.withOpacity(0.8)),
-                      children: [
-                        TextSpan(text: l10n.dontHaveAccount),
-                        TextSpan(
-                          text: l10n.signUp,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600, color: accentBlue),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => Navigator.of(context)
-                                .pushNamed(widget.signUpRoute),
+                        // Sign up link - Enhanced visibility
+                        RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: theme.textTheme.bodyMedium?.color
+                                  ?.withOpacity(0.8),
+                            ),
+                            children: [
+                              TextSpan(text: l10n.dontHaveAccount),
+                              TextSpan(
+                                text: l10n.signUp,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () => Navigator.of(context)
+                                      .pushNamed(widget.signUpRoute),
+                              ),
+                            ],
+                          ),
                         ),
+
+                        const SizedBox(height: 32),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  void _handleLogin(BuildContext context) {
-    // Keep your existing auth logic; then navigate using your named route:
-    Navigator.of(context)
-        .pushNamedAndRemoveUntil(widget.postLoginRoute, (route) => false);
-  }
-}
+  Future<void> _handleLogin(BuildContext context) async {
+    // Form validation bypassed for UI/UX testing
+    // if (!_formKey.currentState!.validate()) {
+    //   return;
+    // }
 
-// Gradient button used for primary action
-class _GradientButton extends StatelessWidget {
-  const _GradientButton({
-    required this.child,
-    required this.gradient,
-    this.borderRadius = 24,
-    this.onPressed,
-  });
+    // Attempt login
+    final success = await ref.read(authProvider.notifier).login(
+          _emailCtrl.text.trim(),
+          _pwdCtrl.text,
+        );
 
-  final Widget child;
-  final LinearGradient gradient;
-  final double borderRadius;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(borderRadius),
-            onTap: onPressed,
-            child: Center(child: child),
-          ),
-        ),
-      ),
-    );
+    if (success && mounted) {
+      // Navigate to main app on successful login
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil(widget.postLoginRoute, (route) => false);
+    }
+    // Error handling is done in the provider and displayed in the UI
   }
 }

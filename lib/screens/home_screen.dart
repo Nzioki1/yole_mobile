@@ -5,6 +5,9 @@ import '../providers/favorites_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/language_toggle.dart';
 import '../providers/global_locale_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
+import '../main.dart'; // Import for global navigator key
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -12,7 +15,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final themeState = ref.watch(themeProvider);
+    final isDark = themeState.isDarkMode;
     final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(currentLocaleProvider);
 
@@ -300,13 +304,34 @@ class _ProfileQuickMenu extends StatelessWidget {
                     color: theme.colorScheme.onSurface.withOpacity(0.7))),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () async {
+              Navigator.pop(context);
+              await _performLogout(context);
+            },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Log Out'),
           ),
         ],
       ),
     );
+  }
+
+  /// Perform logout and navigate to login screen - optimized for speed
+  Future<void> _performLogout(BuildContext context) async {
+    // Get the provider container from the global navigator key
+    final container = ProviderScope.containerOf(context);
+
+    // Clear state immediately for fast response
+    container.read(authProvider.notifier).logout();
+
+    // Navigate immediately without waiting for async operations
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false, // Remove all previous routes
+      );
+    }
   }
 }
 
@@ -440,7 +465,8 @@ class _PrimaryCTA extends StatelessWidget {
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            onTap: () {},
+            onTap: () => Navigator.of(context)
+                .pushNamed(RouteNames.sendMoneyEnterDetails),
             borderRadius: BorderRadius.circular(18),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

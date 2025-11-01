@@ -4,6 +4,7 @@ import '../widgets/gradient_button.dart';
 import '../widgets/yole_logo.dart';
 import '../providers/app_provider.dart';
 import '../router_types.dart';
+import '../l10n/app_localizations.dart';
 
 enum KYCErrorType { document, selfie, general }
 
@@ -222,6 +223,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
 
   Widget _buildSuggestions(
       AppState appState, ThemeData theme, List<String> suggestions) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -234,9 +236,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            appState.locale == 'en'
-                ? 'Tips for success:'
-                : 'Conseils pour réussir :',
+            l10n.tipsForSuccess,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
               color: appState.isDark
@@ -275,6 +275,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
   }
 
   Widget _buildActions(AppState appState) {
+    final l10n = AppLocalizations.of(context)!;
     return AnimatedOpacity(
       opacity: 1.0,
       duration: const Duration(milliseconds: 600),
@@ -289,7 +290,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
                 const Icon(Icons.refresh, size: 20, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
-                  appState.locale == 'en' ? 'Retry' : 'Réessayer',
+                  l10n.retry,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -313,9 +314,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
               ),
             ),
             child: Text(
-              appState.locale == 'en'
-                  ? 'Contact Support'
-                  : 'Contacter le support',
+              l10n.contactSupport,
             ),
           ),
           const SizedBox(height: 16),
@@ -325,9 +324,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
             onPressed: () =>
                 Navigator.pushReplacementNamed(context, RouteNames.home),
             child: Text(
-              appState.locale == 'en'
-                  ? 'Back to login'
-                  : 'Retour à la connexion',
+              l10n.backToLogin,
               style: TextStyle(
                 color: appState.isDark
                     ? Colors.white.withOpacity(0.6)
@@ -341,71 +338,38 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
   }
 
   Map<String, dynamic> _getErrorContent(AppState appState) {
+    final l10n = AppLocalizations.of(context)!;
     switch (widget.errorType) {
       case KYCErrorType.document:
         return {
-          'title': appState.locale == 'en'
-              ? 'Document verification failed'
-              : 'Échec de la vérification du document',
-          'subtitle': appState.locale == 'en'
-              ? 'We couldn\'t verify your ID document. Please try again with a clearer photo.'
-              : 'Nous n\'avons pas pu vérifier votre document d\'identité. Veuillez réessayer avec une photo plus claire.',
+          'title': l10n.documentVerificationFailed,
+          'subtitle': l10n.documentVerificationFailedSubtitle,
           'suggestions': [
-            appState.locale == 'en'
-                ? 'Ensure all corners of the document are visible'
-                : 'Assurez-vous que tous les coins du document sont visibles',
-            appState.locale == 'en'
-                ? 'Take the photo in good lighting'
-                : 'Prenez la photo avec un bon éclairage',
-            appState.locale == 'en'
-                ? 'Make sure the document is not blurry'
-                : 'Assurez-vous que le document n\'est pas flou',
-            appState.locale == 'en'
-                ? 'Check that the document is not expired'
-                : 'Vérifiez que le document n\'est pas expiré',
+            l10n.ensureAllCornersVisible,
+            l10n.takePhotoGoodLighting,
+            l10n.makeSureDocumentNotBlurry,
+            l10n.checkDocumentNotExpired,
           ],
         };
       case KYCErrorType.selfie:
         return {
-          'title': appState.locale == 'en'
-              ? 'Selfie verification failed'
-              : 'Échec de la vérification du selfie',
-          'subtitle': appState.locale == 'en'
-              ? 'We couldn\'t match your selfie with your ID. Please try again.'
-              : 'Nous n\'avons pas pu faire correspondre votre selfie avec votre pièce d\'identité. Veuillez réessayer.',
+          'title': l10n.selfieVerificationFailed,
+          'subtitle': l10n.selfieVerificationFailedSubtitle,
           'suggestions': [
-            appState.locale == 'en'
-                ? 'Look directly at the camera'
-                : 'Regardez directement la caméra',
-            appState.locale == 'en'
-                ? 'Remove glasses, hats, or face coverings'
-                : 'Retirez les lunettes, chapeaux ou masques',
-            appState.locale == 'en'
-                ? 'Ensure your face is well-lit and centered'
-                : 'Assurez-vous que votre visage est bien éclairé et centré',
-            appState.locale == 'en'
-                ? 'Make sure you match the person in your ID'
-                : 'Assurez-vous de correspondre à la personne sur votre pièce d\'identité',
+            l10n.lookDirectlyAtCamera,
+            l10n.removeGlassesHatsCoverings,
+            l10n.ensureFaceWellLitCentered,
+            l10n.makeSureMatchPersonInId,
           ],
         };
       default:
         return {
-          'title': appState.locale == 'en'
-              ? 'Verification failed'
-              : 'Échec de la vérification',
-          'subtitle': appState.locale == 'en'
-              ? 'We couldn\'t verify your details. Please try again.'
-              : 'Nous n\'avons pas pu vérifier vos informations. Veuillez réessayer.',
+          'title': l10n.verificationFailed,
+          'subtitle': l10n.verificationFailedSubtitle,
           'suggestions': [
-            appState.locale == 'en'
-                ? 'Check your internet connection'
-                : 'Vérifiez votre connexion internet',
-            appState.locale == 'en'
-                ? 'Ensure all information is accurate'
-                : 'Assurez-vous que toutes les informations sont exactes',
-            appState.locale == 'en'
-                ? 'Try again in a few minutes'
-                : 'Réessayez dans quelques minutes',
+            l10n.checkInternetConnection,
+            l10n.ensureAllInformationAccurate,
+            l10n.tryAgainInFewMinutes,
           ],
         };
     }
@@ -433,13 +397,12 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
   }
 
   void _handleContactSupport() {
+    final l10n = AppLocalizations.of(context)!;
     // In a real app, this would open support chat or email
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ref.read(appProvider).locale == 'en'
-              ? 'Support contact feature coming soon'
-              : 'Fonctionnalité de contact support bientôt disponible',
+          l10n.supportComingSoon,
         ),
       ),
     );

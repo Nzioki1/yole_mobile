@@ -115,16 +115,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 _ProfileTile(
                   icon: Icons.help_outline_rounded,
                   title: l10n.helpCenter,
+                  onTap: () => _showHelpCenter(context, ref),
                   theme: theme,
                 ),
                 _ProfileTile(
                   icon: Icons.description_outlined,
                   title: l10n.termsConditions,
+                  onTap: () => _showTermsAndConditions(context, ref),
                   theme: theme,
                 ),
                 _ProfileTile(
                   icon: Icons.privacy_tip_outlined,
                   title: l10n.privacyPolicy,
+                  onTap: () => _showPrivacyPolicy(context, ref),
                   theme: theme,
                 ),
 
@@ -227,6 +230,515 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
+
+  void _showPersonalInfo(BuildContext context) {
+    // TODO: Implement personal info screen
+  }
+
+  void _showPhoneNumber(BuildContext context) {
+    // TODO: Implement phone number screen
+  }
+
+  void _showEmailAddress(BuildContext context) {
+    // TODO: Implement email address screen
+  }
+
+  void _showChangePassword(BuildContext context) {
+    // TODO: Implement change password screen
+  }
+
+  void _showHelpCenter(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: isDarkMode ? const Color(0xFF11163A) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Help Center',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.close,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle(
+                          'How to Send Money', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          '1. Select "Send Money" from the home screen\n'
+                          '2. Enter the amount you want to send\n'
+                          '3. Choose or add a recipient\n'
+                          '4. Select the recipient country\n'
+                          '5. Choose your payment method\n'
+                          '6. Review and confirm the transaction',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(
+                          'How to Add Recipients', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          '1. Go to the Favorites tab\n'
+                          '2. Tap the "+" button to add a new recipient\n'
+                          '3. Enter recipient name and phone number\n'
+                          '4. Save the recipient for quick access',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Transaction Issues', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'If you experience any issues with your transaction:\n'
+                          '- Check your internet connection\n'
+                          '- Verify recipient details are correct\n'
+                          '- Ensure sufficient funds in your account\n'
+                          '- Contact support if the issue persists',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Account Management', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'Manage your account settings:\n'
+                          '- Update personal information in Profile\n'
+                          '- Change password in Security settings\n'
+                          '- Enable biometric login for faster access\n'
+                          '- View transaction history',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Security & Privacy', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'Your security is our priority:\n'
+                          '- All transactions are encrypted\n'
+                          '- Enable two-factor authentication\n'
+                          '- Never share your password\n'
+                          '- Report suspicious activity immediately',
+                          isDarkMode),
+                      const SizedBox(height: 32),
+                      // Contact Support
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.1)
+                              : Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Contact Support',
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildContactItem(
+                                Icons.email_outlined,
+                                'support@mpf.co.ke',
+                                isDarkMode),
+                            const SizedBox(height: 8),
+                            _buildContactItem(
+                                Icons.phone_outlined,
+                                '+254 727 205699',
+                                isDarkMode),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Available 24/7',
+                              style: TextStyle(
+                                color: isDarkMode
+                                    ? Colors.white70
+                                    : Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showTermsAndConditions(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: isDarkMode ? const Color(0xFF11163A) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Terms & Conditions',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.close,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle(
+                          '1. Acceptance of Terms', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'By accessing and using this mobile application, you accept and agree to be bound by these Terms & Conditions. If you do not agree to these terms, please do not use our services.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('2. User Accounts', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('3. Use of Service', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'You agree to use our money transfer service only for lawful purposes. You must provide accurate information and comply with all applicable laws and regulations.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('4. Transactions', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'All transactions are subject to verification and may be delayed or rejected for security purposes. You are responsible for ensuring recipient details are correct before confirming a transaction.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('5. Fees and Charges', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'Fees are displayed before you confirm each transaction. Fees may vary based on transaction amount, destination country, and payment method selected.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(
+                          '6. Limitation of Liability', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We are not liable for any indirect, incidental, or consequential damages arising from your use of our service. Our liability is limited to the amount of the transaction.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('7. Termination', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We reserve the right to suspend or terminate your account at any time for violation of these terms or for any reason we deem necessary to protect our service and users.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('8. Changes to Terms', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We may modify these Terms & Conditions at any time. Continued use of the service after changes constitutes acceptance of the modified terms.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('9. Governing Law', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'These Terms & Conditions are governed by the laws of the jurisdiction in which our company is established. Any disputes will be resolved through appropriate legal channels.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Last Updated: ${DateTime.now().year}',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white60 : Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPrivacyPolicy(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: isDarkMode ? const Color(0xFF11163A) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: isDarkMode
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.2),
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Icon(
+                        Icons.close,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionTitle(
+                          '1. Information We Collect', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We collect personal information including:\n'
+                          '- Name, email, and phone number\n'
+                          '- Transaction history\n'
+                          '- Device information\n'
+                          '- Usage data and preferences',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(
+                          '2. How We Use Your Information', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We use your information to:\n'
+                          '- Process and complete transactions\n'
+                          '- Verify your identity and prevent fraud\n'
+                          '- Provide customer support\n'
+                          '- Improve our services\n'
+                          '- Comply with legal obligations',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('3. Data Security', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We implement industry-standard security measures:\n'
+                          '- Encryption of data in transit and at rest\n'
+                          '- Secure authentication protocols\n'
+                          '- Regular security audits\n'
+                          '- Access controls and monitoring',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('4. Data Sharing', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We do not sell your personal information. We may share data with:\n'
+                          '- Payment processors to complete transactions\n'
+                          '- Service providers who assist our operations\n'
+                          '- Regulatory authorities when required by law',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('5. Your Rights', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'You have the right to:\n'
+                          '- Access your personal data\n'
+                          '- Correct inaccurate information\n'
+                          '- Request deletion of your data\n'
+                          '- Object to processing\n'
+                          '- Data portability',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('6. Cookies and Tracking', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We use cookies and similar technologies to:\n'
+                          '- Enhance user experience\n'
+                          '- Analyze app usage\n'
+                          '- Remember your preferences\n'
+                          'You can manage cookie preferences in your device settings.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(
+                          '7. Third-Party Services', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'Our app may integrate with third-party services for payment processing and analytics. These services have their own privacy policies governing data handling.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('8. Children\'s Privacy', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'Our service is not intended for users under 18 years of age. We do not knowingly collect personal information from children.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle(
+                          '9. Changes to Privacy Policy', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'We may update this Privacy Policy periodically. We will notify you of significant changes. Continued use of the service after changes indicates acceptance.',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('10. Contact Us', isDarkMode),
+                      const SizedBox(height: 8),
+                      _buildSectionContent(
+                          'For privacy inquiries, contact us at:\n'
+                          'Email: support@mpf.co.ke\n'
+                          'Phone: +254 727 205699',
+                          isDarkMode),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Last Updated: ${DateTime.now().year}',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white60 : Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, bool isDarkMode) {
+    return Text(
+      title,
+      style: TextStyle(
+        color: isDarkMode ? Colors.white : Colors.black,
+        fontWeight: FontWeight.w600,
+        fontSize: 16,
+      ),
+    );
+  }
+
+  Widget _buildSectionContent(String content, bool isDarkMode) {
+    return Text(
+      content,
+      style: TextStyle(
+        color: isDarkMode ? Colors.white70 : Colors.grey[700],
+        fontSize: 14,
+        height: 1.5,
+      ),
+    );
+  }
+
+  Widget _buildContactItem(IconData icon, String text, bool isDarkMode) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 18,
+          color: isDarkMode ? Colors.white70 : Colors.grey[700],
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
 }
 
 class _ProfileHeader extends ConsumerStatefulWidget {

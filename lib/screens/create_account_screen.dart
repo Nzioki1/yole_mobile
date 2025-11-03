@@ -26,6 +26,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   String? _countryCode;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -301,15 +302,27 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                             GradientButton(
                               height: RegisterSpacing.ctaBtnH,
                               borderRadius: RegisterSpacing.cardRadius,
-                              onPressed: _onCreateAccount,
-                              child: Text(
-                                l10n.createAccount,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.textTheme.titleLarge?.color,
-                                ),
-                              ),
+                              onPressed: _isLoading ? null : _onCreateAccount,
+                              enabled: !_isLoading,
+                              child: _isLoading
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : Text(
+                                      l10n.createAccount,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.textTheme.titleLarge?.color,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -332,6 +345,13 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
   Future<void> _onCreateAccount() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Prevent multiple simultaneous submissions
+      if (_isLoading) return;
+
+      setState(() {
+        _isLoading = true;
+      });
+
       try {
         // Attempt registration with auth provider
         final success = await ref.read(authProvider.notifier).register(
@@ -343,18 +363,40 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
               country: _countryCode ?? 'CD',
             );
 
-        if (success && mounted) {
-          // Navigate to email verification on successful registration
-          Navigator.pushNamed(context, RouteNames.emailVerification);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (success) {
+            // Navigate to email verification on successful registration
+            Navigator.pushNamed(context, RouteNames.emailVerification);
+          } else {
+            // Show error message from auth provider
+            final authState = ref.read(authProvider);
+            if (authState.error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(authState.error!),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+          }
         }
       } catch (e) {
         // Show error message if registration fails
         if (mounted) {
-          final errorTheme = Theme.of(context);
+          setState(() {
+            _isLoading = false;
+          });
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Registration failed: $e'),
-              backgroundColor: errorTheme.colorScheme.error,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 4),
             ),
           );
         }

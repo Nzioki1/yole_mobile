@@ -19,6 +19,7 @@ class StorageService {
   static const String _tokenExpiryKey = 'token_expiry';
   static const String _userProfileKey = 'user_profile';
   static const String _lastLoginKey = 'last_login';
+  static const String _profileOverridesKey = 'profile_overrides';
 
   /// Save authentication token
   Future<void> saveToken(String token) async {
@@ -151,5 +152,37 @@ class StorageService {
   Future<bool> isLoggedIn() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
+  }
+
+  /// Save local profile overrides (local-only edits)
+  /// Supported keys: name, surname, country, phone, email, avatarPath, dateOfBirth (ISO string), address
+  Future<void> saveProfileOverrides(Map<String, dynamic> overrides) async {
+    // Merge with existing overrides
+    final existing = await getProfileOverrides();
+    final merged = {
+      ...existing,
+      ...overrides,
+    };
+    await _storage.write(
+      key: _profileOverridesKey,
+      value: jsonEncode(merged),
+    );
+  }
+
+  /// Get local profile overrides
+  Future<Map<String, dynamic>> getProfileOverrides() async {
+    final jsonString = await _storage.read(key: _profileOverridesKey);
+    if (jsonString == null || jsonString.isEmpty) return {};
+    try {
+      final Map<String, dynamic> data = jsonDecode(jsonString);
+      return data;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Clear local profile overrides
+  Future<void> clearProfileOverrides() async {
+    await _storage.delete(key: _profileOverridesKey);
   }
 }

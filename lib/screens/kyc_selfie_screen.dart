@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/status_chip.dart';
 import '../providers/app_provider.dart';
+import '../providers/kyc_provider.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
 
@@ -17,6 +20,8 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
     with TickerProviderStateMixin {
   bool selfieCaptured = false;
   bool isCapturing = false;
+  String? selfiePath;
+  final ImagePicker _imagePicker = ImagePicker();
   late AnimationController _animationController;
   late AnimationController _captureController;
   late Animation<double> _fadeAnimation;
@@ -508,41 +513,179 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
 
   Widget _buildContinueButton(AppState appState, AppNotifier appNotifier) {
     final l10n = AppLocalizations.of(context)!;
+    final kycSubmissionState = ref.watch(kycSubmissionProvider);
+    
     return AnimatedOpacity(
       opacity: selfieCaptured ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 600),
       child: GradientButton(
-        onPressed: selfieCaptured
-            ? () => Navigator.pushNamed(context, RouteNames.kycSuccess)
+        onPressed: selfieCaptured && !kycSubmissionState.isLoading
+            ? () => _handleSubmitKYC()
             : null,
-        child: Text(
-          l10n.completeVerificationButton,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        child: kycSubmissionState.isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(
+                l10n.completeVerificationButton,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
 
-  void _handleCaptureSelfie() {
+  Future<void> _handleSubmitKYC() async {
+    if (selfiePath == null || selfiePath!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please capture a selfie first'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    // Get all collected KYC data from route arguments
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    
+    if (args == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Missing KYC data. Please start the KYC process again.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    final phoneCode = args['phoneCode'] as String? ?? '';
+    String phoneNumber = args['phoneNumber'] as String? ?? '';
+    // Combine phone code and phone number, then normalize - remove + and any non-digits
+    final fullPhoneNumber = '$phoneCode$phoneNumber'.replaceAll(RegExp(r'[^\d]'), '');
+    
+    final otpCode = args['otpCode'] as String? ?? '';
+    final idNumber = args['idNumber'] as String? ?? '';
+    final idFrontPath = args['idFrontPath'] as String? ?? '';
+
+    // Validate required fields
+    if (fullPhoneNumber.isEmpty || otpCode.isEmpty || idNumber.isEmpty || idFrontPath.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Missing required KYC information. Please complete all steps.'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    // Determine which photo to use as passport photo (selfie or ID back if passport)
+    final passportPhotoPath = selfiePath!; // Always use selfie as passport photo
+
+    // Submit KYC with all collected data
+    final success = await ref.read(kycSubmissionProvider.notifier).submitKyc(
+          phoneNumber: fullPhoneNumber,
+          otpCode: otpCode,
+          idNumber: idNumber,
+          idPhotoPath: idFrontPath,
+          passportPhotoPath: passportPhotoPath,
+        );
+
+    if (mounted) {
+      if (success) {
+        // KYC submitted successfully
+        Navigator.pushNamed(context, RouteNames.kycSuccess);
+      } else {
+        // Show error message
+        final error = ref.read(kycSubmissionProvider).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error ?? 'Failed to submit KYC. Please try again.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleCaptureSelfie() async {
+    // CRITICAL DEBUG: This should appear in logs when button is clicked
+    debugPrint('🔥🔥🔥 BUTTON CLICKED - KYC SELFIE CAPTURE STARTED 🔥🔥🔥');
+    debugPrint('Button clicked at: ${DateTime.now()}');
+    debugPrint('Method called successfully - handler is working!');
+    
     setState(() {
       isCapturing = true;
     });
 
     _captureController.forward();
 
-    // Simulate selfie capture
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
+    try {
+      // Let image_picker handle permissions automatically
+      // It will request camera permission as needed
+      debugPrint('Calling image_picker.pickImage with source: ImageSource.camera');
+      final pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85, // Reduce quality for faster upload
+      );
+      
+      debugPrint('Image picker returned: ${pickedFile?.path ?? "null"}');
+
+      if (pickedFile != null && mounted) {
+        debugPrint('Selfie captured successfully: ${pickedFile.path}');
         setState(() {
           isCapturing = false;
           selfieCaptured = true;
+          selfiePath = pickedFile.path;
+        });
+        debugPrint('State updated - selfieCaptured: $selfieCaptured');
+        _captureController.reset();
+      } else if (mounted) {
+        debugPrint('User cancelled selfie capture');
+        // User cancelled - no error needed
+        setState(() {
+          isCapturing = false;
         });
         _captureController.reset();
       }
-    });
+    } catch (e, stackTrace) {
+      debugPrint('=== KYC SELFIE CAPTURE ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      if (mounted) {
+        setState(() {
+          isCapturing = false;
+        });
+        _captureController.reset();
+
+        String errorMessage = 'Failed to capture selfie';
+        if (e.toString().contains('permission') || e.toString().contains('Permission')) {
+          errorMessage = 'Camera permission denied. Please grant camera permission in Settings.';
+        } else if (e.toString().contains('No camera')) {
+          errorMessage = 'No camera available on this device.';
+        } else {
+          errorMessage = 'Failed to capture selfie: ${e.toString()}';
+        }
+
+        debugPrint('Showing error message to user: $errorMessage');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 }

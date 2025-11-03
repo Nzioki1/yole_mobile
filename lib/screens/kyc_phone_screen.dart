@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/kyc_provider.dart';
 
 /// KYC Phone Screen - Phone number verification step
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -114,23 +115,56 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
   Future<void> _handleSendOTP() async {
     if (_phoneController.text.isEmpty || _selectedCountryCode.isEmpty) return;
 
+    final selectedCountry = _selectedCountryData;
+    if (selectedCountry == null) return;
+
     setState(() {
       _isLoading = true;
     });
 
     HapticFeedback.lightImpact();
 
-    // Simulate sending OTP
-    await Future.delayed(const Duration(seconds: 2));
+    // Extract phone code and phone number
+    final phoneCode = selectedCountry['code'] ?? '';
+    final phoneNumber = _phoneController.text.trim();
+
+    // Call API to send OTP
+    final success = await ref.read(otpSendProvider.notifier).sendOtp(
+          phoneCode: phoneCode,
+          phone: phoneNumber,
+        );
 
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
-      if (widget.onSendOTP != null) {
-        widget.onSendOTP!();
+
+      if (success) {
+        // OTP sent successfully, navigate to OTP screen
+        if (widget.onSendOTP != null) {
+          widget.onSendOTP!();
+        } else {
+          Navigator.pushNamed(
+            context,
+            RouteNames.kycOtp,
+            arguments: {
+              'phoneCode': phoneCode,
+              'phoneNumber': phoneNumber,
+            },
+          );
+        }
       } else {
-        Navigator.pushNamed(context, RouteNames.kycOtp);
+        // Show error message
+        final error = ref.read(otpSendProvider).error;
+        if (mounted && error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     }
   }

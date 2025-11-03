@@ -250,7 +250,88 @@ class YoleApiService {
     return get('/transactions', requiresAuth: true);
   }
 
-  /// Validate KYC
+  /// POST request with multipart form data (for file uploads)
+  Future<http.Response> postMultipart(
+    String endpoint, {
+    Map<String, String>? fields,
+    Map<String, String>? files,
+    bool requiresAuth = false,
+  }) async {
+    final uri = Uri.parse('$baseUrl$endpoint');
+
+    // Prepare headers
+    final headers = <String, String>{
+      'Accept': 'application/x.yole.v1+json',
+      'X-API-Key': apiKey,
+    };
+
+    // Add authorization header if required
+    if (requiresAuth && _authToken != null) {
+      headers['Authorization'] = 'Bearer $_authToken';
+    }
+
+    // Create multipart request
+    final request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(headers);
+
+    // Add form fields
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
+
+    // Add files
+    if (files != null) {
+      for (final entry in files.entries) {
+        if (entry.value.isNotEmpty) {
+          // Check if file exists
+          final file = http.MultipartFile.fromPath(entry.key, entry.value);
+          request.files.add(await file);
+        }
+      }
+    }
+
+    try {
+      // Send request with timeout
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 60), // Longer timeout for file uploads
+        onTimeout: () {
+          print('Multipart request timeout: $endpoint');
+          throw TimeoutException('File upload timed out after 60 seconds');
+        },
+      );
+
+      // Convert streamed response to regular response
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('API Response: POST (multipart) $endpoint - Status: ${response.statusCode}');
+      if (response.statusCode >= 400) {
+        print('Response Body: ${response.body}');
+      }
+
+      // Handle common error responses
+      if (response.statusCode == 401) {
+        throw YoleApiException('Unauthorized - Please login again', 401);
+      } else if (response.statusCode == 403) {
+        throw YoleApiException('Forbidden - Insufficient permissions', 403);
+      } else if (response.statusCode == 404) {
+        throw YoleApiException('Not found - Resource does not exist', 404);
+      } else if (response.statusCode >= 500) {
+        throw YoleApiException(
+            'Server error - Please try again later', response.statusCode);
+      }
+
+      return response;
+    } catch (e) {
+      print('Multipart request error: $e');
+      print('Error type: ${e.runtimeType}');
+      print('Endpoint: POST (multipart) $endpoint');
+      if (e is YoleApiException) rethrow;
+      if (e is TimeoutException) rethrow;
+      throw YoleApiException('File upload failed: $e');
+    }
+  }
+
+  /// Validate KYC with multipart file upload
   Future<http.Response> validateKyc({
     required String phoneNumber,
     required String otpCode,
@@ -258,15 +339,26 @@ class YoleApiService {
     String? idPhotoPath,
     String? passportPhotoPath,
   }) async {
-    final body = {
+    final fields = <String, String>{
       'phone_number': phoneNumber,
       'otp_code': otpCode,
       'id_number': idNumber,
     };
 
-    // For file uploads, we'd need to use multipart form data
-    // This is a simplified version - in practice, you'd use the postFormData method
-    return post('/validate-kyc', body: body, requiresAuth: true);
+    final files = <String, String>{};
+    if (idPhotoPath != null && idPhotoPath.isNotEmpty) {
+      files['id_photo'] = idPhotoPath;
+    }
+    if (passportPhotoPath != null && passportPhotoPath.isNotEmpty) {
+      files['passport_photo'] = passportPhotoPath;
+    }
+
+    return postMultipart(
+      '/validate-kyc',
+      fields: fields,
+      files: files,
+      requiresAuth: true,
+    );
   }
 
   /// Send SMS OTP

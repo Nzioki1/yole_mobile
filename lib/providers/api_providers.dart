@@ -34,3 +34,6 @@ final dataServiceProvider = Provider<DataService>((ref) {
   final api = ref.watch(yoleApiServiceProvider);
   return DataService(api: api);
 });
+
+/// Note: KycService provider is defined in kyc_provider.dart
+/// Import kyc_provider.dart to use kycServiceProvider

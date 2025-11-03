@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_provider.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
-import '../models/api/transaction.dart' as ApiTransaction;
 import '../widgets/status_chip.dart';
 import '../l10n/app_localizations.dart';
 
@@ -84,68 +83,46 @@ class _TransactionsHistorySimpleState
 
   Widget _buildLoadingState(ThemeData theme, AppState appState) {
     return Scaffold(
-      backgroundColor: appState.isDark ? null : Colors.white,
-      body: Container(
-        decoration: appState.isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : null,
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: const Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }
 
   Widget _buildErrorState(ThemeData theme, AppState appState, String error) {
     return Scaffold(
-      backgroundColor: appState.isDark ? null : Colors.white,
-      body: Container(
-        decoration: appState.isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : null,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: appState.isDark ? Colors.white : Colors.grey[600],
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading transactions',
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.onSurface,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Error loading transactions',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: appState.isDark ? Colors.white : Colors.black,
-                ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
               ),
-              const SizedBox(height: 8),
-              Text(
-                error,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: appState.isDark ? Colors.white70 : Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _loadTransactions,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loadTransactions,
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );
@@ -158,29 +135,18 @@ class _TransactionsHistorySimpleState
       List<TransactionModel> transactions,
       TransactionsState transactionsState) {
     return Scaffold(
-      backgroundColor: appState.isDark ? null : Colors.white,
-      body: Container(
-        decoration: appState.isDark
-            ? const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF0B0F19), Color(0xFF19173D)],
-                ),
-              )
-            : null,
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(theme, appState, l10n),
-              Expanded(
-                child: transactions.isEmpty
-                    ? _buildEmptyState(theme, appState, l10n)
-                    : _buildTransactionsListView(
-                        theme, appState, l10n, transactions, transactionsState),
-              ),
-            ],
-          ),
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(theme, appState, l10n),
+            Expanded(
+              child: transactions.isEmpty
+                  ? _buildEmptyState(theme, appState, l10n)
+                  : _buildTransactionsListView(
+                      theme, appState, l10n, transactions, transactionsState),
+            ),
+          ],
         ),
       ),
     );
@@ -208,13 +174,12 @@ class _TransactionsHistorySimpleState
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            appState.isDark ? Colors.white.withOpacity(0.1) : Colors.grey[50],
+        color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: appState.isDark
-              ? Colors.white.withOpacity(0.1)
-              : Colors.grey[200]!,
+          color: theme.brightness == Brightness.dark
+              ? const Color(0xFF2B2F58)
+              : const Color(0xFFE5E7EB),
         ),
       ),
       child: Row(
@@ -230,7 +195,7 @@ class _TransactionsHistorySimpleState
                 Text(
                   transaction.recipientName ?? 'Unknown',
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: appState.isDark ? Colors.white : Colors.black,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -238,14 +203,14 @@ class _TransactionsHistorySimpleState
                 Text(
                   transaction.recipientPhone,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: appState.isDark ? Colors.white70 : Colors.grey[600],
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _formatDate(transaction.date),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: appState.isDark ? Colors.white60 : Colors.grey[500],
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
               ],
@@ -258,7 +223,7 @@ class _TransactionsHistorySimpleState
               Text(
                 '${transaction.currency == 'USD' ? '\$' : '€'}${transaction.amount.toStringAsFixed(2)}',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: appState.isDark ? Colors.white : Colors.black,
+                  color: theme.colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -395,14 +360,14 @@ class _TransactionsHistorySimpleState
             onPressed: () => Navigator.pop(context),
             icon: Icon(
               Icons.arrow_back_ios,
-              color: appState.isDark ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           Expanded(
             child: Text(
               l10n.allTransactions,
               style: theme.textTheme.headlineSmall?.copyWith(
-                color: appState.isDark ? Colors.white : Colors.black,
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -421,20 +386,20 @@ class _TransactionsHistorySimpleState
           Icon(
             Icons.receipt_long_outlined,
             size: 80,
-            color: appState.isDark ? Colors.white38 : Colors.grey[400],
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
           ),
           const SizedBox(height: 16),
           Text(
             'No transactions yet',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: appState.isDark ? Colors.white : Colors.black,
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Your transaction history will appear here',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: appState.isDark ? Colors.white70 : Colors.grey[600],
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
         ],

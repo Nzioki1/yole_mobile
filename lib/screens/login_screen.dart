@@ -66,6 +66,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Toggle theme',
+                icon: Icon(
+                  isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round,
+                  color: theme.appBarTheme.foregroundColor,
+                ),
+                onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+              ),
+            ],
           ),
           body: Container(
             decoration: BoxDecoration(

@@ -6,6 +6,7 @@ import '../widgets/gradient_button.dart';
 import '../widgets/yole_logo.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/api_providers.dart';
 
 /// Email Verification Screen - Email confirmation screen
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -111,31 +112,84 @@ class _EmailVerificationScreenState
 
     HapticFeedback.lightImpact();
 
-    // Simulate sending email
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call API to resend email verification
+      final apiService = ref.read(yoleApiServiceProvider);
+      final response = await apiService.sendEmailVerification();
 
-    if (mounted) {
-      setState(() {
-        _isResending = false;
-      });
-
-      // Start countdown
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (mounted) {
+      if (mounted) {
+        if (response.statusCode == 200 || response.statusCode == 202) {
+          // Email sent successfully
           setState(() {
-            if (_countdown <= 1) {
-              _countdown = 0;
-              timer.cancel();
+            _isResending = false;
+          });
+
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Verification email sent successfully'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+
+          // Start countdown
+          _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+            if (mounted) {
+              setState(() {
+                if (_countdown <= 1) {
+                  _countdown = 0;
+                  timer.cancel();
+                } else {
+                  _countdown--;
+                }
+              });
             } else {
-              _countdown--;
+              timer.cancel();
             }
           });
-        } else {
-          timer.cancel();
-        }
-      });
 
-      widget.onResendEmail?.call();
+          widget.onResendEmail?.call();
+        } else {
+          // Error response
+          setState(() {
+            _isResending = false;
+            _countdown = 0;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to send verification email. Please try again.'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isResending = false;
+          _countdown = 0;
+        });
+
+        String errorMessage;
+        if (e.toString().contains('TimeoutException') ||
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Network')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage = 'Failed to send verification email. Please try again.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 

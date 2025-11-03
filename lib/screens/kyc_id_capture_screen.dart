@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/status_chip.dart';
 import '../providers/app_provider.dart';
@@ -19,6 +21,10 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     with TickerProviderStateMixin {
   DocumentType? selectedDocType;
   Map<String, bool> uploadedSides = {'front': false, 'back': false};
+  Map<String, String> documentPaths = {'front': '', 'back': ''};
+  String? idNumber;
+  final _idNumberController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -50,6 +56,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    _idNumberController.dispose();
     super.dispose();
   }
 
@@ -375,6 +382,11 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             ),
             const SizedBox(height: 24),
 
+            // ID Number Input
+            _buildIdNumberInput(appState),
+
+            const SizedBox(height: 24),
+
             // Front Side Upload
             _buildUploadCard(
               appState,
@@ -585,7 +597,23 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
       padding: const EdgeInsets.all(24),
       child: GradientButton(
         onPressed: isComplete
-            ? () => Navigator.pushNamed(context, RouteNames.kycSelfie)
+            ? () {
+                // Get phone and OTP data from route arguments
+                final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+                
+                // Navigate to selfie screen with all collected data
+                Navigator.pushNamed(
+                  context,
+                  RouteNames.kycSelfie,
+                  arguments: {
+                    if (args != null) ...args, // Pass through phone and OTP data
+                    'idNumber': _idNumberController.text.trim(),
+                    'documentType': selectedDocType?.name,
+                    'idFrontPath': documentPaths['front'] ?? '',
+                    'idBackPath': documentPaths['back'] ?? '',
+                  },
+                );
+              }
             : null,
         child: Text(
           l10n.continueButtonKYC,
@@ -606,19 +634,149 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     });
   }
 
-  void _handleDocumentUpload(String side) {
-    // Mock file upload - in real app, integrate with camera/gallery
-    setState(() {
-      uploadedSides[side] = true;
-    });
+  Future<void> _handleDocumentUpload(String side) async {
+    // CRITICAL DEBUG: This should appear in logs when button is clicked
+    debugPrint('🔥🔥🔥 BUTTON CLICKED - KYC ID UPLOAD STARTED 🔥🔥🔥');
+    debugPrint('Side: $side');
+    debugPrint('Button clicked at: ${DateTime.now()}');
+    debugPrint('Method called successfully - handler is working!');
+    
+    try {
+      // Show dialog to choose camera or gallery
+      debugPrint('Showing image source dialog...');
+      final source = await showDialog<ImageSource>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Select Image Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      debugPrint('Image source selected: $source');
+      if (source == null) {
+        debugPrint('User cancelled image source selection');
+        return;
+      }
+
+      // Let image_picker handle permissions automatically
+      // It will request permissions as needed
+      debugPrint('Calling image_picker.pickImage with source: $source');
+      final pickedFile = await _imagePicker.pickImage(source: source);
+      debugPrint('Image picker returned: ${pickedFile?.path ?? "null"}');
+      if (pickedFile != null && mounted) {
+        debugPrint('Image picked successfully: ${pickedFile.path}');
+        setState(() {
+          uploadedSides[side] = true;
+          documentPaths[side] = pickedFile.path;
+        });
+        debugPrint('State updated - uploadedSides[$side]: ${uploadedSides[side]}');
+      } else if (pickedFile == null && mounted) {
+        debugPrint('User cancelled image selection');
+        // User cancelled image selection - no error needed
+      }
+    } catch (e, stackTrace) {
+      debugPrint('=== KYC ID UPLOAD ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      if (mounted) {
+        String errorMessage = 'Failed to pick image';
+        if (e.toString().contains('permission') || e.toString().contains('Permission')) {
+          errorMessage = 'Permission denied. Please grant camera/storage permission in Settings.';
+        } else if (e.toString().contains('No camera')) {
+          errorMessage = 'No camera available on this device.';
+        } else {
+          errorMessage = 'Failed to pick image: ${e.toString()}';
+        }
+        
+        debugPrint('Showing error message to user: $errorMessage');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   bool _isDocumentUploadComplete() {
     if (selectedDocType == null) return false;
+    if (_idNumberController.text.trim().isEmpty) return false;
     if (!uploadedSides['front']!) return false;
     if (selectedDocType == DocumentType.nationalId && !uploadedSides['back']!) {
       return false;
     }
     return true;
+  }
+
+  Widget _buildIdNumberInput(AppState appState) {
+    final theme = Theme.of(context);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'ID Number',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: appState.isDark ? Colors.white : null,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _idNumberController,
+          decoration: InputDecoration(
+            hintText: 'Enter your ID number',
+            filled: true,
+            fillColor: appState.isDark
+                ? Colors.white.withOpacity(0.05)
+                : theme.colorScheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: appState.isDark
+                    ? Colors.white.withOpacity(0.2)
+                    : theme.colorScheme.outline,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: appState.isDark
+                    ? Colors.white.withOpacity(0.2)
+                    : theme.colorScheme.outline,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+            ),
+          ),
+          style: TextStyle(
+            color: appState.isDark ? Colors.white : theme.colorScheme.onSurface,
+          ),
+          onChanged: (_) => setState(() {}), // Trigger rebuild for validation
+        ),
+      ],
+    );
   }
 }

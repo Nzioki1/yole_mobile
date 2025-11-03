@@ -144,17 +144,39 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
 
     HapticFeedback.lightImpact();
 
-    // Simulate verification
-    await Future.delayed(const Duration(seconds: 2));
+    // Get OTP code from controllers
+    final otpCode = _otpControllers.map((c) => c.text).join();
+
+    // Note: OTP verification happens as part of validateKyc endpoint
+    // So we just store the OTP code and proceed to ID capture
+    // The OTP will be verified when we submit the complete KYC
+
+    // Simulate brief delay for UX
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (mounted) {
       setState(() {
         _isVerifying = false;
       });
+
+      // Get phone data from route arguments or widget
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final phoneCode = args?['phoneCode'] ?? '';
+      final phoneNumber = args?['phoneNumber'] ?? widget.phoneNumber ?? '';
+
       if (widget.onVerifyOTP != null) {
         widget.onVerifyOTP!();
       } else {
-        Navigator.pushNamed(context, RouteNames.kycIdCapture);
+        // Pass phone and OTP data to next screen
+        Navigator.pushNamed(
+          context,
+          RouteNames.kycIdCapture,
+          arguments: {
+            'phoneCode': phoneCode,
+            'phoneNumber': phoneNumber,
+            'otpCode': otpCode,
+          },
+        );
       }
     }
   }

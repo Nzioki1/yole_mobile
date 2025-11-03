@@ -3,22 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../router_types.dart';
 import '../providers/favorites_provider.dart';
 import '../l10n/app_localizations.dart';
-import '../widgets/language_toggle.dart';
-import '../providers/global_locale_provider.dart';
 import '../providers/auth_provider.dart';
-import '../providers/theme_provider.dart';
-import '../main.dart'; // Import for global navigator key
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  /// Get time-based greeting
+  String _getTimeBasedGreeting(BuildContext context) {
+    final hour = DateTime.now().hour;
+    
+    // Get user's first name, default to "John" if not available
+    final firstName = 'John'; // TODO: Get from authProvider user object
+    
+    if (hour >= 5 && hour < 12) {
+      return 'Good morning, $firstName 👋';
+    } else if (hour >= 12 && hour < 18) {
+      return 'Good afternoon, $firstName 👋';
+    } else if (hour >= 18 && hour < 22) {
+      return 'Good evening, $firstName 👋';
+    } else {
+      return 'Good night, $firstName 👋';
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final themeState = ref.watch(themeProvider);
-    final isDark = themeState.isDarkMode;
     final l10n = AppLocalizations.of(context)!;
-    final currentLocale = ref.watch(currentLocaleProvider);
 
     return Scaffold(
       backgroundColor:
@@ -38,7 +49,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          l10n.goodAfternoon,
+                          _getTimeBasedGreeting(context),
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: theme
                                 .colorScheme.onSurface, // THEME: Dynamic text
@@ -46,11 +57,6 @@ class HomeScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                      ),
-                      LanguageToggle(
-                        isDark: isDark,
-                        fontSize: 14,
-                        textColor: theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       GestureDetector(

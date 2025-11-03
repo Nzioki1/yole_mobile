@@ -20,9 +20,8 @@ class _SendMoneyEnterDetailsScreenState
     extends ConsumerState<SendMoneyEnterDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
 
-  String _selectedCurrency = 'USD';
+  String _selectedCurrency = 'USD'; // Always USD
   String? _selectedRecipient;
   String? _selectedRecipientPhone;
   String? _selectedRecipientCountry;
@@ -45,6 +44,9 @@ class _SendMoneyEnterDetailsScreenState
     _selectedRecipient = null;
     _loadCountries();
 
+    // Set default country to Congo (CD)
+    _selectedRecipientCountry = 'CD';
+    
     // Check for pre-selected recipient from arguments
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args =
@@ -53,7 +55,7 @@ class _SendMoneyEnterDetailsScreenState
         setState(() {
           _selectedRecipient = args['recipient'] as String;
           _selectedRecipientCountry =
-              args['recipientCountry'] as String? ?? 'CD'; // Default to DRC
+              args['recipientCountry'] as String? ?? 'CD'; // Default to Congo
         });
         _validateForm();
       }
@@ -85,7 +87,6 @@ class _SendMoneyEnterDetailsScreenState
   @override
   void dispose() {
     _amountController.dispose();
-    _noteController.dispose();
     super.dispose();
   }
 
@@ -184,7 +185,22 @@ class _SendMoneyEnterDetailsScreenState
       ];
     }
 
-    return _availableCountries.map((country) {
+    // East Africa country codes
+    const eastAfricaCodes = ['CD', 'KE', 'UG', 'TZ', 'RW', 'BI', 'ET', 'SS'];
+    
+    // Filter to East Africa only and sort with Congo (CD) first
+    final eastAfricaCountries = _availableCountries
+        .where((country) => eastAfricaCodes.contains(country.code))
+        .toList();
+    
+    // Sort: Congo (CD) first, then alphabetically by name
+    eastAfricaCountries.sort((a, b) {
+      if (a.code == 'CD') return -1;
+      if (b.code == 'CD') return 1;
+      return a.name.compareTo(b.name);
+    });
+
+    return eastAfricaCountries.map((country) {
       return DropdownMenuItem<String>(
         value: country.code,
         child: Text(country.displayName),
@@ -227,15 +243,11 @@ class _SendMoneyEnterDetailsScreenState
                         const SizedBox(height: 32),
                         _buildAmountSection(theme, appState),
                         const SizedBox(height: 24),
-                        _buildCurrencySection(theme, appState),
-                        const SizedBox(height: 24),
                         _buildRecipientSection(theme, appState),
                         const SizedBox(height: 24),
                         _buildRecipientCountrySection(theme, appState),
                         const SizedBox(height: 24),
                         _buildPaymentMethodSection(theme, appState),
-                        const SizedBox(height: 24),
-                        _buildNoteSection(theme, appState),
                         const SizedBox(height: 24),
                         if (_calculatedCharges != null || _isCalculatingCharges)
                           _buildChargesSection(theme, appState),
@@ -304,6 +316,12 @@ class _SendMoneyEnterDetailsScreenState
             color: theme.colorScheme.onSurface,
           ),
           decoration: InputDecoration(
+            prefixText: '\$ ',
+            prefixStyle: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+            ),
             hintText: '0.00',
             hintStyle: TextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.5),
@@ -343,72 +361,6 @@ class _SendMoneyEnterDetailsScreenState
           },
         ),
       ],
-    );
-  }
-
-  Widget _buildCurrencySection(ThemeData theme, AppState appState) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.currency,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildCurrencyButton('USD', theme, appState),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildCurrencyButton('EUR', theme, appState),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCurrencyButton(
-      String currency, ThemeData theme, AppState appState) {
-    final isSelected = _selectedCurrency == currency;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedCurrency = currency;
-        });
-        _validateForm();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.5),
-          ),
-        ),
-        child: Text(
-          currency,
-          style: TextStyle(
-            color: isSelected
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ),
     );
   }
 
@@ -540,6 +492,26 @@ class _SendMoneyEnterDetailsScreenState
           ),
           items: _buildCountryDropdownItems(),
           onChanged: (value) {
+            if (value == null) return;
+            
+            // If country is not Congo (CD), show "coming soon" message and reset to Congo
+            if (value != 'CD') {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Coming soon! Currently only Congo (DRC) is available.'),
+                  backgroundColor: theme.colorScheme.primary,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+              // Reset to Congo
+              setState(() {
+                _selectedRecipientCountry = 'CD';
+              });
+              _validateForm();
+              _calculateCharges();
+              return;
+            }
+            
             setState(() {
               _selectedRecipientCountry = value;
             });
@@ -642,57 +614,6 @@ class _SendMoneyEnterDetailsScreenState
     );
   }
 
-  Widget _buildNoteSection(ThemeData theme, AppState appState) {
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.noteOptional,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _noteController,
-          maxLines: 3,
-          style: TextStyle(
-            color: theme.colorScheme.onSurface,
-          ),
-          decoration: InputDecoration(
-            hintText: l10n.addMessageForRecipient,
-            hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: theme.colorScheme.primary,
-                width: 2,
-              ),
-            ),
-            filled: true,
-            fillColor: theme.colorScheme.surface,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildChargesSection(ThemeData theme, AppState appState) {
     final l10n = AppLocalizations.of(context)!;
     if (_isCalculatingCharges) {
@@ -757,18 +678,18 @@ class _SendMoneyEnterDetailsScreenState
           const SizedBox(height: 12),
           _buildSummaryRow(
               l10n.amount,
-              '${_selectedCurrency == 'USD' ? '\$' : '€'}${amount.toStringAsFixed(2)}',
+              '\$${amount.toStringAsFixed(2)}',
               theme),
           _buildSummaryRow(
               l10n.fees,
-              '${_selectedCurrency == 'USD' ? '\$' : '€'}${_calculatedCharges!.toStringAsFixed(2)}',
+              '\$${_calculatedCharges!.toStringAsFixed(2)}',
               theme),
           Divider(
             color: theme.colorScheme.outline.withOpacity(0.3),
           ),
           _buildSummaryRow(
               l10n.total,
-              '${_selectedCurrency == 'USD' ? '\$' : '€'}${_totalAmount!.toStringAsFixed(2)}',
+              '\$${_totalAmount!.toStringAsFixed(2)}',
               theme,
               isTotal: true),
         ],
@@ -835,7 +756,6 @@ class _SendMoneyEnterDetailsScreenState
                       'recipientPhone': _selectedRecipientPhone,
                       'recipientCountry': _selectedRecipientCountry,
                       'paymentMethod': _selectedPaymentMethod,
-                      'note': _noteController.text,
                       'calculatedCharges': _calculatedCharges,
                       'totalAmount': _totalAmount,
                     },

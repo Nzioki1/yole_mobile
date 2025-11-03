@@ -278,6 +278,46 @@ class AuthNotifier extends StateNotifier<AuthState> {
     });
   }
 
+  /// Send password reset email
+  Future<bool> sendPasswordReset(String email) async {
+    // Validate email
+    if (email.trim().isEmpty) {
+      state = state.copyWith(error: 'Email is required');
+      return false;
+    }
+
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email.trim())) {
+      state = state.copyWith(error: 'Please enter a valid email address');
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      await _authService.sendPasswordReset(email.trim());
+      state = state.copyWith(isLoading: false, error: null);
+      return true;
+    } catch (e) {
+      String errorMessage;
+      if (e.toString().contains('TimeoutException') ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Network')) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      } else if (e.toString().contains('YoleApiException')) {
+        // Extract actual error message
+        errorMessage = e.toString().replaceAll('YoleApiException: ', '');
+      } else {
+        errorMessage = 'Failed to send password reset email. Please try again.';
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        error: errorMessage,
+      );
+      return false;
+    }
+  }
+
   /// Clear error
   void clearError() {
     state = state.copyWith(error: null);

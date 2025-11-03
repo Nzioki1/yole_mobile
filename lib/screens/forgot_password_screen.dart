@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/yole_logo.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
 
 /// Forgot Password Screen - Password reset screen
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -103,27 +104,46 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
     HapticFeedback.lightImpact();
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    // Call password reset API
+    final success = await ref.read(authProvider.notifier).sendPasswordReset(
+          _emailController.text.trim(),
+        );
 
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _step = 'success';
       });
 
-      // Restart animations for success state
-      _animationController.reset();
-      _iconAnimationController.reset();
-      _animationController.forward();
+      if (success) {
+        setState(() {
+          _step = 'success';
+        });
 
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _iconAnimationController.forward();
+        // Restart animations for success state
+        _animationController.reset();
+        _iconAnimationController.reset();
+        _animationController.forward();
+
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _iconAnimationController.forward();
+          }
+        });
+
+        widget.onSendResetLink?.call();
+      } else {
+        // Show error message
+        final error = ref.read(authProvider).error;
+        if (error != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
         }
-      });
-
-      widget.onSendResetLink?.call();
+      }
     }
   }
 

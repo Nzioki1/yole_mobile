@@ -28,6 +28,10 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
     _initializeTheme();
   }
 
+  // In-memory manual override flag (not persisted). When false, time-based
+  // auto switching is disabled until app restart.
+  bool autoSwitchEnabled = true;
+
   /// Initialize theme from storage
   Future<void> _initializeTheme() async {
     try {
@@ -47,6 +51,8 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 
   /// Toggle theme and save to storage
   Future<void> toggleTheme() async {
+    // Manual toggle disables auto switching until restart
+    autoSwitchEnabled = false;
     final newTheme = !state.isDarkMode;
 
     // Update state immediately for fast UI response
@@ -67,6 +73,22 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
     ThemeStorageService.saveThemeMode(isDarkMode).catchError((e) {
       print('Failed to save theme preference: $e');
     });
+  }
+
+  /// Returns true if current time is within dark window (6pm-6am)
+  bool computeIsDarkByTime(DateTime now) {
+    final h = now.hour;
+    return h >= 18 || h < 6;
+  }
+
+  /// Applies time-based theme if auto switching is enabled
+  Future<void> applyTimeBasedThemeIfEnabled(DateTime now) async {
+    if (!autoSwitchEnabled) return;
+    final shouldBeDark = computeIsDarkByTime(now);
+    // Only update if different to avoid unnecessary writes
+    if (state.isDarkMode != shouldBeDark) {
+      await setThemeMode(shouldBeDark);
+    }
   }
 }
 

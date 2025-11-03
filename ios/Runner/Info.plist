@@ -33,6 +33,14 @@
 	<key>NSContactsUsageDescription</key>
 	<string>This app uses your contacts to add recipients to Favorites.</string>
 
+	<!-- ✅ iOS permission for camera access (KYC verification) -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app requires access to your camera to take photos of your ID documents and selfie for KYC verification.</string>
+
+	<!-- ✅ iOS permission for photo library access (KYC verification) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires access to your photo library to select ID documents for KYC verification.</string>
+
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 

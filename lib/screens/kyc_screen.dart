@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/status_chip.dart';
 import '../router_types.dart';
@@ -35,6 +37,11 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
     'idDocument': false,
     'selfie': false,
   };
+  final Map<String, String> _documentPaths = {
+    'idDocument': '',
+    'selfie': '',
+  };
+  final ImagePicker _imagePicker = ImagePicker();
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -111,11 +118,92 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
     }
   }
 
-  void _handleDocumentUpload(String type) {
-    setState(() {
-      _uploadedDocs[type] = true;
-    });
-    HapticFeedback.lightImpact();
+  Future<void> _handleDocumentUpload(String type) async {
+    debugPrint('🔥 KYC Screen - Document upload started for type: $type');
+    
+    try {
+      ImageSource source;
+      
+      // For selfie, always use camera. For document, show dialog
+      if (type == 'selfie') {
+        source = ImageSource.camera;
+      } else {
+        // Show dialog to choose camera or gallery for documents
+        final selectedSource = await showDialog<ImageSource>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Select Image Source'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Camera'),
+                  onTap: () => Navigator.pop(context, ImageSource.camera),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () => Navigator.pop(context, ImageSource.gallery),
+                ),
+              ],
+            ),
+          ),
+        );
+        
+        if (selectedSource == null) {
+          debugPrint('User cancelled image source selection');
+          return;
+        }
+        source = selectedSource;
+      }
+
+      debugPrint('Image source selected: $source');
+      
+      // Let image_picker handle permissions automatically
+      final pickedFile = await _imagePicker.pickImage(
+        source: source,
+        imageQuality: type == 'selfie' ? 85 : 90,
+      );
+      
+      debugPrint('Image picker returned: ${pickedFile?.path ?? "null"}');
+      
+      if (pickedFile != null && mounted) {
+        debugPrint('Image picked successfully: ${pickedFile.path}');
+        setState(() {
+          _uploadedDocs[type] = true;
+          _documentPaths[type] = pickedFile.path;
+        });
+        HapticFeedback.lightImpact();
+        debugPrint('State updated - ${type} uploaded: ${_uploadedDocs[type]}');
+      } else if (pickedFile == null && mounted) {
+        debugPrint('User cancelled image selection');
+        // User cancelled - no error needed
+      }
+    } catch (e, stackTrace) {
+      debugPrint('=== KYC SCREEN UPLOAD ERROR ===');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      
+      if (mounted) {
+        String errorMessage = 'Failed to pick image';
+        if (e.toString().contains('permission') || e.toString().contains('Permission')) {
+          errorMessage = 'Permission denied. Please grant camera/storage permission in Settings.';
+        } else if (e.toString().contains('No camera')) {
+          errorMessage = 'No camera available on this device.';
+        } else {
+          errorMessage = 'Failed to pick image: ${e.toString()}';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   bool get _canContinue {

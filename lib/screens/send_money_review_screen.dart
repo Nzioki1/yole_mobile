@@ -242,7 +242,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                 child: Text(
                   'Fees & Total',
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: appState.isDark ? Colors.white : Colors.black,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

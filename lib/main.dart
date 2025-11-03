@@ -6,6 +6,7 @@ import 'app_router.dart';
 import 'providers/global_locale_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'package:flutter/widgets.dart';
 
 // Global navigator key for forcing navigation stack rebuild
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -73,12 +74,14 @@ class YoleApp extends ConsumerWidget {
       onGenerateRoute: AppRouter.onGenerateRoute,
       // Add this to ensure proper theme propagation
       builder: (context, child) {
-        return MediaQuery(
+        final wrapped = MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaleFactor: 1.0, // Prevent text scaling issues
           ),
           child: child!,
         );
+        // Wrap with lifecycle watcher to apply time-based theme at start/resume
+        return ThemeLifecycleWatcher(child: wrapped);
       },
     );
   }
@@ -194,4 +197,44 @@ class YoleApp extends ConsumerWidget {
       ),
     );
   }
+}
+
+class ThemeLifecycleWatcher extends ConsumerStatefulWidget {
+  const ThemeLifecycleWatcher({super.key, required this.child});
+  final Widget child;
+
+  @override
+  ConsumerState<ThemeLifecycleWatcher> createState() => _ThemeLifecycleWatcherState();
+}
+
+class _ThemeLifecycleWatcherState extends ConsumerState<ThemeLifecycleWatcher>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Apply time-based theme once on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(themeProvider.notifier)
+          .applyTimeBasedThemeIfEnabled(DateTime.now());
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(themeProvider.notifier)
+          .applyTimeBasedThemeIfEnabled(DateTime.now());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

@@ -46,9 +46,9 @@ class YoleApiService {
     };
 
     // Set Content-Type based on request type
-    if (useFormData) {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded';
-    } else {
+    // Note: For form data, we'll let http package set it automatically
+    // when body is Map<String, String>
+    if (!useFormData) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -68,19 +68,31 @@ class YoleApiService {
         case 'POST':
           // Use form data for auth endpoints, JSON for others
           if (useFormData && body != null) {
-            // Convert Map<String, dynamic> to Map<String, String> for form data
-            final formData = body.map(
-                (key, value) => MapEntry(key.toString(), value.toString()));
+            // Convert Map<String, dynamic> to URL-encoded form data string
+            // Properly handle null values and URL-encode all values
+            final formPairs = <String>[];
+            body.forEach((key, value) {
+              if (value != null) {
+                final encodedKey = Uri.encodeComponent(key.toString());
+                final encodedValue = Uri.encodeComponent(value.toString());
+                formPairs.add('$encodedKey=$encodedValue');
+              }
+            });
+            final formDataString = formPairs.join('&');
+
+            // Set Content-Type header for form data
+            final formHeaders = Map<String, String>.from(headers);
+            formHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
 
             // Add logging for debugging
             print('=== REQUEST DEBUG ===');
             print('URL: $uri');
             print('Method: POST (Form Data)');
-            print('Headers: $headers');
-            print('Body: $formData');
-
-            // Let http package handle form encoding automatically
-            requestFuture = _client.post(uri, headers: headers, body: formData);
+            print('Headers: $formHeaders');
+            print('Form Data (encoded): $formDataString');
+            
+            // Send URL-encoded form data as string body
+            requestFuture = _client.post(uri, headers: formHeaders, body: formDataString);
           } else {
             requestFuture = _client.post(
               uri,
@@ -135,11 +147,53 @@ class YoleApiService {
       // 422 Unprocessable Entity - validation error
       try {
         final errorBody = jsonDecode(response.body);
-        final errorMessage = errorBody['message'] ?? 
-                           errorBody['error'] ?? 
-                           'Validation error. Please check your input.';
+        
+        // Extract detailed error message
+        String errorMessage;
+        
+        // Check for nested error structure
+        if (errorBody['message'] != null) {
+          errorMessage = errorBody['message'].toString();
+        } else if (errorBody['error'] != null) {
+          errorMessage = errorBody['error'].toString();
+        } else if (errorBody['errors'] != null) {
+          // Handle Laravel-style validation errors
+          final errors = errorBody['errors'];
+          if (errors is Map) {
+            final errorList = <String>[];
+            errors.forEach((key, value) {
+              if (value is List && value.isNotEmpty) {
+                errorList.add('${key}: ${value.first}');
+              } else if (value is String) {
+                errorList.add('${key}: $value');
+              }
+            });
+            errorMessage = errorList.isNotEmpty 
+                ? errorList.join('\n')
+                : 'Validation error. Please check your input.';
+          } else {
+            errorMessage = errors.toString();
+          }
+        } else {
+          errorMessage = 'Validation error. Please check your input.';
+        }
+        
+        // Log detailed error for debugging
+        print('=== 422 VALIDATION ERROR ===');
+        print('Endpoint: $method $endpoint');
+        print('Response Body: ${response.body}');
+        print('Extracted Error: $errorMessage');
+        
         throw YoleApiException(errorMessage, 422);
       } catch (e) {
+        if (e is YoleApiException) rethrow;
+        
+        // If JSON decode fails, log raw response
+        print('=== 422 ERROR (JSON decode failed) ===');
+        print('Endpoint: $method $endpoint');
+        print('Raw Response: ${response.body}');
+        print('Error: $e');
+        
         throw YoleApiException(
             'Validation error. Please check your input.', 422);
       }

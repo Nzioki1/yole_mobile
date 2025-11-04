@@ -21,11 +21,18 @@ void main() async {
   );
 }
 
-class YoleApp extends ConsumerWidget {
+class YoleApp extends ConsumerStatefulWidget {
   const YoleApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<YoleApp> createState() => _YoleAppState();
+}
+
+class _YoleAppState extends ConsumerState<YoleApp> {
+  bool _isInitializing = false;
+
+  @override
+  Widget build(BuildContext context) {
     final themeState = ref.watch(themeProvider);
     final isDarkMode = themeState.isDarkMode;
     final currentLocale = ref.watch(currentLocaleProvider);
@@ -40,9 +47,23 @@ class YoleApp extends ConsumerWidget {
     }
 
     // Initialize authentication if not already initialized
-    if (!authState.isInitialized) {
+    // Use a flag to prevent multiple initializations
+    if (!authState.isInitialized && !_isInitializing) {
+      _isInitializing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(authProvider.notifier).initializeAuth();
+        ref.read(authProvider.notifier).initializeAuth().then((_) {
+          if (mounted) {
+            setState(() {
+              _isInitializing = false;
+            });
+          }
+        }).catchError((_) {
+          if (mounted) {
+            setState(() {
+              _isInitializing = false;
+            });
+          }
+        });
       });
     }
 

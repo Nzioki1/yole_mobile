@@ -89,19 +89,45 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                             final selectedPhone =
                                 await _showPhoneSelector(context, c.phones);
                             if (selectedPhone != null && context.mounted) {
-                              Navigator.of(context).pop({
-                                'recipient': c.label,
-                                'recipientPhone': selectedPhone,
-                                'recipientCountry': c.countryCode,
-                              });
+                              // Check if we can pop (favorites was pushed from another screen)
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop({
+                                  'recipient': c.label,
+                                  'recipientPhone': selectedPhone,
+                                  'recipientCountry': c.countryCode,
+                                });
+                              } else {
+                                // Favorites is a tab, navigate to send money screen
+                                Navigator.of(context).pushNamed(
+                                  '/send-money-enter-details',
+                                  arguments: {
+                                    'recipient': c.label,
+                                    'recipientPhone': selectedPhone,
+                                    'recipientCountry': c.countryCode,
+                                  },
+                                );
+                              }
                             }
                           } else if (c.phones.isNotEmpty) {
                             // Single number → return directly
-                            Navigator.of(context).pop({
-                              'recipient': c.label,
-                              'recipientPhone': c.phones.first,
-                              'recipientCountry': c.countryCode,
-                            });
+                            // Check if we can pop (favorites was pushed from another screen)
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop({
+                                'recipient': c.label,
+                                'recipientPhone': c.phones.first,
+                                'recipientCountry': c.countryCode,
+                              });
+                            } else {
+                              // Favorites is a tab, navigate to send money screen
+                              Navigator.of(context).pushNamed(
+                                '/send-money-enter-details',
+                                arguments: {
+                                  'recipient': c.label,
+                                  'recipientPhone': c.phones.first,
+                                  'recipientCountry': c.countryCode,
+                                },
+                              );
+                            }
                           } else {
                             // No stored numbers
                             final l10n = AppLocalizations.of(context)!;
@@ -117,19 +143,45 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                             final selectedPhone =
                                 await _showPhoneSelector(context, c.phones);
                             if (selectedPhone != null && context.mounted) {
-                              Navigator.of(context).pop({
-                                'recipient': c.label,
-                                'recipientPhone': selectedPhone,
-                                'recipientCountry': c.countryCode,
-                              });
+                              // Check if we can pop (favorites was pushed from another screen)
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop({
+                                  'recipient': c.label,
+                                  'recipientPhone': selectedPhone,
+                                  'recipientCountry': c.countryCode,
+                                });
+                              } else {
+                                // Favorites is a tab, navigate to send money screen
+                                Navigator.of(context).pushNamed(
+                                  '/send-money-enter-details',
+                                  arguments: {
+                                    'recipient': c.label,
+                                    'recipientPhone': selectedPhone,
+                                    'recipientCountry': c.countryCode,
+                                  },
+                                );
+                              }
                             }
                           } else if (c.phones.isNotEmpty) {
                             // Single number → return directly
-                            Navigator.of(context).pop({
-                              'recipient': c.label,
-                              'recipientPhone': c.phones.first,
-                              'recipientCountry': c.countryCode,
-                            });
+                            // Check if we can pop (favorites was pushed from another screen)
+                            if (Navigator.of(context).canPop()) {
+                              Navigator.of(context).pop({
+                                'recipient': c.label,
+                                'recipientPhone': c.phones.first,
+                                'recipientCountry': c.countryCode,
+                              });
+                            } else {
+                              // Favorites is a tab, navigate to send money screen
+                              Navigator.of(context).pushNamed(
+                                '/send-money-enter-details',
+                                arguments: {
+                                  'recipient': c.label,
+                                  'recipientPhone': c.phones.first,
+                                  'recipientCountry': c.countryCode,
+                                },
+                              );
+                            }
                           } else {
                             // No stored numbers
                             final l10n = AppLocalizations.of(context)!;
@@ -216,6 +268,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
       context: screenContext,
       builder: (dialogContext) => _ContactDetailsDialog(
         contact: contact,
+        screenContext: screenContext,
         onUpdate: (updatedContact) {
           ref.read(favoritesProvider.notifier).update(contact.id, updatedContact);
           Navigator.pop(dialogContext);
@@ -236,11 +289,13 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
 class _ContactDetailsDialog extends StatefulWidget {
   const _ContactDetailsDialog({
     required this.contact,
+    required this.screenContext,
     required this.onUpdate,
     required this.onSelectPhone,
   });
 
   final FavoriteContact contact;
+  final BuildContext screenContext;
   final Function(FavoriteContact) onUpdate;
   final Future<String?> Function(BuildContext, List<String>) onSelectPhone;
 
@@ -617,27 +672,54 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                         Navigator.pop(context); // Close details dialog first
                         // Wait a frame for dialog to close, then trigger selection
                         await Future.microtask(() {});
-                        if (!context.mounted) return;
+                        if (!widget.screenContext.mounted) return;
 
-                        // Trigger selection
+                        // Trigger selection using screen context
+                        final screenCtx = widget.screenContext;
                         if (widget.contact.phones.length > 1) {
                           final selectedPhone = await widget.onSelectPhone(
-                              context, widget.contact.phones);
-                          if (selectedPhone != null && context.mounted) {
-                            Navigator.of(context).pop({
-                              'recipient': widget.contact.label,
-                              'recipientPhone': selectedPhone,
-                              'recipientCountry': widget.contact.countryCode,
-                            });
+                              screenCtx, widget.contact.phones);
+                          if (selectedPhone != null && screenCtx.mounted) {
+                            // Check if we can pop (favorites was pushed from another screen)
+                            if (Navigator.of(screenCtx).canPop()) {
+                              Navigator.of(screenCtx).pop({
+                                'recipient': widget.contact.label,
+                                'recipientPhone': selectedPhone,
+                                'recipientCountry': widget.contact.countryCode,
+                              });
+                            } else {
+                              // Favorites is a tab, navigate to send money screen
+                              Navigator.of(screenCtx).pushNamed(
+                                '/send-money-enter-details',
+                                arguments: {
+                                  'recipient': widget.contact.label,
+                                  'recipientPhone': selectedPhone,
+                                  'recipientCountry': widget.contact.countryCode,
+                                },
+                              );
+                            }
                           }
                         } else if (widget.contact.phones.isNotEmpty) {
-                          Navigator.of(context).pop({
-                            'recipient': widget.contact.label,
-                            'recipientPhone': widget.contact.phones.first,
-                            'recipientCountry': widget.contact.countryCode,
-                          });
+                          // Check if we can pop (favorites was pushed from another screen)
+                          if (Navigator.of(screenCtx).canPop()) {
+                            Navigator.of(screenCtx).pop({
+                              'recipient': widget.contact.label,
+                              'recipientPhone': widget.contact.phones.first,
+                              'recipientCountry': widget.contact.countryCode,
+                            });
+                          } else {
+                            // Favorites is a tab, navigate to send money screen
+                            Navigator.of(screenCtx).pushNamed(
+                              '/send-money-enter-details',
+                              arguments: {
+                                'recipient': widget.contact.label,
+                                'recipientPhone': widget.contact.phones.first,
+                                'recipientCountry': widget.contact.countryCode,
+                              },
+                            );
+                          }
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          ScaffoldMessenger.of(screenCtx).showSnackBar(
                             SnackBar(content: Text(l10n.noPhoneNumber)),
                           );
                         }

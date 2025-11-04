@@ -36,6 +36,7 @@ class _SendMoneyEnterDetailsScreenState
   double? _calculatedCharges;
   double? _totalAmount;
   bool _isCalculatingCharges = false;
+  bool _hasLoadedArguments = false;
 
   @override
   void initState() {
@@ -47,20 +48,60 @@ class _SendMoneyEnterDetailsScreenState
 
     // Set default country to Congo (CD)
     _selectedRecipientCountry = 'CD';
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Load route arguments here (ModalRoute is available in didChangeDependencies)
+    if (!_hasLoadedArguments) {
+      _hasLoadedArguments = true;
+      _loadArgumentsFromRoute();
+    }
+  }
+
+  void _loadArgumentsFromRoute() {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     
-    // Check for pre-selected recipient from arguments
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      if (args != null && args['recipient'] != null) {
-        setState(() {
-          _selectedRecipient = args['recipient'] as String;
-          _selectedRecipientCountry =
-              args['recipientCountry'] as String? ?? 'CD'; // Default to Congo
-        });
-        _validateForm();
-      }
-    });
+    // Debug logging
+    print('=== SEND MONEY ENTER DETAILS: Loading arguments ===');
+    print('Args received: $args');
+    if (args != null) {
+      print('Args keys: ${args.keys.toList()}');
+      print('Recipient: ${args['recipient']}');
+      print('RecipientPhone: ${args['recipientPhone']}');
+      print('RecipientCountry: ${args['recipientCountry']}');
+    }
+    
+    if (args != null && args['recipient'] != null) {
+      setState(() {
+        _selectedRecipient = args['recipient'] as String;
+        _selectedRecipientCountry =
+            args['recipientCountry'] as String? ?? 'CD'; // Default to Congo
+        
+        // Format phone number if provided
+        final rawPhone = args['recipientPhone'] as String?;
+        if (rawPhone != null && rawPhone.isNotEmpty) {
+          _selectedRecipientPhone = _formatPhoneWithCountryCode(
+            rawPhone,
+            _selectedRecipientCountry,
+          );
+          print('Phone number formatted: $_selectedRecipientPhone');
+        } else {
+          _selectedRecipientPhone = null;
+          print('Phone number is null or empty');
+        }
+        
+        print('Final state:');
+        print('  Recipient: $_selectedRecipient');
+        print('  Phone: $_selectedRecipientPhone');
+        print('  Country: $_selectedRecipientCountry');
+      });
+      _validateForm();
+    } else {
+      print('No arguments or recipient is null');
+    }
   }
 
   Future<void> _loadCountries() async {

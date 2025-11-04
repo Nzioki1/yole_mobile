@@ -7,6 +7,7 @@ import '../widgets/gradient_button.dart';
 import '../models/api/country.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/payment_validator.dart';
 
 class SendMoneyEnterDetailsScreen extends ConsumerStatefulWidget {
   const SendMoneyEnterDetailsScreen({super.key});
@@ -185,27 +186,27 @@ class _SendMoneyEnterDetailsScreenState
       ];
     }
 
-    // East Africa country codes
-    const eastAfricaCodes = ['CD', 'KE', 'UG', 'TZ', 'RW', 'BI', 'ET', 'SS'];
+    // Lock to DRC (Congo) only
+    final drcCountry = _availableCountries
+        .where((country) => country.code == 'CD')
+        .firstOrNull;
     
-    // Filter to East Africa only and sort with Congo (CD) first
-    final eastAfricaCountries = _availableCountries
-        .where((country) => eastAfricaCodes.contains(country.code))
-        .toList();
-    
-    // Sort: Congo (CD) first, then alphabetically by name
-    eastAfricaCountries.sort((a, b) {
-      if (a.code == 'CD') return -1;
-      if (b.code == 'CD') return 1;
-      return a.name.compareTo(b.name);
-    });
+    if (drcCountry == null) {
+      return [
+        DropdownMenuItem(
+          value: 'CD',
+          child: const Text('Democratic Republic of the Congo'),
+        ),
+      ];
+    }
 
-    return eastAfricaCountries.map((country) {
-      return DropdownMenuItem<String>(
-        value: country.code,
-        child: Text(country.displayName),
-      );
-    }).toList();
+    // Return only DRC
+    return [
+      DropdownMenuItem<String>(
+        value: drcCountry.code,
+        child: Text(drcCountry.displayName),
+      ),
+    ];
   }
 
   @override
@@ -484,40 +485,20 @@ class _SendMoneyEnterDetailsScreenState
                 width: 2,
               ),
             ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
             filled: true,
-            fillColor: theme.colorScheme.surface,
+            fillColor: theme.colorScheme.surface.withOpacity(0.6),
           ),
           style: TextStyle(
             color: theme.colorScheme.onSurface,
           ),
           items: _buildCountryDropdownItems(),
-          onChanged: (value) {
-            if (value == null) return;
-            
-            // If country is not Congo (CD), show "coming soon" message and reset to Congo
-            if (value != 'CD') {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Coming soon! Currently only Congo (DRC) is available.'),
-                  backgroundColor: theme.colorScheme.primary,
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-              // Reset to Congo
-              setState(() {
-                _selectedRecipientCountry = 'CD';
-              });
-              _validateForm();
-              _calculateCharges();
-              return;
-            }
-            
-            setState(() {
-              _selectedRecipientCountry = value;
-            });
-            _validateForm();
-            _calculateCharges();
-          },
+          onChanged: null, // Disable dropdown - locked to DRC
           validator: (value) {
             if (value == null || value.isEmpty) {
               return l10n.pleaseSelectRecipientCountry;
@@ -745,7 +726,22 @@ class _SendMoneyEnterDetailsScreenState
                 print('Form validate result: $isValid');
 
                 if (isValid) {
-                  print('Navigating to review screen...');
+                  // Validate Congo phone number format
+                  final phoneError = PaymentValidator.validateCongoPhone(_selectedRecipientPhone);
+                  if (phoneError != null) {
+                    // Phone validation failed - show error and stop transaction
+                    print('Phone validation FAILED: $phoneError');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(phoneError),
+                        backgroundColor: theme.colorScheme.error,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                    return; // Stop transaction - don't navigate
+                  }
+
+                  print('Phone validation passed. Navigating to review screen...');
                   Navigator.pushNamed(
                     context,
                     RouteNames.sendMoneyReview,

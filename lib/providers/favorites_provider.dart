@@ -47,6 +47,12 @@ class FavoritesController extends StateNotifier<List<FavoriteContact>> {
   void add(FavoriteContact c) => state = [...state, c];
   void remove(String id) => state = state.where((c) => c.id != id).toList();
 
+  void update(String id, FavoriteContact updated) {
+    state = state.map((contact) {
+      return contact.id == id ? updated : contact;
+    }).toList();
+  }
+
   void reorder(int oldIndex, int newIndex) {
     final list = [...state];
     if (newIndex > oldIndex) newIndex -= 1;

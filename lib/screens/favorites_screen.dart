@@ -7,6 +7,7 @@ import '../providers/favorites_provider.dart';
 import '../providers/contacts_provider.dart';
 import '../utils/contacts_permission.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/payment_validator.dart';
 // import '../router_types.dart';
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -82,6 +83,34 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                       _FavTile(
                         key: ValueKey(c.id),
                         contact: c,
+                        onSelect: () async {
+                          // Multiple numbers → let user pick
+                          if (c.phones.length > 1) {
+                            final selectedPhone =
+                                await _showPhoneSelector(context, c.phones);
+                            if (selectedPhone != null && context.mounted) {
+                              Navigator.of(context).pop({
+                                'recipient': c.label,
+                                'recipientPhone': selectedPhone,
+                                'recipientCountry': c.countryCode,
+                              });
+                            }
+                          } else if (c.phones.isNotEmpty) {
+                            // Single number → return directly
+                            Navigator.of(context).pop({
+                              'recipient': c.label,
+                              'recipientPhone': c.phones.first,
+                              'recipientCountry': c.countryCode,
+                            });
+                          } else {
+                            // No stored numbers
+                            final l10n = AppLocalizations.of(context)!;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.noPhoneNumber)),
+                            );
+                          }
+                        },
+                        onDetails: () => _showContactDetails(context, c),
                         onSend: () async {
                           // Multiple numbers → let user pick
                           if (c.phones.length > 1) {
@@ -181,17 +210,468 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     final second = parts.length > 1 ? parts[1].characters.first : '';
     return (first + second).toUpperCase();
   }
+
+  void _showContactDetails(BuildContext screenContext, FavoriteContact contact) {
+    showDialog(
+      context: screenContext,
+      builder: (dialogContext) => _ContactDetailsDialog(
+        contact: contact,
+        onUpdate: (updatedContact) {
+          ref.read(favoritesProvider.notifier).update(contact.id, updatedContact);
+          Navigator.pop(dialogContext);
+          ScaffoldMessenger.of(screenContext).showSnackBar(
+            const SnackBar(
+              content: Text('Contact updated successfully'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        },
+        onSelectPhone: _showPhoneSelector,
+      ),
+    );
+  }
+}
+
+class _ContactDetailsDialog extends StatefulWidget {
+  const _ContactDetailsDialog({
+    required this.contact,
+    required this.onUpdate,
+    required this.onSelectPhone,
+  });
+
+  final FavoriteContact contact;
+  final Function(FavoriteContact) onUpdate;
+  final Future<String?> Function(BuildContext, List<String>) onSelectPhone;
+
+  @override
+  State<_ContactDetailsDialog> createState() => _ContactDetailsDialogState();
+}
+
+class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
+  late List<TextEditingController> _phoneControllers;
+  bool _isEditMode = false;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _phoneControllers = widget.contact.phones
+        .map((phone) => TextEditingController(text: phone))
+        .toList();
+    if (_phoneControllers.isEmpty) {
+      _phoneControllers.add(TextEditingController());
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _phoneControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _addPhoneField() {
+    setState(() {
+      _phoneControllers.add(TextEditingController());
+    });
+  }
+
+  void _removePhoneField(int index) {
+    if (_phoneControllers.length > 1) {
+      setState(() {
+        _phoneControllers[index].dispose();
+        _phoneControllers.removeAt(index);
+      });
+    }
+  }
+
+  void _saveChanges() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Validate all phone numbers
+    final List<String> validPhones = [];
+    for (var controller in _phoneControllers) {
+      final phone = controller.text.trim();
+      if (phone.isNotEmpty) {
+        final error = PaymentValidator.validateCongoPhone(phone);
+        if (error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invalid phone: $phone\n$error'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+          return;
+        }
+        validPhones.add(phone);
+      }
+    }
+
+    if (validPhones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('At least one phone number is required'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    // Create updated contact
+    final updatedContact = FavoriteContact(
+      id: widget.contact.id,
+      label: widget.contact.label,
+      initials: widget.contact.initials,
+      phones: validPhones,
+      countryCode: widget.contact.countryCode,
+    );
+
+    widget.onUpdate(updatedContact);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    return Dialog(
+      backgroundColor: theme.cardTheme.color,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    height: 56,
+                    width: 56,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
+                      ),
+                    ),
+                    child: Text(
+                      widget.contact.initials,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.contact.label,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            color: theme.colorScheme.onSurface,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (widget.contact.countryCode != null)
+                          Text(
+                            'Country: ${widget.contact.countryCode}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.close,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Edit/View Mode Toggle
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Phone Numbers',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (!_isEditMode)
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _isEditMode = true;
+                        });
+                      },
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Edit'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.primaryColor,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Phone Numbers Section
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      if (_isEditMode)
+                        ..._phoneControllers.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final controller = entry.value;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextFormField(
+                                    controller: controller,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      hintText: '+243123456789',
+                                      hintStyle: TextStyle(
+                                        color: theme.colorScheme.onSurface
+                                            .withOpacity(0.5),
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.phone_outlined,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      filled: true,
+                                      fillColor:
+                                          theme.colorScheme.surface.withOpacity(0.5),
+                                    ),
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.trim().isEmpty) {
+                                        if (_phoneControllers.length > 1) {
+                                          return null; // Optional if multiple phones
+                                        }
+                                        return 'Phone number is required';
+                                      }
+                                      final error = PaymentValidator
+                                          .validateCongoPhone(value.trim());
+                                      return error;
+                                    },
+                                  ),
+                                ),
+                                if (_phoneControllers.length > 1)
+                                  IconButton(
+                                    onPressed: () => _removePhoneField(index),
+                                    icon: Icon(
+                                      Icons.delete_outline,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    tooltip: 'Remove',
+                                  ),
+                              ],
+                            ),
+                          );
+                        })
+                      else
+                        ...widget.contact.phones.map((phone) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface.withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colorScheme.outline.withOpacity(0.2),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.phone_outlined,
+                                    size: 20,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      phone,
+                                      style: theme.textTheme.bodyLarge?.copyWith(
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                      if (_isEditMode && _phoneControllers.length < 5)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: OutlinedButton.icon(
+                            onPressed: _addPhoneField,
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add Phone Number'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: theme.primaryColor,
+                            ),
+                          ),
+                        ),
+                      if (!_isEditMode && widget.contact.phones.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                size: 20,
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  l10n.noPhoneNumber,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (_isEditMode) ...[
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _isEditMode = false;
+                          // Reset controllers to original values
+                          _phoneControllers.clear();
+                          _phoneControllers = widget.contact.phones
+                              .map((phone) => TextEditingController(text: phone))
+                              .toList();
+                          if (_phoneControllers.isEmpty) {
+                            _phoneControllers.add(TextEditingController());
+                          }
+                        });
+                      },
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ] else ...[
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: theme.colorScheme.onSurface),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context); // Close details dialog first
+                        // Wait a frame for dialog to close, then trigger selection
+                        await Future.microtask(() {});
+                        if (!context.mounted) return;
+
+                        // Trigger selection
+                        if (widget.contact.phones.length > 1) {
+                          final selectedPhone = await widget.onSelectPhone(
+                              context, widget.contact.phones);
+                          if (selectedPhone != null && context.mounted) {
+                            Navigator.of(context).pop({
+                              'recipient': widget.contact.label,
+                              'recipientPhone': selectedPhone,
+                              'recipientCountry': widget.contact.countryCode,
+                            });
+                          }
+                        } else if (widget.contact.phones.isNotEmpty) {
+                          Navigator.of(context).pop({
+                            'recipient': widget.contact.label,
+                            'recipientPhone': widget.contact.phones.first,
+                            'recipientCountry': widget.contact.countryCode,
+                          });
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.noPhoneNumber)),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Select'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _FavTile extends StatelessWidget {
   const _FavTile({
     required this.contact,
+    required this.onSelect,
+    required this.onDetails,
     required this.onSend,
     required this.onDelete,
     super.key,
   });
 
   final FavoriteContact contact;
+  final VoidCallback onSelect;
+  final VoidCallback onDetails;
   final VoidCallback onSend;
   final VoidCallback onDelete;
 
@@ -203,7 +683,6 @@ class _FavTile extends StatelessWidget {
     return Container(
       key: key,
       margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(18),
@@ -211,51 +690,67 @@ class _FavTile extends StatelessWidget {
             ? Border.all(color: const Color(0xFF2B2F58))
             : Border.all(color: const Color(0xFFE5E7EB)),
       ),
-      child: Row(
-        children: [
-          Container(
-            height: 44,
-            width: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
-              ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onSelect,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  height: 44,
+                  width: 44,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
+                    ),
+                  ),
+                  child: Text(
+                    contact.initials,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    contact.label,
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'View Details',
+                  onPressed: onDetails,
+                  icon: Icon(
+                    Icons.drag_handle_rounded,
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: 'Send',
+                  onPressed: onSend,
+                  icon: Icon(Icons.send_rounded, color: theme.primaryColor),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: 'Remove',
+                  onPressed: onDelete,
+                  icon: Icon(Icons.delete_outline_rounded,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                ),
+              ],
             ),
-            child: Text(
-              contact.initials,
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800),
-            ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              contact.label,
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          Icon(Icons.drag_handle_rounded,
-              color: theme.colorScheme.onSurface.withOpacity(0.4)),
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: 'Send',
-            onPressed: onSend,
-            icon: Icon(Icons.send_rounded, color: theme.primaryColor),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            tooltip: 'Remove',
-            onPressed: onDelete,
-            icon: Icon(Icons.delete_outline_rounded,
-                color: theme.colorScheme.onSurface.withOpacity(0.7)),
-          ),
-        ],
+        ),
       ),
     );
   }

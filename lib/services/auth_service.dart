@@ -20,9 +20,17 @@ class AuthService implements AuthServiceInterface {
   /// Login user - password required
   Future<AuthResponse> login(String email, String password) async {
     try {
+      // Validate inputs before sending
+      if (email.trim().isEmpty) {
+        throw YoleApiException('Email is required', 422);
+      }
+      if (password.isEmpty) {
+        throw YoleApiException('Password is required', 422);
+      }
+
       // Password is required for login
       final Map<String, dynamic> body = {
-        'email': email,
+        'email': email.trim(),
         'password': password,
       };
 
@@ -38,28 +46,35 @@ class AuthService implements AuthServiceInterface {
           await _storage.saveRefreshToken(authResponse.refreshToken!);
         }
 
-        // Set token in API service before fetching user profile
+        // Set token in API service
         _api.setAuthToken(authResponse.accessToken);
 
-        // Fetch user profile from /me endpoint
-        try {
-          final user = await getProfile();
-          await _storage.saveUserProfile(user);
-          await _storage.saveLastLogin();
-
-          // Return auth response with actual user data
-          return AuthResponse(
-            accessToken: authResponse.accessToken,
-            refreshToken: authResponse.refreshToken,
-            tokenType: authResponse.tokenType,
-            expiresIn: authResponse.expiresIn,
-            user: user,
-          );
-        } catch (e) {
-          // If profile fetch fails, still return auth response but log error
-          print('Warning: Could not fetch user profile: $e');
+        // Check if login response already has valid user data
+        if (authResponse.user.isValid) {
+          // Login response has valid user data - use it and skip /me call
           await _storage.saveUserProfile(authResponse.user);
           await _storage.saveLastLogin();
+          
+          // Return immediately with user data from login response
+          return authResponse;
+        } else {
+          // Login response doesn't have valid user data - fetch from /me endpoint
+          // But do it in background (non-blocking) to return login immediately
+          await _storage.saveUserProfile(authResponse.user);
+          await _storage.saveLastLogin();
+          
+          // Fetch full profile in background (non-blocking)
+          Future.microtask(() async {
+            try {
+              final user = await getProfile();
+              await _storage.saveUserProfile(user);
+            } catch (e) {
+              // Log error but don't block login
+              print('Warning: Could not fetch user profile in background: $e');
+            }
+          });
+          
+          // Return immediately with user data from login response
           return authResponse;
         }
       } else {
@@ -170,10 +185,14 @@ class AuthService implements AuthServiceInterface {
     }
   }
 
-  /// Get user profile
-  Future<UserProfile> getProfile() async {
+  /// Get user profile with shorter timeout for faster response
+  Future<UserProfile> getProfile({Duration? timeout}) async {
     try {
-      final response = await _api.get('/me', requiresAuth: true);
+      // Use shorter timeout for profile calls (5 seconds default)
+      final response = await _api.get('/me', 
+        requiresAuth: true,
+        timeout: timeout ?? const Duration(seconds: 5),
+      );
 
       if (response.statusCode == 200) {
         final user = UserProfile.fromJson(jsonDecode(response.body));

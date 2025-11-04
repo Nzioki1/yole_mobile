@@ -720,10 +720,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get noCountriesAvailable => 'Aucun pays disponible';
 
   @override
-  String get mobileMoney => 'Argent mobile';
+  String get mobileMoney => 'Mpesa/Airtel Money';
 
   @override
-  String get pesapalCardPayment => 'PesaPal (Paiement par carte)';
+  String get pesapalCardPayment => 'only card payment';
 
   @override
   String get checkAllFields => 'Veuillez vérifier tous les champs et réessayer';

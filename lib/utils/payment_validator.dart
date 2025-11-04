@@ -35,6 +35,35 @@ class PaymentValidator {
     return null;
   }
 
+  /// Validate Congo phone number (must start with +243 and have exactly 9 digits after)
+  static String? validateCongoPhone(String? phone) {
+    if (phone == null || phone.isEmpty) {
+      return 'Phone number is required';
+    }
+
+    // Remove any spaces or formatting
+    final cleaned = phone.trim();
+
+    // Check if phone starts with +243
+    if (!cleaned.startsWith('+243')) {
+      return 'Phone number must start with +243 (Congo country code). Please correct the country code.';
+    }
+
+    // Extract digits after +243
+    final digitsAfterCode = cleaned.substring(4); // Skip "+243"
+
+    // Check if there are exactly 9 digits
+    if (!RegExp(r'^\d{9}$').hasMatch(digitsAfterCode)) {
+      if (digitsAfterCode.length < 9) {
+        return 'Phone number must have exactly 9 digits after +243. Current: ${digitsAfterCode.length} digits.';
+      } else {
+        return 'Phone number must have exactly 9 digits after +243. Current: ${digitsAfterCode.length} digits.';
+      }
+    }
+
+    return null; // Valid
+  }
+
   /// Validate country code
   static String? validateCountry(String? country) {
     if (country == null || country.isEmpty) {

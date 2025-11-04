@@ -1439,13 +1439,13 @@ abstract class AppLocalizations {
   /// Mobile money payment method
   ///
   /// In en, this message translates to:
-  /// **'Mobile Money'**
+  /// **'Mpesa/Airtel Money'**
   String get mobileMoney;
 
   /// PesaPal payment method
   ///
   /// In en, this message translates to:
-  /// **'PesaPal (Card Payment)'**
+  /// **'only card payment'**
   String get pesapalCardPayment;
 
   /// Form validation error message

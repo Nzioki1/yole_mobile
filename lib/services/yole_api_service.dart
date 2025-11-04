@@ -35,6 +35,7 @@ class YoleApiService {
     Map<String, dynamic>? body,
     bool requiresAuth = false,
     bool useFormData = false,
+    Duration? timeout,
   }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
 
@@ -44,8 +45,10 @@ class YoleApiService {
       'X-API-Key': apiKey,
     };
 
-    // Only add Content-Type for JSON requests
-    if (!useFormData) {
+    // Set Content-Type based on request type
+    if (useFormData) {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    } else {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -101,10 +104,11 @@ class YoleApiService {
       }
 
       response = await requestFuture.timeout(
-        const Duration(seconds: 30),
+        timeout ?? const Duration(seconds: 30),
         onTimeout: () {
-          print('Request timeout: $method $endpoint');
-          throw TimeoutException('Request timed out after 30 seconds');
+          final timeoutSeconds = (timeout ?? const Duration(seconds: 30)).inSeconds;
+          print('Request timeout: $method $endpoint (${timeoutSeconds}s)');
+          throw TimeoutException('Request timed out after $timeoutSeconds seconds');
         },
       );
 
@@ -127,6 +131,18 @@ class YoleApiService {
       throw YoleApiException('Forbidden - Insufficient permissions', 403);
     } else if (response.statusCode == 404) {
       throw YoleApiException('Not found - Resource does not exist', 404);
+    } else if (response.statusCode == 422) {
+      // 422 Unprocessable Entity - validation error
+      try {
+        final errorBody = jsonDecode(response.body);
+        final errorMessage = errorBody['message'] ?? 
+                           errorBody['error'] ?? 
+                           'Validation error. Please check your input.';
+        throw YoleApiException(errorMessage, 422);
+      } catch (e) {
+        throw YoleApiException(
+            'Validation error. Please check your input.', 422);
+      }
     } else if (response.statusCode >= 500) {
       throw YoleApiException(
           'Server error - Please try again later', response.statusCode);
@@ -137,8 +153,8 @@ class YoleApiService {
 
   /// GET request
   Future<http.Response> get(String endpoint,
-      {bool requiresAuth = false}) async {
-    return _request('GET', endpoint, requiresAuth: requiresAuth);
+      {bool requiresAuth = false, Duration? timeout}) async {
+    return _request('GET', endpoint, requiresAuth: requiresAuth, timeout: timeout);
   }
 
   /// POST request

@@ -134,6 +134,14 @@ class UserProfile {
 
   String get fullName => '$name $surname';
 
+  /// Check if user data is valid (not default empty user)
+  bool get isValid {
+    // Check if user has meaningful data (not the default empty user)
+    return id != '0' && 
+           email.isNotEmpty && 
+           (name.isNotEmpty || surname.isNotEmpty);
+  }
+
   @override
   String toString() {
     return 'UserProfile(id: $id, email: $email, fullName: $fullName)';

@@ -66,10 +66,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
           children: [
             if (widget.title != null) _buildAppBar(theme, appState),
             Expanded(child: widget.body),
-            MainBottomNavigation(
-              currentIndex: widget.currentIndex,
-              onTap: _onBottomNavTap,
-            ),
+            MainBottomNavigation(currentIndex: widget.currentIndex),
           ],
         ),
       ),
@@ -83,9 +80,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         color: appState.isDark ? Colors.white.withOpacity(0.1) : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.grey[200]!,
+            color: appState.isDark ? Colors.white.withOpacity(0.1) : Colors.grey[200]!,
           ),
         ),
       ),

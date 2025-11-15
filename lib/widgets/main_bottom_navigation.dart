@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../router_types.dart';
 
-class YoleBottomNav extends StatelessWidget {
-  const YoleBottomNav({
+class MainBottomNavigation extends StatelessWidget {
+  const MainBottomNavigation({
     super.key,
     required this.currentIndex,
   });
@@ -52,18 +52,10 @@ class YoleBottomNav extends StatelessWidget {
         showUnselectedLabels: true,
         onTap: (i) => _go(context, i),
         items: [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: AppLocalizations.of(context)!.home),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.history_rounded),
-              label: AppLocalizations.of(context)!.history),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border_rounded),
-              label: AppLocalizations.of(context)!.favorites),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: AppLocalizations.of(context)!.profile),
+          BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: AppLocalizations.of(context)!.home),
+          BottomNavigationBarItem(icon: Icon(Icons.history_rounded), label: AppLocalizations.of(context)!.history),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite_border_rounded), label: AppLocalizations.of(context)!.favorites),
+          BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: AppLocalizations.of(context)!.profile),
         ],
       ),
     );

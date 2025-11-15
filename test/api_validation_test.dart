@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yole_mobile/services/api_validator.dart';
-import 'package:yole_mobile/services/api_report_generator.dart';
+import 'api_validator.dart';
+import 'api_report_generator.dart';
 
 void main() {
   group('API Validation Tests', () {

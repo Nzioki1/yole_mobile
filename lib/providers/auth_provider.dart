@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/mock_auth_service.dart';
 import '../models/api/auth_response.dart';
 import 'api_providers.dart';
 
@@ -199,7 +198,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(error: 'Surname is required');
       return false;
     }
-    // Password validation removed for UI/UX testing
     if (country.trim().isEmpty) {
       state = state.copyWith(error: 'Country is required');
       return false;
@@ -208,7 +206,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Try real auth service first
+      // Attempt real registration
       final authResponse = await _authService.register(
         email: email.trim(),
         name: name.trim(),
@@ -227,37 +225,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       return true;
     } catch (e) {
-      // If real service fails (network error, etc.), fallback to mock service
       print('Real auth service failed: $e, falling back to mock service');
-
-      try {
-        final mockAuthService = MockAuthService();
-        final authResponse = await mockAuthService.register(
-          email: email.trim(),
-          name: name.trim(),
-          surname: surname.trim(),
-          password: password,
-          passwordConfirmation: passwordConfirmation,
-          country: country.trim(),
-        );
-
-        state = state.copyWith(
-          isLoading: false,
-          isAuthenticated: true,
-          user: authResponse.user,
-          error: null,
-        );
-
-        return true;
-      } catch (mockError) {
-        state = state.copyWith(
-          isLoading: false,
-          isAuthenticated: false,
-          user: null,
-          error: 'Registration failed: ${e.toString()}',
-        );
-        return false;
-      }
+      return false;
     }
   }
 
@@ -323,12 +292,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(error: null);
   }
 }
-
-/// Mock authentication provider for testing
-final mockAuthProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final mockAuthService = MockAuthService();
-  return AuthNotifier(mockAuthService);
-});
 
 /// Authentication provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

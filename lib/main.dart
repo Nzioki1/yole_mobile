@@ -6,7 +6,6 @@ import 'app_router.dart';
 import 'providers/global_locale_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
-import 'package:flutter/widgets.dart';
 
 // Global navigator key for forcing navigation stack rebuild
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yole_mobile/l10n/app_localizations.dart';
 import '../providers/app_provider.dart';
 
 /// Navigation Test Screen - Helps test all routes and UI/UX flows
@@ -15,8 +16,7 @@ class NavigationTestScreen extends ConsumerWidget {
       backgroundColor: appState.isDark ? const Color(0xFF0B0F19) : Colors.white,
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.navigationTest),
-        backgroundColor:
-            appState.isDark ? const Color(0xFF0B0F19) : Colors.white,
+        backgroundColor: appState.isDark ? const Color(0xFF0B0F19) : Colors.white,
         foregroundColor: appState.isDark ? Colors.white : Colors.black,
       ),
       body: SingleChildScrollView(

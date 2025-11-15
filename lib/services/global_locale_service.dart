@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
 
 /// Global locale service that manages language state across the entire app
 /// Uses ChangeNotifier for proper state management and SharedPreferences for persistence

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'yole_api_service.dart';
 import '../models/api/charges_response.dart';
 import '../models/api/send_money_response.dart';

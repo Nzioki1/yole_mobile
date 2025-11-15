@@ -1,5 +1,5 @@
-import '../models/api/auth_response.dart';
-import '../providers/auth_provider.dart';
+import '../lib/models/api/auth_response.dart';
+import '../lib/providers/auth_provider.dart';
 
 /// Mock authentication service for testing when backend is unavailable
 class MockAuthService implements AuthServiceInterface {

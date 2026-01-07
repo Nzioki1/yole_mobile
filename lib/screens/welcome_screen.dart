@@ -53,8 +53,7 @@ class WelcomeScreen extends ConsumerWidget {
                     minHeight: screenHeight,
                   ),
                   child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: horizontalPadding),
+                    padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -68,7 +67,7 @@ class WelcomeScreen extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(28),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.shadowColor.withOpacity(0.35),
+                                color: theme.shadowColor.withValues(alpha: 0.35),
                                 blurRadius: 30,
                                 offset: const Offset(0, 12),
                               ),
@@ -86,22 +85,18 @@ class WelcomeScreen extends ConsumerWidget {
                                   height: imageSize,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => Container(
-                                    color:
-                                        theme.cardTheme.color?.withOpacity(0.3),
+                                    color: theme.cardTheme.color?.withValues(alpha: 0.3),
                                     child: Center(
                                       child: CircularProgressIndicator(
                                         color: theme.colorScheme.primary,
                                       ),
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) =>
-                                      Container(
-                                    color:
-                                        theme.cardTheme.color?.withOpacity(0.3),
+                                  errorWidget: (context, url, error) => Container(
+                                    color: theme.cardTheme.color?.withValues(alpha: 0.3),
                                     child: Icon(
                                       Icons.image_not_supported,
-                                      color: theme.textTheme.bodyMedium?.color
-                                          ?.withOpacity(0.5),
+                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5),
                                       size: 48,
                                     ),
                                   ),
@@ -111,10 +106,8 @@ class WelcomeScreen extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        theme.colorScheme.primary
-                                            .withOpacity(0.22),
-                                        theme.colorScheme.secondary
-                                            .withOpacity(0.22),
+                                        theme.colorScheme.primary.withValues(alpha: 0.22),
+                                        theme.colorScheme.secondary.withValues(alpha: 0.22),
                                       ],
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
@@ -156,8 +149,7 @@ class WelcomeScreen extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: subtitleFontSize,
                             height: 1.45,
-                            color: theme.textTheme.bodyLarge?.color
-                                ?.withOpacity(0.78),
+                            color: theme.textTheme.bodyLarge?.color?.withValues(alpha: 0.78),
                           ),
                         ),
 
@@ -170,16 +162,12 @@ class WelcomeScreen extends ConsumerWidget {
                           child: _GradientButton(
                             borderRadius: 24,
                             onPressed: () {
-                              Navigator.of(context)
-                                  .pushNamed(RouteNames.register);
+                              Navigator.of(context).pushNamed(RouteNames.register);
                             },
                             gradient: LinearGradient(
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.secondary
-                              ],
+                              colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
                             ),
                             child: Center(
                               child: Text(
@@ -203,8 +191,7 @@ class WelcomeScreen extends ConsumerWidget {
                           text: TextSpan(
                             style: TextStyle(
                               fontSize: linkFontSize,
-                              color: theme.textTheme.bodyMedium?.color
-                                  ?.withOpacity(0.8),
+                              color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.8),
                             ),
                             children: [
                               TextSpan(text: l10n.alreadyHaveAccount),
@@ -217,8 +204,7 @@ class WelcomeScreen extends ConsumerWidget {
                                 ),
                                 recognizer: TapGestureRecognizer()
                                   ..onTap = () {
-                                    Navigator.of(context)
-                                        .pushNamed(RouteNames.login);
+                                    Navigator.of(context).pushNamed(RouteNames.login);
                                   },
                               ),
                             ],
@@ -264,7 +250,7 @@ class _GradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withOpacity(0.35),
+              color: theme.shadowColor.withValues(alpha: 0.35),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),

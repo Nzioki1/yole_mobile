@@ -19,8 +19,7 @@ class SendMoneyResultScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SendMoneyResultScreen> createState() =>
-      _SendMoneyResultScreenState();
+  ConsumerState<SendMoneyResultScreen> createState() => _SendMoneyResultScreenState();
 }
 
 class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
@@ -31,15 +30,12 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
   }
 
   Future<void> _checkTransactionStatus() async {
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args == null) return;
 
     final pspTransactionId = args['pspTransactionId'] as String?;
     if (pspTransactionId != null) {
-      await ref
-          .read(transactionStatusProvider.notifier)
-          .checkStatus(pspTransactionId);
+      await ref.read(transactionStatusProvider.notifier).checkStatus(pspTransactionId);
     }
   }
 
@@ -63,20 +59,16 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                       const SizedBox(height: 48),
                       _buildStatusIcon(theme, appState, transactionStatusState),
                       const SizedBox(height: 24),
-                      _buildStatusTitle(
-                          theme, appState, transactionStatusState),
+                      _buildStatusTitle(theme, appState, transactionStatusState),
                       const SizedBox(height: 16),
-                      _buildStatusMessage(
-                          theme, appState, transactionStatusState),
+                      _buildStatusMessage(theme, appState, transactionStatusState),
                       const SizedBox(height: 32),
-                      _buildTransactionDetails(
-                          theme, appState, transactionStatusState),
+                      _buildTransactionDetails(theme, appState, transactionStatusState),
                     ],
                   ),
                 ),
               ),
-              _buildActionButtons(
-                  theme, appState, context, transactionStatusState),
+              _buildActionButtons(theme, appState, context, transactionStatusState),
             ],
           ),
         ),
@@ -84,14 +76,12 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
     );
   }
 
-  Widget _buildStatusIcon(ThemeData theme, AppState appState,
-      TransactionStatusState transactionStatusState) {
+  Widget _buildStatusIcon(ThemeData theme, AppState appState, TransactionStatusState transactionStatusState) {
     IconData icon;
     Color color;
 
     // Use API status if available, otherwise fall back to widget status
-    final currentStatus = transactionStatusState.status?.status ??
-        widget.status.toString().split('.').last;
+    final currentStatus = transactionStatusState.status?.status ?? widget.status.toString().split('.').last;
 
     switch (currentStatus.toLowerCase()) {
       case 'success':
@@ -121,7 +111,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
       width: 80,
       height: 80,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(
@@ -132,8 +122,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
     );
   }
 
-  Widget _buildStatusTitle(ThemeData theme, AppState appState,
-      TransactionStatusState transactionStatusState) {
+  Widget _buildStatusTitle(ThemeData theme, AppState appState, TransactionStatusState transactionStatusState) {
     String title;
 
     final currentStatus = transactionStatusState.status?.status ?? 'PENDING';
@@ -167,22 +156,19 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
     );
   }
 
-  Widget _buildStatusMessage(ThemeData theme, AppState appState,
-      TransactionStatusState transactionStatusState) {
+  Widget _buildStatusMessage(ThemeData theme, AppState appState, TransactionStatusState transactionStatusState) {
     String message;
 
     final status = transactionStatusState.status?.status;
     switch (status) {
       case 'COMPLETED':
-        message =
-            'Your transfer has been scheduled and will be processed shortly.';
+        message = 'Your transfer has been scheduled and will be processed shortly.';
         break;
       case 'PENDING':
         message = 'We\'ll notify you once payment is confirmed.';
         break;
       case 'FAILED':
-        message =
-            'Your transfer could not be completed. Please try again or contact support.';
+        message = 'Your transfer could not be completed. Please try again or contact support.';
         break;
       case 'CANCELLED':
         message = 'Your transfer has been cancelled. No charges were made.';
@@ -201,16 +187,13 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
     );
   }
 
-  Widget _buildTransactionDetails(ThemeData theme, AppState appState,
-      TransactionStatusState transactionStatusState) {
+  Widget _buildTransactionDetails(ThemeData theme, AppState appState, TransactionStatusState transactionStatusState) {
     // Extract PesaPal data
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final pesapalOrderTrackingId = args?['pesapalOrderTrackingId'] as String?;
     final paymentMethod = args?['paymentMethod'] as String? ?? 'mobile_money';
 
-    if (transactionStatusState.status == null &&
-        pesapalOrderTrackingId == null) {
+    if (transactionStatusState.status == null && pesapalOrderTrackingId == null) {
       return const SizedBox.shrink();
     }
 
@@ -222,7 +205,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -237,38 +220,23 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
           ),
           const SizedBox(height: 16),
           if (details != null) ...[
-            _buildDetailRow(
-                'Amount',
-                _formatAmount(details.amount, details.currency ?? 'USD'),
-                theme,
-                appState),
-            _buildDetailRow('Fees',
-                _formatAmount(0.0, details.currency ?? 'USD'), theme, appState),
-            _buildDetailRow(
-                'Total charged',
-                _formatAmount(details.amount, details.currency ?? 'USD'),
-                theme,
-                appState),
+            _buildDetailRow('Amount', _formatAmount(details.amount, details.currency ?? 'USD'), theme, appState),
+            _buildDetailRow('Fees', _formatAmount(0.0, details.currency ?? 'USD'), theme, appState),
+            _buildDetailRow('Total charged', _formatAmount(details.amount, details.currency ?? 'USD'), theme, appState),
             _buildDetailRow('Recipient', 'N/A', theme, appState),
-            _buildDetailRow(
-                'YOLE Ref', details.orderTrackingId, theme, appState),
-            _buildDetailRow(
-                'PSP Txn ID', details.orderTrackingId, theme, appState),
+            _buildDetailRow('YOLE Ref', details.orderTrackingId, theme, appState),
+            _buildDetailRow('PSP Txn ID', details.orderTrackingId, theme, appState),
           ] else ...[
             // Show basic info from args when details are not available
-            _buildDetailRow(
-                'Payment Method', paymentMethod.toUpperCase(), theme, appState),
-            if (pesapalOrderTrackingId != null)
-              _buildDetailRow(
-                  'PesaPal Order ID', pesapalOrderTrackingId, theme, appState),
+            _buildDetailRow('Payment Method', paymentMethod.toUpperCase(), theme, appState),
+            if (pesapalOrderTrackingId != null) _buildDetailRow('PesaPal Order ID', pesapalOrderTrackingId, theme, appState),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(
-      String label, String value, ThemeData theme, AppState appState) {
+  Widget _buildDetailRow(String label, String value, ThemeData theme, AppState appState) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -299,11 +267,9 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
     );
   }
 
-  Widget _buildActionButtons(ThemeData theme, AppState appState,
-      BuildContext context, TransactionStatusState transactionStatusState) {
+  Widget _buildActionButtons(ThemeData theme, AppState appState, BuildContext context, TransactionStatusState transactionStatusState) {
     // Extract PesaPal data for completion button
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final pesapalRedirectUrl = args?['pesapalRedirectUrl'] as String?;
     final paymentMethod = args?['paymentMethod'] as String? ?? 'mobile_money';
 
@@ -321,8 +287,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                   try {
                     final url = Uri.parse(pesapalRedirectUrl);
                     if (await canLaunchUrl(url)) {
-                      await launchUrl(url,
-                          mode: LaunchMode.externalApplication);
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
                     } else {
                       final l10n = AppLocalizations.of(context)!;
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -342,20 +307,20 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                     );
                   }
                 },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Complete Payment in Browser',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                child: const Text(
+                  'Complete Payment in Browser',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
               ),
             ),
             const SizedBox(height: 12),
@@ -379,8 +344,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
           ),
 
           // Secondary action buttons for failed transfers
-          if (transactionStatusState.status?.status == 'FAILED' ||
-              transactionStatusState.status?.status == 'CANCELLED') ...[
+          if (transactionStatusState.status?.status == 'FAILED' || transactionStatusState.status?.status == 'CANCELLED') ...[
             const SizedBox(height: 12),
             Row(
               children: [
@@ -396,9 +360,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: appState.isDark
-                            ? Colors.white54
-                            : Colors.grey[400]!,
+                        color: appState.isDark ? Colors.white54 : Colors.grey[400]!,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -426,9 +388,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: appState.isDark
-                            ? Colors.white54
-                            : Colors.grey[400]!,
+                        color: appState.isDark ? Colors.white54 : Colors.grey[400]!,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

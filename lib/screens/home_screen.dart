@@ -11,10 +11,10 @@ class HomeScreen extends ConsumerWidget {
   /// Get time-based greeting
   String _getTimeBasedGreeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    
+
     // Get user's first name, default to "John" if not available
     final firstName = 'John'; // TODO: Get from authProvider user object
-    
+
     if (hour >= 5 && hour < 12) {
       return 'Good morning, $firstName 👋';
     } else if (hour >= 12 && hour < 18) {
@@ -32,8 +32,7 @@ class HomeScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor:
-          theme.scaffoldBackgroundColor, // THEME: Dynamic background
+      backgroundColor: theme.scaffoldBackgroundColor, // THEME: Dynamic background
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, c) => SingleChildScrollView(
@@ -51,8 +50,7 @@ class HomeScreen extends ConsumerWidget {
                         child: Text(
                           _getTimeBasedGreeting(context),
                           style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme
-                                .colorScheme.onSurface, // THEME: Dynamic text
+                            color: theme.colorScheme.onSurface, // THEME: Dynamic text
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                           ),
@@ -106,15 +104,13 @@ class HomeScreen extends ConsumerWidget {
                       Text(
                         l10n.recentTransactions,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme
-                              .colorScheme.onSurface, // THEME: Dynamic text
+                          color: theme.colorScheme.onSurface, // THEME: Dynamic text
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const Spacer(),
                       GestureDetector(
-                        onTap: () => Navigator.of(context)
-                            .pushNamed(RouteNames.transactions),
+                        onTap: () => Navigator.of(context).pushNamed(RouteNames.transactions),
                         child: Text(
                           l10n.viewAll,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -128,26 +124,11 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   // Sample items
-                  _TxListItem(
-                      name: 'Marie Kabila',
-                      amount: '-\$100.00',
-                      status: 'Delivered',
-                      statusColor: const Color(0xFF0C7A53),
-                      date: 'Jan 10'),
+                  _TxListItem(name: 'Marie Kabila', amount: '-\$100.00', status: 'Delivered', statusColor: const Color(0xFF0C7A53), date: 'Jan 10'),
                   const SizedBox(height: 10),
-                  _TxListItem(
-                      name: 'Joseph Mumba',
-                      amount: '-€50.00',
-                      status: 'Processing',
-                      statusColor: const Color(0xFF165BAA),
-                      date: 'Jan 10'),
+                  _TxListItem(name: 'Joseph Mumba', amount: '-€50.00', status: 'Processing', statusColor: const Color(0xFF165BAA), date: 'Jan 10'),
                   const SizedBox(height: 10),
-                  _TxListItem(
-                      name: 'Grace Tshisekedi',
-                      amount: '-\$200.00',
-                      status: 'Failed',
-                      statusColor: const Color(0xFF912D2D),
-                      date: 'Jan 9'),
+                  _TxListItem(name: 'Grace Tshisekedi', amount: '-\$200.00', status: 'Failed', statusColor: const Color(0xFF912D2D), date: 'Jan 9'),
                 ],
               ),
             ),
@@ -188,8 +169,7 @@ class _ProfileQuickMenu extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface
-                  .withOpacity(0.2), // THEME: Dynamic
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2), // THEME: Dynamic
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -207,8 +187,7 @@ class _ProfileQuickMenu extends StatelessWidget {
                     Text(
                       'John Doe',
                       style: TextStyle(
-                        color:
-                            theme.colorScheme.onSurface, // THEME: Dynamic text
+                        color: theme.colorScheme.onSurface, // THEME: Dynamic text
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
@@ -216,8 +195,7 @@ class _ProfileQuickMenu extends StatelessWidget {
                     Text(
                       'john.doe@email.com',
                       style: TextStyle(
-                        color: theme.colorScheme.onSurface
-                            .withOpacity(0.7), // THEME: Dynamic
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7), // THEME: Dynamic
                         fontSize: 14,
                       ),
                     ),
@@ -295,19 +273,16 @@ class _ProfileQuickMenu extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Log Out',
-          style: TextStyle(
-              color: theme.colorScheme.onSurface, fontWeight: FontWeight.w700),
+          style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w700),
         ),
         content: Text(
           'Are you sure you want to log out?',
-          style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+          style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7))),
+            child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
           ),
           TextButton(
             onPressed: () async {
@@ -357,10 +332,9 @@ class _ProfileOption extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListTile(
-      leading: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7)),
+      leading: Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
       title: Text(title, style: TextStyle(color: theme.colorScheme.onSurface)),
-      trailing: Icon(Icons.arrow_forward_ios_rounded,
-          size: 16, color: theme.colorScheme.onSurface.withOpacity(0.3)),
+      trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
     );
@@ -381,21 +355,18 @@ class _Avatar extends StatelessWidget {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient:
-            LinearGradient(colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
+        gradient: LinearGradient(colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
       ),
       child: Text(
         initials,
-        style: const TextStyle(
-            color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
+        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
       ),
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
-  const _StatCard(
-      {required this.title, required this.value, required this.icon});
+  const _StatCard({required this.title, required this.value, required this.icon});
   final String title;
   final String value;
   final IconData icon;
@@ -411,9 +382,7 @@ class _StatCard extends StatelessWidget {
         color: theme.cardTheme.color, // THEME: Dynamic card background
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
+          color: theme.brightness == Brightness.dark ? const Color(0xFF2B2F58) : const Color(0xFFE5E7EB),
         ),
       ),
       child: Column(
@@ -422,25 +391,18 @@ class _StatCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7)),
+              Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
               const Spacer(),
-              Icon(Icons.north_east_rounded,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
-                  size: 16),
+              Icon(Icons.north_east_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.3), size: 16),
             ],
           ),
           Text(
             value,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 26,
-                fontWeight: FontWeight.w800),
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 26, fontWeight: FontWeight.w800),
           ),
           Text(
             title,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                fontSize: 13),
+            style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 13),
           ),
         ],
       ),
@@ -458,32 +420,23 @@ class _PrimaryCTA extends StatelessWidget {
       height: 56,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
+          gradient: const LinearGradient(colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
           ],
         ),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            onTap: () => Navigator.of(context)
-                .pushNamed(RouteNames.sendMoneyEnterDetails),
+            onTap: () => Navigator.of(context).pushNamed(RouteNames.sendMoneyEnterDetails),
             borderRadius: BorderRadius.circular(18),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(Icons.send_rounded, color: Colors.white),
                 const SizedBox(width: 10),
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16)),
+                Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
               ],
             ),
           ),
@@ -515,8 +468,7 @@ class _FavoritesPreview extends ConsumerWidget {
             ),
             const Spacer(),
             GestureDetector(
-              onTap: () =>
-                  Navigator.of(context).pushNamed(RouteNames.favorites),
+              onTap: () => Navigator.of(context).pushNamed(RouteNames.favorites),
               child: Text(
                 'Manage',
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -529,9 +481,7 @@ class _FavoritesPreview extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         if (items.isEmpty)
-          Text('No favorites yet',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6)))
+          Text('No favorites yet', style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.6)))
         else
           SizedBox(
             height: 84,
@@ -544,8 +494,7 @@ class _FavoritesPreview extends ConsumerWidget {
                 return _FavoritePill(
                   initials: c.initials,
                   label: c.label,
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(RouteNames.favorites),
+                  onTap: () => Navigator.of(context).pushNamed(RouteNames.favorites),
                 );
               },
             ),
@@ -556,8 +505,7 @@ class _FavoritesPreview extends ConsumerWidget {
 }
 
 class _FavoritePill extends StatelessWidget {
-  const _FavoritePill(
-      {required this.initials, required this.label, required this.onTap});
+  const _FavoritePill({required this.initials, required this.label, required this.onTap});
   final String initials;
   final String label;
   final VoidCallback onTap;
@@ -583,18 +531,12 @@ class _FavoritePill extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                      colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
+                  gradient: LinearGradient(colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
                 ),
-                child: Text(initials,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w800)),
+                child: Text(initials, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
               ),
               const SizedBox(width: 10),
-              Text(label,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w700)),
+              Text(label, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -628,9 +570,7 @@ class _TxListItem extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
+          color: theme.brightness == Brightness.dark ? const Color(0xFF2B2F58) : const Color(0xFFE5E7EB),
         ),
       ),
       child: Row(
@@ -642,18 +582,11 @@ class _TxListItem extends StatelessWidget {
             alignment: Alignment.center,
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                  colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
+              gradient: LinearGradient(colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
             ),
             child: Text(
-              name
-                  .split(' ')
-                  .map((p) => p.isNotEmpty ? p[0] : '')
-                  .take(2)
-                  .join()
-                  .toUpperCase(),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800),
+              name.split(' ').map((p) => p.isNotEmpty ? p[0] : '').take(2).join().toUpperCase(),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(width: 12),
@@ -662,22 +595,13 @@ class _TxListItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
-                    style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16)),
+                Text(name, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w700, fontSize: 16)),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.access_time,
-                        size: 14,
-                        color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                    Icon(Icons.access_time, size: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                     const SizedBox(width: 6),
-                    Text(date,
-                        style: TextStyle(
-                            color:
-                                theme.colorScheme.onSurface.withOpacity(0.6))),
+                    Text(date, style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
                   ],
                 )
               ],
@@ -687,22 +611,16 @@ class _TxListItem extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(amount,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w800)),
+              Text(amount, style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w800)),
               const SizedBox(height: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(.15),
+                  color: statusColor.withValues(alpha: .15),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: statusColor.withOpacity(.6)),
+                  border: Border.all(color: statusColor.withValues(alpha: .6)),
                 ),
-                child: Text(status,
-                    style: TextStyle(
-                        color: statusColor, fontWeight: FontWeight.w700)),
+                child: Text(status, style: TextStyle(color: statusColor, fontWeight: FontWeight.w700)),
               ),
             ],
           )

@@ -27,8 +27,7 @@ class KYCPhoneScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCPhoneScreen> createState() => _KYCPhoneScreenState();
 }
 
-class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
-    with TickerProviderStateMixin {
+class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen> with TickerProviderStateMixin {
   final _phoneController = TextEditingController();
   String _selectedCountryCode = '';
   bool _isLoading = false;
@@ -79,8 +78,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
-    _slideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
@@ -105,9 +103,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
   Map<String, String>? get _selectedCountryData {
     return _countryCodes
         .where(
-          (country) =>
-              '${country['code']}-${country['country']}' ==
-              _selectedCountryCode,
+          (country) => '${country['code']}-${country['country']}' == _selectedCountryCode,
         )
         .firstOrNull;
   }
@@ -200,9 +196,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : theme.colorScheme.outline.withOpacity(0.3),
+                        color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -220,9 +214,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                         },
                         icon: Icon(
                           Icons.arrow_back,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                         ),
                       ),
                       Expanded(
@@ -232,9 +224,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
+                            color: isDark ? Colors.white : theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -256,9 +246,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                           l10n.stepXofY(1, 4),
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.7)
-                                : theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         Text(
@@ -266,9 +254,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
+                            color: isDark ? Colors.white : theme.colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -276,9 +262,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                     const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: 0.25,
-                      backgroundColor: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : theme.colorScheme.outline.withOpacity(0.3),
+                      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFF3B82F6),
                       ),
@@ -291,8 +275,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
               // Content (make scrollable and avoid overlap)
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     child: Column(
@@ -322,14 +305,12 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                                 Color(0xFF8B5CF6),
                                               ],
                                             ),
-                                      color: isDark
-                                          ? Colors.white.withOpacity(0.1)
-                                          : null,
+                                      color: isDark ? Colors.white.withValues(alpha: 0.1) : null,
                                       borderRadius: BorderRadius.circular(40),
                                       border: isDark
                                           ? Border.all(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.2,
                                               ),
                                               width: 1,
                                             )
@@ -358,9 +339,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         style: TextStyle(
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : theme.colorScheme.onSurface,
+                                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                         ),
                                       ),
                                       const SizedBox(height: 16),
@@ -369,10 +348,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 16,
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.7)
-                                              : theme.colorScheme.onSurface
-                                                  .withOpacity(0.7),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                           height: 1.5,
                                         ),
                                       ),
@@ -390,22 +366,18 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                   ),
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.white.withOpacity(0.08)
-                                        : theme.colorScheme.surface,
+                                    color: isDark ? Colors.white.withValues(alpha: 0.08) : theme.colorScheme.surface,
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
                                       color: isDark
-                                          ? Colors.white.withOpacity(0.1)
-                                          : theme.colorScheme.outline
-                                              .withOpacity(
-                                              0.3,
+                                          ? Colors.white.withValues(alpha: 0.1)
+                                          : theme.colorScheme.outline.withValues(
+                                              alpha: 0.3,
                                             ),
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       // Country Code Selector
                                       Text(
@@ -413,39 +385,25 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.9)
-                                              : theme.colorScheme.onSurface,
+                                          color: isDark ? Colors.white.withValues(alpha: 0.9) : theme.colorScheme.onSurface,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
                                       DropdownButtonFormField<String>(
-                                        initialValue:
-                                            _selectedCountryCode.isEmpty
-                                                ? null
-                                                : _selectedCountryCode,
+                                        initialValue: _selectedCountryCode.isEmpty ? null : _selectedCountryCode,
                                         decoration: InputDecoration(
                                           hintText: l10n.selectYourCountry,
                                           hintStyle: TextStyle(
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.5)
-                                                : theme.colorScheme.onSurface
-                                                    .withOpacity(0.5),
+                                            color: isDark ? Colors.white.withValues(alpha: 0.5) : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                           ),
                                           filled: true,
-                                          fillColor: isDark
-                                              ? Colors.white.withOpacity(0.05)
-                                              : theme.inputDecorationTheme
-                                                  .fillColor,
+                                          fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : theme.inputDecorationTheme.fillColor,
                                           border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                             borderSide: BorderSide(
-                                              color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.2)
-                                                  : theme.colorScheme.outline,
+                                              color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                             ),
                                           ),
                                           enabledBorder: OutlineInputBorder(
@@ -453,25 +411,17 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                               12,
                                             ),
                                             borderSide: BorderSide(
-                                              color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.2)
-                                                  : theme.colorScheme.outline,
+                                              color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                             ),
                                           ),
                                         ),
-                                        dropdownColor: isDark
-                                            ? const Color(0xFF19173D)
-                                            : theme.colorScheme.surface,
+                                        dropdownColor: isDark ? const Color(0xFF19173D) : theme.colorScheme.surface,
                                         style: TextStyle(
-                                          color: isDark
-                                              ? Colors.white
-                                              : theme.colorScheme.onSurface,
+                                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                         ),
                                         items: _countryCodes.map((country) {
                                           return DropdownMenuItem<String>(
-                                            value:
-                                                '${country['code']}-${country['country']}',
+                                            value: '${country['code']}-${country['country']}',
                                             child: Row(
                                               children: [
                                                 Text(
@@ -484,8 +434,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                                 Expanded(
                                                   child: Text(
                                                     country['name']!,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
@@ -493,11 +442,8 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                                   country['code']!,
                                                   style: TextStyle(
                                                     color: isDark
-                                                        ? Colors.white
-                                                            .withOpacity(0.6)
-                                                        : theme.colorScheme
-                                                            .onSurface
-                                                            .withOpacity(0.6),
+                                                        ? Colors.white.withValues(alpha: 0.6)
+                                                        : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                                   ),
                                                 ),
                                               ],
@@ -519,9 +465,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w500,
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.9)
-                                              : theme.colorScheme.onSurface,
+                                          color: isDark ? Colors.white.withValues(alpha: 0.9) : theme.colorScheme.onSurface,
                                         ),
                                       ),
                                       const SizedBox(height: 8),
@@ -529,28 +473,23 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         children: [
                                           if (_selectedCountryData != null)
                                             Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
+                                              padding: const EdgeInsets.symmetric(
                                                 horizontal: 12,
                                                 vertical: 16,
                                               ),
                                               decoration: BoxDecoration(
                                                 color: isDark
-                                                    ? Colors.white.withOpacity(
-                                                        0.05,
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.05,
                                                       )
-                                                    : theme.colorScheme.outline
-                                                        .withOpacity(0.1),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                    : theme.colorScheme.outline.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(12),
                                                 border: Border.all(
                                                   color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(
-                                                          0.2,
+                                                      ? Colors.white.withValues(
+                                                          alpha: 0.2,
                                                         )
-                                                      : theme
-                                                          .colorScheme.outline,
+                                                      : theme.colorScheme.outline,
                                                 ),
                                               ),
                                               child: Text(
@@ -558,81 +497,54 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                                 style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w500,
-                                                  color: isDark
-                                                      ? Colors.white
-                                                      : theme.colorScheme
-                                                          .onSurface,
+                                                  color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                                 ),
                                               ),
                                             ),
-                                          if (_selectedCountryData != null)
-                                            const SizedBox(width: 8),
+                                          if (_selectedCountryData != null) const SizedBox(width: 8),
                                           Expanded(
                                             child: TextFormField(
                                               controller: _phoneController,
                                               keyboardType: TextInputType.phone,
-                                              textInputAction:
-                                                  TextInputAction.done,
-                                              onFieldSubmitted: (_) =>
-                                                  FocusScope.of(context)
-                                                      .unfocus(),
+                                              textInputAction: TextInputAction.done,
+                                              onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
                                               onChanged: (value) {
                                                 // Optionally dismiss when likely complete (heuristic)
                                                 if (value.length >= 9) {
                                                   // Uncomment to auto-dismiss as users finish typing
                                                   // FocusScope.of(context).unfocus();
                                                 }
-                                                setState(
-                                                    () {}); // update button state
+                                                setState(() {}); // update button state
                                               },
-                                              enabled:
-                                                  _selectedCountryData != null,
+                                              enabled: _selectedCountryData != null,
                                               style: TextStyle(
-                                                color: isDark
-                                                    ? Colors.white
-                                                    : theme
-                                                        .colorScheme.onSurface,
+                                                color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                               ),
                                               decoration: InputDecoration(
                                                 hintText: l10n.phonePlaceholder,
                                                 hintStyle: TextStyle(
                                                   color: isDark
-                                                      ? Colors.white
-                                                          .withOpacity(
-                                                          0.5,
+                                                      ? Colors.white.withValues(
+                                                          alpha: 0.5,
                                                         )
-                                                      : theme
-                                                          .colorScheme.onSurface
-                                                          .withOpacity(0.5),
+                                                      : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                                 ),
                                                 filled: true,
                                                 fillColor: isDark
-                                                    ? Colors.white.withOpacity(
-                                                        0.05,
+                                                    ? Colors.white.withValues(
+                                                        alpha: 0.05,
                                                       )
-                                                    : theme.inputDecorationTheme
-                                                        .fillColor,
+                                                    : theme.inputDecorationTheme.fillColor,
                                                 border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
+                                                  borderRadius: BorderRadius.circular(12),
                                                   borderSide: BorderSide(
-                                                    color: isDark
-                                                        ? Colors.white
-                                                            .withOpacity(0.2)
-                                                        : theme.colorScheme
-                                                            .outline,
+                                                    color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                                   ),
                                                 ),
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(12),
                                                   borderSide: BorderSide(
-                                                    color: isDark
-                                                        ? Colors.white
-                                                            .withOpacity(0.2)
-                                                        : theme.colorScheme
-                                                            .outline,
+                                                    color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                                   ),
                                                 ),
                                               ),
@@ -648,10 +560,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         l10n.standardMessageRates,
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.6)
-                                              : theme.colorScheme.onSurface
-                                                  .withOpacity(0.6),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                         ),
                                       ),
                                     ],
@@ -688,9 +597,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
           child: AnimatedBuilder(
             animation: _fadeAnimation,
             builder: (context, child) {
-              final canSend = _phoneController.text.isNotEmpty &&
-                  _selectedCountryCode.isNotEmpty &&
-                  !_isLoading;
+              final canSend = _phoneController.text.isNotEmpty && _selectedCountryCode.isNotEmpty && !_isLoading;
               return Transform.translate(
                 offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
                 child: Opacity(
@@ -704,8 +611,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : Text(

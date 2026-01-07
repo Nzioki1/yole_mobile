@@ -68,13 +68,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                   child: Text(
                     'No favorites yet',
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 )
               : ReorderableListView(
-                  proxyDecorator: (child, index, animation) =>
-                      Material(color: Colors.transparent, child: child),
+                  proxyDecorator: (child, index, animation) => Material(color: Colors.transparent, child: child),
                   onReorder: (oldIndex, newIndex) {
                     notifier.reorder(oldIndex, newIndex);
                   },
@@ -86,8 +85,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                         onSelect: () async {
                           // Multiple numbers → let user pick
                           if (c.phones.length > 1) {
-                            final selectedPhone =
-                                await _showPhoneSelector(context, c.phones);
+                            final selectedPhone = await _showPhoneSelector(context, c.phones);
                             if (selectedPhone != null && context.mounted) {
                               // Check if we can pop (favorites was pushed from another screen)
                               if (Navigator.of(context).canPop()) {
@@ -140,8 +138,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                         onSend: () async {
                           // Multiple numbers → let user pick
                           if (c.phones.length > 1) {
-                            final selectedPhone =
-                                await _showPhoneSelector(context, c.phones);
+                            final selectedPhone = await _showPhoneSelector(context, c.phones);
                             if (selectedPhone != null && context.mounted) {
                               // Check if we can pop (favorites was pushed from another screen)
                               if (Navigator.of(context).canPop()) {
@@ -199,8 +196,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     );
   }
 
-  Future<String?> _showPhoneSelector(
-      BuildContext context, List<String> phones) {
+  Future<String?> _showPhoneSelector(BuildContext context, List<String> phones) {
     final l10n = AppLocalizations.of(context)!;
     return showDialog<String>(
       context: context,
@@ -235,10 +231,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
     if (!mounted || picked == null) return;
 
     // Extract phone numbers from picked contact
-    final phoneNumbers = picked.phones
-        .map((p) => p.number)
-        .where((n) => n.trim().isNotEmpty)
-        .toList();
+    final phoneNumbers = picked.phones.map((p) => p.number).where((n) => n.trim().isNotEmpty).toList();
 
     ref.read(favoritesProvider.notifier).add(
           FavoriteContact(
@@ -311,9 +304,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
   @override
   void initState() {
     super.initState();
-    _phoneControllers = widget.contact.phones
-        .map((phone) => TextEditingController(text: phone))
-        .toList();
+    _phoneControllers = widget.contact.phones.map((phone) => TextEditingController(text: phone)).toList();
     if (_phoneControllers.isEmpty) {
       _phoneControllers.add(TextEditingController());
     }
@@ -445,7 +436,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                           Text(
                             'Country: ${widget.contact.countryCode}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                       ],
@@ -508,8 +499,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                                     decoration: InputDecoration(
                                       hintText: '+243123456789',
                                       hintStyle: TextStyle(
-                                        color: theme.colorScheme.onSurface
-                                            .withOpacity(0.5),
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                       ),
                                       prefixIcon: Icon(
                                         Icons.phone_outlined,
@@ -519,8 +509,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       filled: true,
-                                      fillColor:
-                                          theme.colorScheme.surface.withOpacity(0.5),
+                                      fillColor: theme.colorScheme.surface.withValues(alpha: 0.5),
                                     ),
                                     style: TextStyle(
                                       color: theme.colorScheme.onSurface,
@@ -532,8 +521,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                                         }
                                         return 'Phone number is required';
                                       }
-                                      final error = PaymentValidator
-                                          .validateCongoPhone(value.trim());
+                                      final error = PaymentValidator.validateCongoPhone(value.trim());
                                       return error;
                                     },
                                   ),
@@ -556,10 +544,10 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                               margin: const EdgeInsets.only(bottom: 8),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surface.withOpacity(0.5),
+                                color: theme.colorScheme.surface.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: theme.colorScheme.outline.withOpacity(0.2),
+                                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
                                 ),
                               ),
                               child: Row(
@@ -597,7 +585,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withOpacity(0.5),
+                            color: theme.colorScheme.surface.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -605,15 +593,14 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                               Icon(
                                 Icons.info_outline,
                                 size: 20,
-                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   l10n.noPhoneNumber,
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                   ),
                                 ),
                               ),
@@ -636,9 +623,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                           _isEditMode = false;
                           // Reset controllers to original values
                           _phoneControllers.clear();
-                          _phoneControllers = widget.contact.phones
-                              .map((phone) => TextEditingController(text: phone))
-                              .toList();
+                          _phoneControllers = widget.contact.phones.map((phone) => TextEditingController(text: phone)).toList();
                           if (_phoneControllers.isEmpty) {
                             _phoneControllers.add(TextEditingController());
                           }
@@ -677,8 +662,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                         // Trigger selection using screen context
                         final screenCtx = widget.screenContext;
                         if (widget.contact.phones.length > 1) {
-                          final selectedPhone = await widget.onSelectPhone(
-                              screenCtx, widget.contact.phones);
+                          final selectedPhone = await widget.onSelectPhone(screenCtx, widget.contact.phones);
                           if (selectedPhone != null && screenCtx.mounted) {
                             // Check if we can pop (favorites was pushed from another screen)
                             if (Navigator.of(screenCtx).canPop()) {
@@ -768,9 +752,7 @@ class _FavTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(18),
-        border: isDark
-            ? Border.all(color: const Color(0xFF2B2F58))
-            : Border.all(color: const Color(0xFFE5E7EB)),
+        border: isDark ? Border.all(color: const Color(0xFF2B2F58)) : Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -793,8 +775,7 @@ class _FavTile extends StatelessWidget {
                   ),
                   child: Text(
                     contact.initials,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w800),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -813,7 +794,7 @@ class _FavTile extends StatelessWidget {
                   onPressed: onDetails,
                   icon: Icon(
                     Icons.drag_handle_rounded,
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -826,8 +807,7 @@ class _FavTile extends StatelessWidget {
                 IconButton(
                   tooltip: 'Remove',
                   onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline_rounded,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                  icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                 ),
               ],
             ),
@@ -888,8 +868,7 @@ class _PickedContact {
   final String id;
   final String displayName;
   final List<Phone> phones;
-  const _PickedContact(
-      {required this.id, required this.displayName, required this.phones});
+  const _PickedContact({required this.id, required this.displayName, required this.phones});
 }
 
 class _FastContactPicker extends StatefulWidget {
@@ -926,8 +905,7 @@ class _FastContactPickerState extends State<_FastContactPicker> {
   }
 
   Future<void> _pick(Contact c) async {
-    final full =
-        await widget.ref.read(contactsRepoProvider.notifier).getFull(c.id);
+    final full = await widget.ref.read(contactsRepoProvider.notifier).getFull(c.id);
     if (!mounted) return;
 
     if (full == null || full.phones.isEmpty) {
@@ -971,7 +949,7 @@ class _FastContactPickerState extends State<_FastContactPicker> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(0.3),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -986,25 +964,17 @@ class _FastContactPickerState extends State<_FastContactPicker> {
                       decoration: InputDecoration(
                         isDense: true,
                         hintText: AppLocalizations.of(context)!.searchContacts,
-                        hintStyle: TextStyle(
-                            color:
-                                theme.colorScheme.onSurface.withOpacity(0.5)),
-                        prefixIcon: Icon(Icons.search,
-                            color:
-                                theme.colorScheme.onSurface.withOpacity(0.5)),
+                        hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                        prefixIcon: Icon(Icons.search, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: theme.cardTheme.color,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.2)),
+                          borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                              color:
-                                  theme.colorScheme.onSurface.withOpacity(0.2)),
+                          borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.2)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1014,8 +984,7 @@ class _FastContactPickerState extends State<_FastContactPicker> {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close_rounded,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                    icon: Icon(Icons.close_rounded, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -1028,18 +997,12 @@ class _FastContactPickerState extends State<_FastContactPicker> {
                 error: (error, stack) => Center(
                   child: Text(
                     'Failed to load contacts',
-                    style: TextStyle(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                    style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
                   ),
                 ),
                 data: (contacts) {
-                  final filtered = _query.isEmpty
-                      ? contacts
-                      : contacts
-                          .where((c) => c.displayName
-                              .toLowerCase()
-                              .contains(_query.toLowerCase()))
-                          .toList();
+                  final filtered =
+                      _query.isEmpty ? contacts : contacts.where((c) => c.displayName.toLowerCase().contains(_query.toLowerCase())).toList();
 
                   return ListView.builder(
                     shrinkWrap: true,
@@ -1051,9 +1014,7 @@ class _FastContactPickerState extends State<_FastContactPicker> {
                           backgroundColor: theme.cardTheme.color,
                           child: Text(
                             _initialsLocal(contact.displayName),
-                            style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontWeight: FontWeight.w800),
+                            style: TextStyle(color: theme.colorScheme.onSurface, fontWeight: FontWeight.w800),
                           ),
                         ),
                         title: Text(

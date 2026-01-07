@@ -22,8 +22,7 @@ class KYCErrorScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCErrorScreen> createState() => _KYCErrorScreenState();
 }
 
-class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
-    with TickerProviderStateMixin {
+class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late AnimationController _iconController;
   late Animation<double> _fadeAnimation;
@@ -160,14 +159,10 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
-                  color: appState.isDark
-                      ? theme.colorScheme.error.withOpacity(0.2)
-                      : theme.colorScheme.error.withOpacity(0.1),
+                  color: appState.isDark ? theme.colorScheme.error.withValues(alpha: 0.2) : theme.colorScheme.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: appState.isDark
-                        ? theme.colorScheme.error.withOpacity(0.3)
-                        : theme.colorScheme.error.withOpacity(0.2),
+                    color: appState.isDark ? theme.colorScheme.error.withValues(alpha: 0.3) : theme.colorScheme.error.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Icon(
@@ -196,9 +191,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
                   Text(
                     errorContent['subtitle'] as String,
                     style: theme.textTheme.bodyLarge?.copyWith(
-                      color: appState.isDark
-                          ? Colors.white.withOpacity(0.7)
-                          : theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -209,8 +202,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
                   AnimatedOpacity(
                     opacity: 1.0,
                     duration: const Duration(milliseconds: 600),
-                    child: _buildSuggestions(appState, theme,
-                        errorContent['suggestions'] as List<String>),
+                    child: _buildSuggestions(appState, theme, errorContent['suggestions'] as List<String>),
                   ),
                 ],
               ),
@@ -221,15 +213,12 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
     );
   }
 
-  Widget _buildSuggestions(
-      AppState appState, ThemeData theme, List<String> suggestions) {
+  Widget _buildSuggestions(AppState appState, ThemeData theme, List<String> suggestions) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: appState.isDark
-            ? Colors.white.withOpacity(0.05)
-            : theme.colorScheme.onSurface.withOpacity(0.05),
+        color: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -239,9 +228,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
             l10n.tipsForSuccess,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.8)
-                  : theme.colorScheme.onSurface.withOpacity(0.8),
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.8) : theme.colorScheme.onSurface.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 12),
@@ -260,9 +247,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
                       child: Text(
                         suggestion,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: appState.isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
@@ -308,9 +293,7 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
             style: OutlinedButton.styleFrom(
               minimumSize: const Size(double.infinity, 48),
               side: BorderSide(
-                color: appState.isDark
-                    ? Colors.white.withOpacity(0.2)
-                    : Theme.of(context).dividerColor,
+                color: appState.isDark ? Colors.white.withValues(alpha: 0.2) : Theme.of(context).dividerColor,
               ),
             ),
             child: Text(
@@ -321,14 +304,11 @@ class _KYCErrorScreenState extends ConsumerState<KYCErrorScreen>
 
           // Back to Login
           TextButton(
-            onPressed: () =>
-                Navigator.pushReplacementNamed(context, RouteNames.home),
+            onPressed: () => Navigator.pushReplacementNamed(context, RouteNames.home),
             child: Text(
               l10n.backToLogin,
               style: TextStyle(
-                color: appState.isDark
-                    ? Colors.white.withOpacity(0.6)
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),

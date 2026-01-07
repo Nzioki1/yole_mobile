@@ -1,4 +1,3 @@
-
 // lib/widgets/sparkles_core.dart (safe version)
 // - Uses Ticker instead of AnimationController.unbounded
 // - Avoids any Tween/lerp-based animations
@@ -34,9 +33,9 @@ class SparklesCore extends StatefulWidget {
     this.fadeInDuration = const Duration(milliseconds: 1000),
     this.fpsLimit,
     this.enablePushOnTap = true,
-  }) : assert(minSize > 0),
-       assert(maxSize >= minSize),
-       assert(particleDensity > 0);
+  })  : assert(minSize > 0),
+        assert(maxSize >= minSize),
+        assert(particleDensity > 0);
 
   @override
   State<SparklesCore> createState() => _SparklesCoreState();
@@ -225,7 +224,7 @@ class _SparklesPainter extends CustomPainter {
 
       final twinkle = 0.5 + 0.5 * math.sin(2 * math.pi * p.twinkleHz * timeSeconds + p.twinklePhase);
       final op = (p.baseOpacity * twinkle).clamp(0.05, 1.0);
-      paint.color = p.color.withOpacity(op);
+      paint.color = p.color.withValues(alpha: op);
 
       final r = (p.size / 2).clamp(0.5, 20.0);
       canvas.drawCircle(p.position, r, paint);

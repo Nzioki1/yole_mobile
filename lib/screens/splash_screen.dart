@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/sparkles_core.dart';
@@ -57,9 +58,7 @@ class SplashScreenFlutter extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = _isDark;
     final l10n = AppLocalizations.of(context)!;
-    final gradient = isDark
-        ? const [Color(0xFF0B0F19), Color(0xFF19173D)]
-        : const [Color(0xFFF8FAFC), Colors.white];
+    final gradient = isDark ? const [Color(0xFF0B0F19), Color(0xFF19173D)] : const [Color(0xFFF8FAFC), Colors.white];
 
     return Scaffold(
       body: Stack(
@@ -122,21 +121,17 @@ class SplashScreenFlutter extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 32), // pt-8
                       child: Center(
                         child: ConstrainedBox(
-                          constraints:
-                              const BoxConstraints(maxWidth: 384), // max-w-sm
+                          constraints: const BoxConstraints(maxWidth: 384), // max-w-sm
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               // Tagline
                               ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                    maxWidth: 320), // max-w-xs
+                                constraints: const BoxConstraints(maxWidth: 320), // max-w-xs
                                 child: AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (Widget child,
-                                      Animation<double> animation) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
+                                  transitionBuilder: (Widget child, Animation<double> animation) {
+                                    return FadeTransition(opacity: animation, child: child);
                                   },
                                   child: Text(
                                     l10n.sendMoneyDescription,
@@ -147,20 +142,16 @@ class SplashScreenFlutter extends ConsumerWidget {
                                       fontWeight: FontWeight.w400,
                                       height: 1.5,
                                       letterSpacing: 0.2,
-                                      fontFamily:
-                                          'Inter', // Clean, readable sans-serif
+                                      fontFamily: 'Inter', // Clean, readable sans-serif
                                       color: isDark
-                                          ? Colors.white.withOpacity(
-                                              0.70) // text-white/70
-                                          : const Color(
-                                              0xFF475569), // text-slate-600
+                                          ? Colors.white.withValues(alpha: 0.70) // text-white/70
+                                          : const Color(0xFF475569), // text-slate-600
                                     ),
                                   ),
                                 ),
                               ),
 
-                              const SizedBox(
-                                  height: 20 + 16), // space-y-5 + pt-4
+                              const SizedBox(height: 20 + 16), // space-y-5 + pt-4
 
                               // Primary Get Started — w-full h-12 rounded-2xl gradient
                               SizedBox(
@@ -197,10 +188,8 @@ class SplashScreenFlutter extends ConsumerWidget {
                                   ),
                                   child: AnimatedSwitcher(
                                     duration: const Duration(milliseconds: 300),
-                                    transitionBuilder: (Widget child,
-                                        Animation<double> animation) {
-                                      return FadeTransition(
-                                          opacity: animation, child: child);
+                                    transitionBuilder: (Widget child, Animation<double> animation) {
+                                      return FadeTransition(opacity: animation, child: child);
                                     },
                                     child: Text(
                                       l10n.logIn,
@@ -208,10 +197,7 @@ class SplashScreenFlutter extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.80)
-                                            : const Color(
-                                                0xFF334155), // text-slate-700
+                                        color: isDark ? Colors.white.withValues(alpha: 0.80) : const Color(0xFF334155), // text-slate-700
                                       ),
                                     ),
                                   ),
@@ -236,10 +222,8 @@ class SplashScreenFlutter extends ConsumerWidget {
                       child: TextButton(
                         onPressed: onLanguage,
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           overlayColor: Colors.transparent,
                         ),
                         child: Row(
@@ -247,15 +231,12 @@ class SplashScreenFlutter extends ConsumerWidget {
                           children: [
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                    opacity: animation, child: child);
+                              transitionBuilder: (Widget child, Animation<double> animation) {
+                                return FadeTransition(opacity: animation, child: child);
                               },
                               child: Builder(
                                 builder: (context) {
-                                  final currentLocale =
-                                      ref.watch(currentLocaleProvider);
+                                  final currentLocale = ref.watch(currentLocaleProvider);
                                   final localeCode = currentLocale.languageCode;
                                   return Text(
                                     localeCode == 'en' ? '🇺🇸' : '🇫🇷',
@@ -268,30 +249,20 @@ class SplashScreenFlutter extends ConsumerWidget {
                             const SizedBox(width: 12),
                             AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                    opacity: animation, child: child);
+                              transitionBuilder: (Widget child, Animation<double> animation) {
+                                return FadeTransition(opacity: animation, child: child);
                               },
                               child: Builder(
                                 builder: (context) {
-                                  final currentLocale =
-                                      ref.watch(currentLocaleProvider);
+                                  final currentLocale = ref.watch(currentLocaleProvider);
                                   final localeCode = currentLocale.languageCode;
                                   return Text(
-                                    localeCode == 'en'
-                                        ? l10n.english
-                                        : l10n.french,
-                                    key: ValueKey(localeCode == 'en'
-                                        ? l10n.english
-                                        : l10n.french),
+                                    localeCode == 'en' ? l10n.english : l10n.french,
+                                    key: ValueKey(localeCode == 'en' ? l10n.english : l10n.french),
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: isDark
-                                          ? Colors.white.withOpacity(0.90)
-                                          : const Color(
-                                              0xFF64748B), // text-slate-500->700 hover
+                                      color: isDark ? Colors.white.withValues(alpha: 0.9) : const Color(0xFF64748B), // text-slate-500->700 hover
                                     ),
                                   );
                                 },
@@ -321,10 +292,13 @@ class _MinHeightBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (_, c) => ConstrainedBox(
-        constraints:
-            BoxConstraints(minHeight: minHeight, maxHeight: c.maxHeight),
-      ),
+      builder: (_, c) {
+        // Prevent non-normalized constraints (minHeight > maxHeight)
+        final allowedMin = math.min(minHeight, c.maxHeight);
+        return ConstrainedBox(
+          constraints: BoxConstraints(minHeight: allowedMin, maxHeight: c.maxHeight),
+        );
+      },
     );
   }
 }
@@ -345,8 +319,7 @@ class _FadeSlideIn extends StatefulWidget {
   State<_FadeSlideIn> createState() => _FadeSlideInState();
 }
 
-class _FadeSlideInState extends State<_FadeSlideIn>
-    with SingleTickerProviderStateMixin {
+class _FadeSlideInState extends State<_FadeSlideIn> with SingleTickerProviderStateMixin {
   late final AnimationController _c;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
@@ -354,12 +327,9 @@ class _FadeSlideInState extends State<_FadeSlideIn>
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(
-        vsync: this, duration: Duration(milliseconds: widget.durationMs));
+    _c = AnimationController(vsync: this, duration: Duration(milliseconds: widget.durationMs));
     _fade = CurvedAnimation(parent: _c, curve: Curves.easeOut);
-    _slide =
-        Tween(begin: Offset(0, widget.beginOffset.dy / 100), end: Offset.zero)
-            .animate(CurvedAnimation(parent: _c, curve: Curves.easeOut));
+    _slide = Tween(begin: Offset(0, widget.beginOffset.dy / 100), end: Offset.zero).animate(CurvedAnimation(parent: _c, curve: Curves.easeOut));
     Future.delayed(Duration(milliseconds: widget.delayMs), () {
       if (mounted) _c.forward();
     });
@@ -397,8 +367,7 @@ class _FadeInState extends State<_FadeIn> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(
-        vsync: this, duration: Duration(milliseconds: widget.durationMs));
+    _c = AnimationController(vsync: this, duration: Duration(milliseconds: widget.durationMs));
     _fade = CurvedAnimation(parent: _c, curve: Curves.easeInOut);
     Future.delayed(Duration(milliseconds: widget.delayMs), () {
       if (mounted) _c.forward();
@@ -412,8 +381,7 @@ class _FadeInState extends State<_FadeIn> with SingleTickerProviderStateMixin {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      FadeTransition(opacity: _fade, child: widget.child);
+  Widget build(BuildContext context) => FadeTransition(opacity: _fade, child: widget.child);
 }
 
 /// ============================= Gradient Button =============================
@@ -428,8 +396,7 @@ class _GradientButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.borderRadius = const BorderRadius.all(Radius.circular(16)),
-    this.gradient =
-        const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)]),
+    this.gradient = const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)]),
     this.elevation = 10,
   });
 
@@ -440,8 +407,7 @@ class _GradientButton extends StatelessWidget {
       borderRadius: borderRadius,
       color: Colors.transparent,
       child: Ink(
-        decoration:
-            BoxDecoration(gradient: gradient, borderRadius: borderRadius),
+        decoration: BoxDecoration(gradient: gradient, borderRadius: borderRadius),
         child: InkWell(
           borderRadius: borderRadius,
           onTap: onPressed,

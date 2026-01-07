@@ -12,8 +12,7 @@ class CreateAccountScreen extends ConsumerStatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  ConsumerState<CreateAccountScreen> createState() =>
-      _CreateAccountScreenState();
+  ConsumerState<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
 class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
@@ -60,13 +59,10 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-                horizontal: RegisterSpacing.screenPX,
-                vertical: RegisterSpacing.headerPY),
+            padding: const EdgeInsets.symmetric(horizontal: RegisterSpacing.screenPX, vertical: RegisterSpacing.headerPY),
             child: Center(
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: RegisterSpacing.contentMaxW),
+                constraints: const BoxConstraints(maxWidth: RegisterSpacing.contentMaxW),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -74,8 +70,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     Row(
                       children: [
                         IconButton(
-                          icon: Icon(Icons.arrow_back_ios_new_rounded,
-                              color: theme.appBarTheme.foregroundColor),
+                          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.appBarTheme.foregroundColor),
                           onPressed: () => Navigator.pop(context),
                         ),
                         const Spacer(),
@@ -116,8 +111,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
-                        color:
-                            theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                        color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                       ),
                     ),
 
@@ -125,22 +119,15 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
 
                     // Card
                     Container(
-                      padding: const EdgeInsets.fromLTRB(
-                          RegisterSpacing.cardPX,
-                          RegisterSpacing.cardPT,
-                          RegisterSpacing.cardPX,
-                          RegisterSpacing.cardPB),
+                      padding:
+                          const EdgeInsets.fromLTRB(RegisterSpacing.cardPX, RegisterSpacing.cardPT, RegisterSpacing.cardPX, RegisterSpacing.cardPB),
                       decoration: BoxDecoration(
                         color: theme.cardTheme.color,
-                        borderRadius:
-                            BorderRadius.circular(RegisterSpacing.cardRadius),
+                        borderRadius: BorderRadius.circular(RegisterSpacing.cardRadius),
                         border: Border.all(
                           color: theme.cardTheme.shape is RoundedRectangleBorder
-                              ? (theme.cardTheme.shape
-                                      as RoundedRectangleBorder)
-                                  .side
-                                  .color
-                              : theme.dividerColor.withOpacity(0.3),
+                              ? (theme.cardTheme.shape as RoundedRectangleBorder).side.color
+                              : theme.dividerColor.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Form(
@@ -154,8 +141,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                 controller: _emailCtrl,
                                 keyboardType: TextInputType.emailAddress,
                                 textInputAction: TextInputAction.next,
-                                decoration:
-                                    _inputDecoration(l10n.emailPlaceholder),
+                                decoration: _inputDecoration(l10n.emailPlaceholder),
                                 validator: _validateEmail,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -170,8 +156,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                 controller: _firstNameCtrl,
                                 textInputAction: TextInputAction.next,
                                 textCapitalization: TextCapitalization.words,
-                                decoration:
-                                    _inputDecoration(l10n.firstNamePlaceholder),
+                                decoration: _inputDecoration(l10n.firstNamePlaceholder),
                                 validator: _validateRequired,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -186,8 +171,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                 controller: _lastNameCtrl,
                                 textInputAction: TextInputAction.next,
                                 textCapitalization: TextCapitalization.words,
-                                decoration:
-                                    _inputDecoration(l10n.lastNamePlaceholder),
+                                decoration: _inputDecoration(l10n.lastNamePlaceholder),
                                 validator: _validateRequired,
                                 style: TextStyle(
                                   fontSize: 16,
@@ -206,15 +190,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                   l10n.passwordPlaceholder,
                                   suffix: IconButton(
                                     icon: Icon(
-                                      _showPassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
+                                      _showPassword ? Icons.visibility_off : Icons.visibility,
                                       size: RegisterSpacing.pwdIcon,
-                                      color: theme.textTheme.bodyMedium?.color
-                                          ?.withOpacity(0.7),
+                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                                     ),
-                                    onPressed: () => setState(
-                                        () => _showPassword = !_showPassword),
+                                    onPressed: () => setState(() => _showPassword = !_showPassword),
                                   ),
                                 ),
                                 // Password validation removed for UI/UX testing
@@ -236,16 +216,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                                   l10n.confirmPassword,
                                   suffix: IconButton(
                                     icon: Icon(
-                                      _showConfirmPassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
+                                      _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
                                       size: RegisterSpacing.pwdIcon,
-                                      color: theme.textTheme.bodyMedium?.color
-                                          ?.withOpacity(0.7),
+                                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                                     ),
-                                    onPressed: () => setState(() =>
-                                        _showConfirmPassword =
-                                            !_showConfirmPassword),
+                                    onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
                                   ),
                                 ),
                                 validator: (value) => null,
@@ -260,45 +235,25 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                               label: l10n.country,
                               child: DropdownButtonFormField<String>(
                                 value: _countryCode,
-                                decoration:
-                                    _inputDecoration(l10n.selectYourCountry),
-                                icon: Icon(Icons.keyboard_arrow_down,
-                                    color: theme.textTheme.bodyMedium?.color
-                                        ?.withOpacity(0.7)),
+                                decoration: _inputDecoration(l10n.selectYourCountry),
+                                icon: Icon(Icons.keyboard_arrow_down, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                                 items: const [
-                                  DropdownMenuItem(
-                                      value: 'KE', child: Text('🇰🇪 Kenya')),
-                                  DropdownMenuItem(
-                                      value: 'NG', child: Text('🇳🇬 Nigeria')),
-                                  DropdownMenuItem(
-                                      value: 'GH', child: Text('🇬🇭 Ghana')),
-                                  DropdownMenuItem(
-                                      value: 'UG', child: Text('🇺🇬 Uganda')),
-                                  DropdownMenuItem(
-                                      value: 'TZ',
-                                      child: Text('🇹🇿 Tanzania')),
-                                  DropdownMenuItem(
-                                      value: 'ZA',
-                                      child: Text('🇿🇦 South Africa')),
-                                  DropdownMenuItem(
-                                      value: 'CD', child: Text('🇨🇩 DRC')),
-                                  DropdownMenuItem(
-                                      value: 'FR', child: Text('🇫🇷 France')),
-                                  DropdownMenuItem(
-                                      value: 'DE', child: Text('🇩🇪 Germany')),
-                                  DropdownMenuItem(
-                                      value: 'US',
-                                      child: Text('🇺🇸 United States')),
+                                  DropdownMenuItem(value: 'KE', child: Text('🇰🇪 Kenya')),
+                                  DropdownMenuItem(value: 'NG', child: Text('🇳🇬 Nigeria')),
+                                  DropdownMenuItem(value: 'GH', child: Text('🇬🇭 Ghana')),
+                                  DropdownMenuItem(value: 'UG', child: Text('🇺🇬 Uganda')),
+                                  DropdownMenuItem(value: 'TZ', child: Text('🇹🇿 Tanzania')),
+                                  DropdownMenuItem(value: 'ZA', child: Text('🇿🇦 South Africa')),
+                                  DropdownMenuItem(value: 'CD', child: Text('🇨🇩 DRC')),
+                                  DropdownMenuItem(value: 'FR', child: Text('🇫🇷 France')),
+                                  DropdownMenuItem(value: 'DE', child: Text('🇩🇪 Germany')),
+                                  DropdownMenuItem(value: 'US', child: Text('🇺🇸 United States')),
                                 ],
-                                onChanged: (v) =>
-                                    setState(() => _countryCode = v),
-                                validator: (v) => (v == null || v.isEmpty)
-                                    ? l10n.pleaseSelectCountry
-                                    : null,
+                                onChanged: (v) => setState(() => _countryCode = v),
+                                validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseSelectCountry : null,
                               ),
                             ),
-                            const SizedBox(
-                                height: RegisterSpacing.ctaSectionPT),
+                            const SizedBox(height: RegisterSpacing.ctaSectionPT),
                             GradientButton(
                               height: RegisterSpacing.ctaBtnH,
                               borderRadius: RegisterSpacing.cardRadius,
@@ -330,8 +285,7 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                     ),
                     const SizedBox(height: RegisterSpacing.footerPB),
                     _FooterSignIn(
-                      onTap: () => Navigator.pushReplacementNamed(
-                          context, RouteNames.login),
+                      onTap: () => Navigator.pushReplacementNamed(context, RouteNames.login),
                     ),
                   ],
                 ),
@@ -404,15 +358,11 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     }
   }
 
-  String? _validateRequired(String? v) => (v == null || v.trim().isEmpty)
-      ? AppLocalizations.of(context)!.thisFieldRequired
-      : null;
+  String? _validateRequired(String? v) => (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.thisFieldRequired : null;
   String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty)
-      return AppLocalizations.of(context)!.emailRequired;
+    if (v == null || v.trim().isEmpty) return AppLocalizations.of(context)!.emailRequired;
     final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!regex.hasMatch(v.trim()))
-      return AppLocalizations.of(context)!.enterValidEmail;
+    if (!regex.hasMatch(v.trim())) return AppLocalizations.of(context)!.enterValidEmail;
     return null;
   }
 
@@ -429,25 +379,18 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final theme = Theme.of(context);
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(
-          fontSize: 16,
-          color: theme.textTheme.bodyMedium?.color?.withOpacity(0.5)),
+      hintStyle: TextStyle(fontSize: 16, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.5)),
       filled: true,
       fillColor: theme.inputDecorationTheme.fillColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       suffixIcon: suffix,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-            color: theme.inputDecorationTheme.enabledBorder?.borderSide.color ??
-                theme.dividerColor.withOpacity(0.3)),
+        borderSide: BorderSide(color: theme.inputDecorationTheme.enabledBorder?.borderSide.color ?? theme.dividerColor.withValues(alpha: 0.3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-            color: theme.inputDecorationTheme.focusedBorder?.borderSide.color ??
-                theme.colorScheme.primary,
-            width: 2),
+        borderSide: BorderSide(color: theme.inputDecorationTheme.focusedBorder?.borderSide.color ?? theme.colorScheme.primary, width: 2),
       ),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
@@ -496,19 +439,14 @@ class _FooterSignIn extends StatelessWidget {
         children: [
           TextSpan(
             text: l10n.alreadyHaveAccount,
-            style: TextStyle(
-                fontSize: 14,
-                color: theme.textTheme.bodySmall?.color?.withOpacity(0.6)),
+            style: TextStyle(fontSize: 14, color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6)),
           ),
           WidgetSpan(
             child: GestureDetector(
               onTap: onTap,
               child: Text(
                 l10n.signIn,
-                style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.primary),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.primary),
               ),
             ),
           ),

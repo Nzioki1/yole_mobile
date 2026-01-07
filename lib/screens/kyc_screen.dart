@@ -28,8 +28,7 @@ class KYCScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCScreen> createState() => _KYCScreenState();
 }
 
-class _KYCScreenState extends ConsumerState<KYCScreen>
-    with TickerProviderStateMixin {
+class _KYCScreenState extends ConsumerState<KYCScreen> with TickerProviderStateMixin {
   int _currentStep = 1;
   final int _totalSteps = 3;
 
@@ -120,10 +119,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
 
   Future<void> _handleDocumentUpload(String type) async {
     debugPrint('🔥 KYC Screen - Document upload started for type: $type');
-    
+
     try {
       ImageSource source;
-      
+
       // For selfie, always use camera. For document, show dialog
       if (type == 'selfie') {
         source = ImageSource.camera;
@@ -150,7 +149,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
             ),
           ),
         );
-        
+
         if (selectedSource == null) {
           debugPrint('User cancelled image source selection');
           return;
@@ -159,15 +158,15 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
       }
 
       debugPrint('Image source selected: $source');
-      
+
       // Let image_picker handle permissions automatically
       final pickedFile = await _imagePicker.pickImage(
         source: source,
         imageQuality: type == 'selfie' ? 85 : 90,
       );
-      
+
       debugPrint('Image picker returned: ${pickedFile?.path ?? "null"}');
-      
+
       if (pickedFile != null && mounted) {
         debugPrint('Image picked successfully: ${pickedFile.path}');
         setState(() {
@@ -184,7 +183,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
       debugPrint('=== KYC SCREEN UPLOAD ERROR ===');
       debugPrint('Error: $e');
       debugPrint('Stack trace: $stackTrace');
-      
+
       if (mounted) {
         String errorMessage = 'Failed to pick image';
         if (e.toString().contains('permission') || e.toString().contains('Permission')) {
@@ -194,7 +193,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
         } else {
           errorMessage = 'Failed to pick image: ${e.toString()}';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -236,9 +235,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : theme.colorScheme.outline.withOpacity(0.3),
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -249,8 +246,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                     onPressed: _handleBack,
                     icon: Icon(
                       Icons.arrow_back,
-                      color:
-                          isDark ? Colors.white : theme.colorScheme.onSurface,
+                      color: isDark ? Colors.white : theme.colorScheme.onSurface,
                     ),
                   ),
                   Expanded(
@@ -260,8 +256,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color:
-                            isDark ? Colors.white : theme.colorScheme.onSurface,
+                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -283,9 +278,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                       l10n.stepXofY(_currentStep, _totalSteps),
                       style: TextStyle(
                         fontSize: 12,
-                        color: isDark
-                            ? Colors.white.withOpacity(0.7)
-                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     Text(
@@ -293,8 +286,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color:
-                            isDark ? Colors.white : theme.colorScheme.onSurface,
+                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -302,11 +294,8 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                 const SizedBox(height: 8),
                 LinearProgressIndicator(
                   value: _progress,
-                  backgroundColor: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : theme.colorScheme.outline.withOpacity(0.3),
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
+                  backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
                 ),
               ],
             ),
@@ -315,8 +304,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                  16, 0, 16, 100), // Space for floating button
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 100), // Space for floating button
               child: FadeTransition(
                 opacity: _fadeAnimation,
                 child: SlideTransition(
@@ -334,9 +322,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
               color: isDark ? const Color(0xFF19173D) : Colors.white,
               border: Border(
                 top: BorderSide(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : theme.colorScheme.outline.withOpacity(0.3),
+                  color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -413,9 +399,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           style: TextStyle(
             fontSize: 16,
             height: 1.5,
-            color: isDark
-                ? Colors.white.withOpacity(0.7)
-                : theme.colorScheme.onSurface.withOpacity(0.7),
+            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
 
@@ -425,14 +409,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.surface,
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : theme.colorScheme.outline.withOpacity(0.3),
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -466,9 +446,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                             item,
                             style: TextStyle(
                               fontSize: 14,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.9)
-                                  : theme.colorScheme.onSurface,
+                              color: isDark ? Colors.white.withValues(alpha: 0.9) : theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
@@ -504,9 +482,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           style: TextStyle(
             fontSize: 16,
             height: 1.5,
-            color: isDark
-                ? Colors.white.withOpacity(0.7)
-                : theme.colorScheme.onSurface.withOpacity(0.7),
+            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 32),
@@ -514,14 +490,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.surface,
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : theme.colorScheme.outline.withOpacity(0.3),
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -531,7 +503,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -559,17 +531,13 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : theme.colorScheme.outline.withOpacity(0.1),
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.upload_outlined,
                     size: 32,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.5)
-                        : theme.colorScheme.onSurface.withOpacity(0.5),
+                    color: isDark ? Colors.white.withValues(alpha: 0.5) : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -580,8 +548,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.camera_alt,
-                              size: 20, color: Colors.white),
+                          const Icon(Icons.camera_alt, size: 20, color: Colors.white),
                           const SizedBox(width: 8),
                           Text(l10n.takePhoto),
                         ],
@@ -591,12 +558,9 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                     OutlinedButton(
                       onPressed: () => _handleDocumentUpload('idDocument'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            isDark ? Colors.white : theme.colorScheme.primary,
+                        foregroundColor: isDark ? Colors.white : theme.colorScheme.primary,
                         side: BorderSide(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.3)
-                              : theme.colorScheme.primary,
+                          color: isDark ? Colors.white.withValues(alpha: 0.3) : theme.colorScheme.primary,
                         ),
                         minimumSize: const Size(double.infinity, 48),
                       ),
@@ -620,14 +584,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.02)
-                  : theme.colorScheme.surface.withOpacity(0.5),
+              color: isDark ? Colors.white.withValues(alpha: 0.02) : theme.colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : theme.colorScheme.outline.withOpacity(0.1),
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.outline.withValues(alpha: 0.1),
               ),
             ),
             child: Column(
@@ -638,9 +598,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.7)
-                        : theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -654,9 +612,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                         '• $requirement',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     )),
@@ -690,9 +646,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           style: TextStyle(
             fontSize: 16,
             height: 1.5,
-            color: isDark
-                ? Colors.white.withOpacity(0.7)
-                : theme.colorScheme.onSurface.withOpacity(0.7),
+            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 32),
@@ -700,14 +654,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.surface,
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.1)
-                  : theme.colorScheme.outline.withOpacity(0.3),
+              color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -717,7 +667,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -745,17 +695,13 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   width: 96,
                   height: 96,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : theme.colorScheme.outline.withOpacity(0.1),
+                    color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.camera_alt,
                     size: 48,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.5)
-                        : theme.colorScheme.onSurface.withOpacity(0.5),
+                    color: isDark ? Colors.white.withValues(alpha: 0.5) : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -764,8 +710,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.camera_alt,
-                          size: 20, color: Colors.white),
+                      const Icon(Icons.camera_alt, size: 20, color: Colors.white),
                       const SizedBox(width: 8),
                       Text(l10n.takeSelfie),
                     ],
@@ -780,14 +725,10 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.02)
-                  : theme.colorScheme.surface.withOpacity(0.5),
+              color: isDark ? Colors.white.withValues(alpha: 0.02) : theme.colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark
-                    ? Colors.white.withOpacity(0.05)
-                    : theme.colorScheme.outline.withOpacity(0.1),
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.outline.withValues(alpha: 0.1),
               ),
             ),
             child: Column(
@@ -798,9 +739,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.7)
-                        : theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -814,9 +753,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen>
                         '• $instruction',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     )),

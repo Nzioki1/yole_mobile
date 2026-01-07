@@ -21,12 +21,10 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() =>
-      _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
-    with TickerProviderStateMixin {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -184,9 +182,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : theme.colorScheme.outline.withOpacity(0.3),
+                      color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -197,8 +193,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                       onPressed: _handleBackToLogin,
                       icon: Icon(
                         Icons.arrow_back,
-                        color:
-                            isDark ? Colors.white : theme.colorScheme.onSurface,
+                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                       ),
                     ),
                     Expanded(
@@ -208,9 +203,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -223,11 +216,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
             // Content - Now scrollable
             Expanded(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: _step == 'request'
-                    ? _buildRequestStep(isDark, theme)
-                    : _buildSuccessStep(isDark, theme),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: _step == 'request' ? _buildRequestStep(isDark, theme) : _buildSuccessStep(isDark, theme),
               ),
             ),
           ],
@@ -273,17 +263,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                   : const LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
-                                      colors: [
-                                        Color(0xFF3B82F6),
-                                        Color(0xFF8B5CF6)
-                                      ],
+                                      colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                                     ),
-                              color:
-                                  isDark ? Colors.white.withOpacity(0.1) : null,
+                              color: isDark ? Colors.white.withValues(alpha: 0.1) : null,
                               borderRadius: BorderRadius.circular(40),
                               border: isDark
                                   ? Border.all(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       width: 1,
                                     )
                                   : null,
@@ -311,23 +297,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? Colors.white
-                                  : theme.colorScheme.onSurface,
+                              color: isDark ? Colors.white : theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            AppLocalizations.of(context)!
-                                .weWillSendInstructions,
+                            AppLocalizations.of(context)!.weWillSendInstructions,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
                               height: 1.5,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.7)
-                                  : theme.colorScheme.onSurface
-                                      .withOpacity(0.7),
+                              color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -347,15 +327,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                             opacity: _fadeAnimation.value,
                             child: Container(
                               constraints: const BoxConstraints(maxWidth: 320),
-                              padding: isDark
-                                  ? const EdgeInsets.all(24)
-                                  : EdgeInsets.zero,
+                              padding: isDark ? const EdgeInsets.all(24) : EdgeInsets.zero,
                               decoration: isDark
                                   ? BoxDecoration(
-                                      color: Colors.white.withOpacity(0.08),
+                                      color: Colors.white.withValues(alpha: 0.08),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: Colors.white.withOpacity(0.1),
+                                        color: Colors.white.withValues(alpha: 0.1),
                                         width: 1,
                                       ),
                                     )
@@ -370,9 +348,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.9)
-                                            : theme.colorScheme.onSurface,
+                                        color: isDark ? Colors.white.withValues(alpha: 0.9) : theme.colorScheme.onSurface,
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -381,67 +357,47 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                       keyboardType: TextInputType.emailAddress,
                                       textInputAction: TextInputAction.done,
                                       style: TextStyle(
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.onSurface,
+                                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                       ),
                                       decoration: InputDecoration(
                                         hintText: l10n.emailPlaceholder,
                                         hintStyle: TextStyle(
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.5)
-                                              : theme.colorScheme.onSurface
-                                                  .withOpacity(0.5),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.5) : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                                         ),
                                         filled: true,
-                                        fillColor: isDark
-                                            ? Colors.white.withOpacity(0.05)
-                                            : theme
-                                                .inputDecorationTheme.fillColor,
+                                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : theme.inputDecorationTheme.fillColor,
                                         border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.2)
-                                                : theme.colorScheme.outline,
+                                            color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(12),
                                           borderSide: BorderSide(
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.2)
-                                                : theme.colorScheme.outline,
+                                            color: isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(12),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF3B82F6),
                                             width: 2,
                                           ),
                                         ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 16),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                       ),
                                       validator: (value) {
-                                        final l10n =
-                                            AppLocalizations.of(context)!;
+                                        final l10n = AppLocalizations.of(context)!;
                                         if (value == null || value.isEmpty) {
                                           return l10n.pleaseEnterEmail;
                                         }
-                                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                                            .hasMatch(value)) {
+                                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                                           return l10n.pleaseEnterValidEmail;
                                         }
                                         return null;
                                       },
-                                      onFieldSubmitted: (_) =>
-                                          _handleSendResetLink(),
+                                      onFieldSubmitted: (_) => _handleSendResetLink(),
                                     ),
                                   ],
                                 ),
@@ -471,16 +427,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                       children: [
                         GradientButton(
                           onPressed: _isLoading ? null : _handleSendResetLink,
-                          enabled:
-                              !_isLoading && _emailController.text.isNotEmpty,
+                          enabled: !_isLoading && _emailController.text.isNotEmpty,
                           child: _isLoading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                   ),
                                 )
                               : Text(
@@ -498,10 +452,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                               l10n.rememberPassword,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.6)
-                                    : theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                             GestureDetector(
@@ -511,9 +462,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? const Color(0xFF3B82F6)
-                                      : theme.colorScheme.primary,
+                                  color: isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -563,14 +512,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                             width: 96,
                             height: 96,
                             decoration: BoxDecoration(
-                              color: isDark
-                                  ? const Color(0xFF10B981).withOpacity(0.2)
-                                  : const Color(0xFF10B981).withOpacity(0.1),
+                              color: isDark ? const Color(0xFF10B981).withValues(alpha: 0.2) : const Color(0xFF10B981).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(48),
                               border: Border.all(
-                                color: isDark
-                                    ? const Color(0xFF10B981).withOpacity(0.3)
-                                    : const Color(0xFF10B981).withOpacity(0.2),
+                                color: isDark ? const Color(0xFF10B981).withValues(alpha: 0.3) : const Color(0xFF10B981).withValues(alpha: 0.2),
                                 width: 1,
                               ),
                             ),
@@ -596,23 +541,17 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: isDark
-                                  ? Colors.white
-                                  : theme.colorScheme.onSurface,
+                              color: isDark ? Colors.white : theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            AppLocalizations.of(context)!
-                                .checkEmailResetInstructions,
+                            AppLocalizations.of(context)!.checkEmailResetInstructions,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
                               height: 1.5,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.7)
-                                  : theme.colorScheme.onSurface
-                                      .withOpacity(0.7),
+                              color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -622,10 +561,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                             style: TextStyle(
                               fontSize: 14,
                               height: 1.5,
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.6)
-                                  : theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
+                              color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -666,10 +602,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                               l10n.didntReceiveEmail,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.6)
-                                    : theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                               ),
                             ),
                             GestureDetector(
@@ -681,8 +614,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                 _animationController.reset();
                                 _iconAnimationController.reset();
                                 _animationController.forward();
-                                Future.delayed(
-                                    const Duration(milliseconds: 300), () {
+                                Future.delayed(const Duration(milliseconds: 300), () {
                                   if (mounted) {
                                     _iconAnimationController.forward();
                                   }
@@ -693,9 +625,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: isDark
-                                      ? const Color(0xFF3B82F6)
-                                      : theme.colorScheme.primary,
+                                  color: isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary,
                                 ),
                               ),
                             ),

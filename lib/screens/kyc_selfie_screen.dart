@@ -16,8 +16,7 @@ class KYCSelfieScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCSelfieScreen> createState() => _KYCSelfieScreenState();
 }
 
-class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
-    with TickerProviderStateMixin {
+class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen> with TickerProviderStateMixin {
   bool selfieCaptured = false;
   bool isCapturing = false;
   String? selfiePath;
@@ -81,8 +80,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
     final appNotifier = ref.read(appProvider.notifier);
 
     return Scaffold(
-      backgroundColor:
-          appState.isDark ? const Color(0xFF19173d) : theme.colorScheme.surface,
+      backgroundColor: appState.isDark ? const Color(0xFF19173d) : theme.colorScheme.surface,
       body: Container(
         decoration: appState.isDark
             ? const BoxDecoration(
@@ -106,8 +104,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
                       Expanded(
                         child: _buildContent(appState),
                       ),
-                      if (selfieCaptured)
-                        _buildContinueButton(appState, appNotifier),
+                      if (selfieCaptured) _buildContinueButton(appState, appNotifier),
                     ],
                   ),
                 ),
@@ -126,9 +123,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : Theme.of(context).dividerColor,
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : Theme.of(context).dividerColor,
           ),
         ),
       ),
@@ -139,9 +134,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
             icon: const Icon(Icons.arrow_back),
             style: IconButton.styleFrom(
               minimumSize: const Size(44, 44),
-              backgroundColor: appState.isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.transparent,
+              backgroundColor: appState.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.transparent,
             ),
           ),
           Expanded(
@@ -174,9 +167,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
               Text(
                 l10n.stepXofY(4, 4),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: appState.isDark
-                      ? Colors.white.withOpacity(0.7)
-                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               Text(
@@ -191,9 +182,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: 1.0,
-            backgroundColor: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : theme.colorScheme.onSurface.withOpacity(0.1),
+            backgroundColor: appState.isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(
               theme.colorScheme.primary,
             ),
@@ -249,9 +238,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           Text(
             l10n.takeSelfieSoWeCanVerify,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.7)
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -269,10 +256,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           padding: const EdgeInsets.all(32),
           child: Column(
             children: [
-              if (selfieCaptured)
-                _buildSuccessState(appState, theme)
-              else
-                _buildCaptureInterface(appState, theme),
+              if (selfieCaptured) _buildSuccessState(appState, theme) else _buildCaptureInterface(appState, theme),
             ],
           ),
         ),
@@ -288,10 +272,10 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           width: 96,
           height: 96,
           decoration: BoxDecoration(
-            color: Colors.green.withOpacity(0.2),
+            color: Colors.green.withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.green.withOpacity(0.3),
+              color: Colors.green.withValues(alpha: 0.3),
             ),
           ),
           child: const Icon(
@@ -327,21 +311,15 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           width: 192,
           height: 192,
           decoration: BoxDecoration(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.onSurface.withOpacity(0.05),
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.2)
-                  : theme.dividerColor,
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.2) : theme.dividerColor,
               width: 4,
               style: BorderStyle.solid,
             ),
           ),
-          child: isCapturing
-              ? _buildCapturingState(appState, theme)
-              : _buildIdleState(appState, theme),
+          child: isCapturing ? _buildCapturingState(appState, theme) : _buildIdleState(appState, theme),
         ),
         const SizedBox(height: 24),
 
@@ -391,9 +369,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: appState.isDark
-                        ? Colors.white.withOpacity(0.2)
-                        : theme.colorScheme.onSurface.withOpacity(0.2),
+                    color: appState.isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     width: 4,
                   ),
                 ),
@@ -404,9 +380,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           Text(
             l10n.capturing,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.7)
-                  : theme.colorScheme.onSurface.withOpacity(0.7),
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -423,17 +397,13 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
           Icon(
             Icons.camera_alt,
             size: 64,
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.4)
-                : theme.colorScheme.onSurface.withOpacity(0.4),
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.4) : theme.colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 12),
           Text(
             l10n.positionYourFaceInFrame,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.6)
-                  : theme.colorScheme.onSurface.withOpacity(0.6),
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -459,9 +429,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.onSurface.withOpacity(0.05),
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -471,9 +439,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
                 l10n.forBestResults,
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: appState.isDark
-                      ? Colors.white.withOpacity(0.8)
-                      : theme.colorScheme.onSurface.withOpacity(0.8),
+                  color: appState.isDark ? Colors.white.withValues(alpha: 0.8) : theme.colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 8),
@@ -485,19 +451,14 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
                         Text(
                           '• ',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: appState.isDark
-                                ? Colors.white.withOpacity(0.6)
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
+                            color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                         Expanded(
                           child: Text(
                             instruction,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: appState.isDark
-                                  ? Colors.white.withOpacity(0.6)
-                                  : theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
+                              color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -514,14 +475,12 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
   Widget _buildContinueButton(AppState appState, AppNotifier appNotifier) {
     final l10n = AppLocalizations.of(context)!;
     final kycSubmissionState = ref.watch(kycSubmissionProvider);
-    
+
     return AnimatedOpacity(
       opacity: selfieCaptured ? 1.0 : 0.0,
       duration: const Duration(milliseconds: 600),
       child: GradientButton(
-        onPressed: selfieCaptured && !kycSubmissionState.isLoading
-            ? () => _handleSubmitKYC()
-            : null,
+        onPressed: selfieCaptured && !kycSubmissionState.isLoading ? () => _handleSubmitKYC() : null,
         child: kycSubmissionState.isLoading
             ? const SizedBox(
                 width: 20,
@@ -556,7 +515,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
 
     // Get all collected KYC data from route arguments
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    
+
     if (args == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -571,7 +530,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
     String phoneNumber = args['phoneNumber'] as String? ?? '';
     // Combine phone code and phone number, then normalize - remove + and any non-digits
     final fullPhoneNumber = '$phoneCode$phoneNumber'.replaceAll(RegExp(r'[^\d]'), '');
-    
+
     final otpCode = args['otpCode'] as String? ?? '';
     final idNumber = args['idNumber'] as String? ?? '';
     final idFrontPath = args['idFrontPath'] as String? ?? '';
@@ -622,7 +581,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
     debugPrint('🔥🔥🔥 BUTTON CLICKED - KYC SELFIE CAPTURE STARTED 🔥🔥🔥');
     debugPrint('Button clicked at: ${DateTime.now()}');
     debugPrint('Method called successfully - handler is working!');
-    
+
     setState(() {
       isCapturing = true;
     });
@@ -637,7 +596,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
         source: ImageSource.camera,
         imageQuality: 85, // Reduce quality for faster upload
       );
-      
+
       debugPrint('Image picker returned: ${pickedFile?.path ?? "null"}');
 
       if (pickedFile != null && mounted) {
@@ -661,7 +620,7 @@ class _KYCSelfieScreenState extends ConsumerState<KYCSelfieScreen>
       debugPrint('=== KYC SELFIE CAPTURE ERROR ===');
       debugPrint('Error: $e');
       debugPrint('Stack trace: $stackTrace');
-      
+
       if (mounted) {
         setState(() {
           isCapturing = false;

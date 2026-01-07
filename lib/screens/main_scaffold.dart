@@ -80,12 +80,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       decoration: BoxDecoration(
-        color: appState.isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+        color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : Colors.grey[200]!,
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[200]!,
           ),
         ),
       ),

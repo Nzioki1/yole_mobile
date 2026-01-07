@@ -43,12 +43,10 @@ class TransactionsHistorySimple extends ConsumerStatefulWidget {
   const TransactionsHistorySimple({super.key});
 
   @override
-  ConsumerState<TransactionsHistorySimple> createState() =>
-      _TransactionsHistorySimpleState();
+  ConsumerState<TransactionsHistorySimple> createState() => _TransactionsHistorySimpleState();
 }
 
-class _TransactionsHistorySimpleState
-    extends ConsumerState<TransactionsHistorySimple> {
+class _TransactionsHistorySimpleState extends ConsumerState<TransactionsHistorySimple> {
   @override
   void initState() {
     super.initState();
@@ -56,9 +54,7 @@ class _TransactionsHistorySimpleState
   }
 
   Future<void> _loadTransactions() async {
-    await ref
-        .read(transactionsListProvider.notifier)
-        .loadTransactions(refresh: true);
+    await ref.read(transactionsListProvider.notifier).loadTransactions(refresh: true);
   }
 
   TransactionStatus _mapApiStatusToTransactionStatus(String apiStatus) {
@@ -100,7 +96,7 @@ class _TransactionsHistorySimpleState
             Icon(
               Icons.error_outline,
               size: 64,
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 16),
             Text(
@@ -113,7 +109,7 @@ class _TransactionsHistorySimpleState
             Text(
               error,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -129,11 +125,7 @@ class _TransactionsHistorySimpleState
   }
 
   Widget _buildTransactionsList(
-      ThemeData theme,
-      AppState appState,
-      AppLocalizations l10n,
-      List<TransactionModel> transactions,
-      TransactionsState transactionsState) {
+      ThemeData theme, AppState appState, AppLocalizations l10n, List<TransactionModel> transactions, TransactionsState transactionsState) {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
@@ -143,8 +135,7 @@ class _TransactionsHistorySimpleState
             Expanded(
               child: transactions.isEmpty
                   ? _buildEmptyState(theme, appState, l10n)
-                  : _buildTransactionsListView(
-                      theme, appState, l10n, transactions, transactionsState),
+                  : _buildTransactionsListView(theme, appState, l10n, transactions, transactionsState),
             ),
           ],
         ),
@@ -153,11 +144,7 @@ class _TransactionsHistorySimpleState
   }
 
   Widget _buildTransactionsListView(
-      ThemeData theme,
-      AppState appState,
-      AppLocalizations l10n,
-      List<TransactionModel> transactions,
-      TransactionsState transactionsState) {
+      ThemeData theme, AppState appState, AppLocalizations l10n, List<TransactionModel> transactions, TransactionsState transactionsState) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: transactions.length,
@@ -168,8 +155,7 @@ class _TransactionsHistorySimpleState
     );
   }
 
-  Widget _buildTransactionTile(ThemeData theme, AppState appState,
-      AppLocalizations l10n, TransactionModel transaction) {
+  Widget _buildTransactionTile(ThemeData theme, AppState appState, AppLocalizations l10n, TransactionModel transaction) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -177,9 +163,7 @@ class _TransactionsHistorySimpleState
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
+          color: theme.brightness == Brightness.dark ? const Color(0xFF2B2F58) : const Color(0xFFE5E7EB),
         ),
       ),
       child: Row(
@@ -203,14 +187,14 @@ class _TransactionsHistorySimpleState
                 Text(
                   transaction.recipientPhone,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _formatDate(transaction.date),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -285,9 +269,7 @@ class _TransactionsHistorySimpleState
   }
 
   Widget _buildAvatar(String name) {
-    final initials = name.isNotEmpty
-        ? name.split(' ').map((word) => word[0]).take(2).join().toUpperCase()
-        : '?';
+    final initials = name.isNotEmpty ? name.split(' ').map((word) => word[0]).take(2).join().toUpperCase() : '?';
 
     return Container(
       width: 48,
@@ -322,8 +304,7 @@ class _TransactionsHistorySimpleState
     if (transactionsState.isLoading && transactionsState.transactions.isEmpty) {
       // Show loading state
       return _buildLoadingState(theme, appState);
-    } else if (transactionsState.error != null &&
-        transactionsState.transactions.isEmpty) {
+    } else if (transactionsState.error != null && transactionsState.transactions.isEmpty) {
       // Show error state with fallback data
       return _buildErrorState(theme, appState, transactionsState.error!);
     } else {
@@ -346,12 +327,10 @@ class _TransactionsHistorySimpleState
       }
     }
 
-    return _buildTransactionsList(
-        theme, appState, l10n, transactions, transactionsState);
+    return _buildTransactionsList(theme, appState, l10n, transactions, transactionsState);
   }
 
-  Widget _buildHeader(
-      ThemeData theme, AppState appState, AppLocalizations l10n) {
+  Widget _buildHeader(ThemeData theme, AppState appState, AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -377,8 +356,7 @@ class _TransactionsHistorySimpleState
     );
   }
 
-  Widget _buildEmptyState(
-      ThemeData theme, AppState appState, AppLocalizations l10n) {
+  Widget _buildEmptyState(ThemeData theme, AppState appState, AppLocalizations l10n) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -386,7 +364,7 @@ class _TransactionsHistorySimpleState
           Icon(
             Icons.receipt_long_outlined,
             size: 80,
-            color: theme.colorScheme.onSurface.withOpacity(0.4),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -399,7 +377,7 @@ class _TransactionsHistorySimpleState
           Text(
             'Your transaction history will appear here',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ],

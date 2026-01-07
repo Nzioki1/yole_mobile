@@ -13,12 +13,10 @@ class SendMoneyEnterDetailsScreen extends ConsumerStatefulWidget {
   const SendMoneyEnterDetailsScreen({super.key});
 
   @override
-  ConsumerState<SendMoneyEnterDetailsScreen> createState() =>
-      _SendMoneyEnterDetailsScreenState();
+  ConsumerState<SendMoneyEnterDetailsScreen> createState() => _SendMoneyEnterDetailsScreenState();
 }
 
-class _SendMoneyEnterDetailsScreenState
-    extends ConsumerState<SendMoneyEnterDetailsScreen> {
+class _SendMoneyEnterDetailsScreenState extends ConsumerState<SendMoneyEnterDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
 
@@ -61,9 +59,8 @@ class _SendMoneyEnterDetailsScreenState
   }
 
   void _loadArgumentsFromRoute() {
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
     // Debug logging
     print('=== SEND MONEY ENTER DETAILS: Loading arguments ===');
     print('Args received: $args');
@@ -73,13 +70,12 @@ class _SendMoneyEnterDetailsScreenState
       print('RecipientPhone: ${args['recipientPhone']}');
       print('RecipientCountry: ${args['recipientCountry']}');
     }
-    
+
     if (args != null && args['recipient'] != null) {
       setState(() {
         _selectedRecipient = args['recipient'] as String;
-        _selectedRecipientCountry =
-            args['recipientCountry'] as String? ?? 'CD'; // Default to Congo
-        
+        _selectedRecipientCountry = args['recipientCountry'] as String? ?? 'CD'; // Default to Congo
+
         // Format phone number if provided
         final rawPhone = args['recipientPhone'] as String?;
         if (rawPhone != null && rawPhone.isNotEmpty) {
@@ -92,7 +88,7 @@ class _SendMoneyEnterDetailsScreenState
           _selectedRecipientPhone = null;
           print('Phone number is null or empty');
         }
-        
+
         print('Final state:');
         print('  Recipient: $_selectedRecipient');
         print('  Phone: $_selectedRecipientPhone');
@@ -145,8 +141,7 @@ class _SendMoneyEnterDetailsScreenState
   }
 
   void _onAmountOrCountryChanged() {
-    if (_amountController.text.isNotEmpty &&
-        _selectedRecipientCountry != null) {
+    if (_amountController.text.isNotEmpty && _selectedRecipientCountry != null) {
       _calculateCharges();
     }
   }
@@ -176,8 +171,7 @@ class _SendMoneyEnterDetailsScreenState
   }
 
   Future<void> _calculateCharges() async {
-    if (_amountController.text.isEmpty || _selectedRecipientCountry == null)
-      return;
+    if (_amountController.text.isEmpty || _selectedRecipientCountry == null) return;
 
     final amount = double.tryParse(_amountController.text);
     if (amount == null || amount <= 0) return;
@@ -228,10 +222,8 @@ class _SendMoneyEnterDetailsScreenState
     }
 
     // Lock to DRC (Congo) only
-    final drcCountry = _availableCountries
-        .where((country) => country.code == 'CD')
-        .firstOrNull;
-    
+    final drcCountry = _availableCountries.where((country) => country.code == 'CD').firstOrNull;
+
     if (drcCountry == null) {
       return [
         DropdownMenuItem(
@@ -265,7 +257,7 @@ class _SendMoneyEnterDetailsScreenState
                   end: Alignment.bottomCenter,
                   colors: [
                     theme.colorScheme.surface,
-                    theme.colorScheme.surface.withOpacity(0.8),
+                    theme.colorScheme.surface.withValues(alpha: 0.8),
                   ],
                 ),
               )
@@ -291,8 +283,7 @@ class _SendMoneyEnterDetailsScreenState
                         const SizedBox(height: 24),
                         _buildPaymentMethodSection(theme, appState),
                         const SizedBox(height: 24),
-                        if (_calculatedCharges != null || _isCalculatingCharges)
-                          _buildChargesSection(theme, appState),
+                        if (_calculatedCharges != null || _isCalculatingCharges) _buildChargesSection(theme, appState),
                         const SizedBox(height: 48),
                         _buildContinueButton(theme, appState),
                       ],
@@ -366,19 +357,19 @@ class _SendMoneyEnterDetailsScreenState
             ),
             hintText: '0.00',
             hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 24,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -421,8 +412,7 @@ class _SendMoneyEnterDetailsScreenState
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
-            final result =
-                await Navigator.of(context).pushNamed(RouteNames.favorites);
+            final result = await Navigator.of(context).pushNamed(RouteNames.favorites);
             if (result != null && result is Map<String, dynamic>) {
               setState(() {
                 _selectedRecipient = result['recipient'];
@@ -449,34 +439,30 @@ class _SendMoneyEnterDetailsScreenState
               color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.person_outline,
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     _selectedRecipient != null
-                        ? (_selectedRecipientPhone != null
-                            ? '$_selectedRecipient\n$_selectedRecipientPhone'
-                            : _selectedRecipient!)
+                        ? (_selectedRecipientPhone != null ? '$_selectedRecipient\n$_selectedRecipientPhone' : _selectedRecipient!)
                         : l10n.selectRecipient,
                     style: TextStyle(
-                      color: _selectedRecipient != null
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: _selectedRecipient != null ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontSize: 16,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   size: 16,
                 ),
               ],
@@ -505,18 +491,18 @@ class _SendMoneyEnterDetailsScreenState
           decoration: InputDecoration(
             hintText: l10n.selectRecipientCountry,
             hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -529,11 +515,11 @@ class _SendMoneyEnterDetailsScreenState
             disabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.3),
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             filled: true,
-            fillColor: theme.colorScheme.surface.withOpacity(0.6),
+            fillColor: theme.colorScheme.surface.withValues(alpha: 0.6),
           ),
           style: TextStyle(
             color: theme.colorScheme.onSurface,
@@ -569,18 +555,18 @@ class _SendMoneyEnterDetailsScreenState
           decoration: InputDecoration(
             hintText: l10n.selectPaymentMethod,
             hintStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.colorScheme.outline.withOpacity(0.5),
+                color: theme.colorScheme.outline.withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -604,7 +590,7 @@ class _SendMoneyEnterDetailsScreenState
                   Icon(
                     Icons.phone_android,
                     size: 20,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
                   Text(l10n.mobileMoney),
@@ -618,7 +604,7 @@ class _SendMoneyEnterDetailsScreenState
                   Icon(
                     Icons.credit_card,
                     size: 20,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
                   Text(l10n.pesapalCardPayment),
@@ -645,7 +631,7 @@ class _SendMoneyEnterDetailsScreenState
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: theme.colorScheme.outline.withOpacity(0.3),
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -663,7 +649,7 @@ class _SendMoneyEnterDetailsScreenState
             Text(
               l10n.calculatingCharges,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -684,7 +670,7 @@ class _SendMoneyEnterDetailsScreenState
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -698,29 +684,18 @@ class _SendMoneyEnterDetailsScreenState
             ),
           ),
           const SizedBox(height: 12),
-          _buildSummaryRow(
-              l10n.amount,
-              '\$${amount.toStringAsFixed(2)}',
-              theme),
-          _buildSummaryRow(
-              l10n.fees,
-              '\$${_calculatedCharges!.toStringAsFixed(2)}',
-              theme),
+          _buildSummaryRow(l10n.amount, '\$${amount.toStringAsFixed(2)}', theme),
+          _buildSummaryRow(l10n.fees, '\$${_calculatedCharges!.toStringAsFixed(2)}', theme),
           Divider(
-            color: theme.colorScheme.outline.withOpacity(0.3),
+            color: theme.colorScheme.outline.withValues(alpha: 0.3),
           ),
-          _buildSummaryRow(
-              l10n.total,
-              '\$${_totalAmount!.toStringAsFixed(2)}',
-              theme,
-              isTotal: true),
+          _buildSummaryRow(l10n.total, '\$${_totalAmount!.toStringAsFixed(2)}', theme, isTotal: true),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, ThemeData theme,
-      {bool isTotal = false}) {
+  Widget _buildSummaryRow(String label, String value, ThemeData theme, {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -729,7 +704,7 @@ class _SendMoneyEnterDetailsScreenState
           Text(
             label,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -754,60 +729,60 @@ class _SendMoneyEnterDetailsScreenState
       borderRadius: 16,
       onPressed: _isFormValid
           ? () {
-                print('=== CONTINUE CLICKED ===');
-                print('Amount: ${_amountController.text}');
-                print('Recipient: $_selectedRecipient');
-                print('Phone: $_selectedRecipientPhone');
-                print('Country: $_selectedRecipientCountry');
-                print('Payment: $_selectedPaymentMethod');
-                print('Charges: $_calculatedCharges');
-                print('Total: $_totalAmount');
+              print('=== CONTINUE CLICKED ===');
+              print('Amount: ${_amountController.text}');
+              print('Recipient: $_selectedRecipient');
+              print('Phone: $_selectedRecipientPhone');
+              print('Country: $_selectedRecipientCountry');
+              print('Payment: $_selectedPaymentMethod');
+              print('Charges: $_calculatedCharges');
+              print('Total: $_totalAmount');
 
-                final isValid = _formKey.currentState?.validate() ?? false;
-                print('Form validate result: $isValid');
+              final isValid = _formKey.currentState?.validate() ?? false;
+              print('Form validate result: $isValid');
 
-                if (isValid) {
-                  // Validate Congo phone number format
-                  final phoneError = PaymentValidator.validateCongoPhone(_selectedRecipientPhone);
-                  if (phoneError != null) {
-                    // Phone validation failed - show error and stop transaction
-                    print('Phone validation FAILED: $phoneError');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(phoneError),
-                        backgroundColor: theme.colorScheme.error,
-                        duration: const Duration(seconds: 4),
-                      ),
-                    );
-                    return; // Stop transaction - don't navigate
-                  }
-
-                  print('Phone validation passed. Navigating to review screen...');
-                  Navigator.pushNamed(
-                    context,
-                    RouteNames.sendMoneyReview,
-                    arguments: {
-                      'amount': double.parse(_amountController.text),
-                      'currency': _selectedCurrency,
-                      'recipient': _selectedRecipient,
-                      'recipientPhone': _selectedRecipientPhone,
-                      'recipientCountry': _selectedRecipientCountry,
-                      'paymentMethod': _selectedPaymentMethod,
-                      'calculatedCharges': _calculatedCharges,
-                      'totalAmount': _totalAmount,
-                    },
-                  );
-                } else {
-                  print('Form validation FAILED');
+              if (isValid) {
+                // Validate Congo phone number format
+                final phoneError = PaymentValidator.validateCongoPhone(_selectedRecipientPhone);
+                if (phoneError != null) {
+                  // Phone validation failed - show error and stop transaction
+                  print('Phone validation FAILED: $phoneError');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(l10n.checkAllFields),
+                      content: Text(phoneError),
                       backgroundColor: theme.colorScheme.error,
-                      duration: const Duration(seconds: 3),
+                      duration: const Duration(seconds: 4),
                     ),
                   );
+                  return; // Stop transaction - don't navigate
                 }
+
+                print('Phone validation passed. Navigating to review screen...');
+                Navigator.pushNamed(
+                  context,
+                  RouteNames.sendMoneyReview,
+                  arguments: {
+                    'amount': double.parse(_amountController.text),
+                    'currency': _selectedCurrency,
+                    'recipient': _selectedRecipient,
+                    'recipientPhone': _selectedRecipientPhone,
+                    'recipientCountry': _selectedRecipientCountry,
+                    'paymentMethod': _selectedPaymentMethod,
+                    'calculatedCharges': _calculatedCharges,
+                    'totalAmount': _totalAmount,
+                  },
+                );
+              } else {
+                print('Form validation FAILED');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.checkAllFields),
+                    backgroundColor: theme.colorScheme.error,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
               }
+            }
           : null,
       enabled: _isFormValid,
       child: Text(l10n.continueButton),

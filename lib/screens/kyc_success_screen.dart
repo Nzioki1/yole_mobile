@@ -24,8 +24,7 @@ class KYCSuccessScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCSuccessScreen> createState() => _KYCSuccessScreenState();
 }
 
-class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
-    with TickerProviderStateMixin {
+class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen> with TickerProviderStateMixin {
   late AnimationController _mainController;
   late AnimationController _iconController;
   late AnimationController _glowController;
@@ -174,8 +173,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
             // Main content
             SafeArea(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: Column(
                   children: [
                     // Top Section - Logo
@@ -214,24 +212,19 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                       animation: _glowAnimation,
                                       builder: (context, child) {
                                         return Transform.scale(
-                                          scale: 0.9 +
-                                              (0.1 * _glowAnimation.value),
+                                          scale: 0.9 + (0.1 * _glowAnimation.value),
                                           child: Container(
                                             width: 128,
                                             height: 128,
                                             decoration: BoxDecoration(
                                               shape: BoxShape.circle,
                                               color: isDark
-                                                  ? const Color(0xFF10B981)
-                                                      .withOpacity(0.2)
-                                                  : const Color(0xFF10B981)
-                                                      .withOpacity(0.1),
+                                                  ? const Color(0xFF10B981).withValues(alpha: 0.2)
+                                                  : const Color(0xFF10B981).withValues(alpha: 0.1),
                                               border: Border.all(
                                                 color: isDark
-                                                    ? const Color(0xFF10B981)
-                                                        .withOpacity(0.3)
-                                                    : const Color(0xFF10B981)
-                                                        .withOpacity(0.2),
+                                                    ? const Color(0xFF10B981).withValues(alpha: 0.3)
+                                                    : const Color(0xFF10B981).withValues(alpha: 0.2),
                                                 width: 1,
                                               ),
                                             ),
@@ -248,21 +241,16 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                         height: 128,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: isDark
-                                              ? const Color(0xFF10B981)
-                                                  .withOpacity(0.3)
-                                              : const Color(0xFF10B981),
+                                          color: isDark ? const Color(0xFF10B981).withValues(alpha: 0.3) : const Color(0xFF10B981),
                                           border: isDark
                                               ? Border.all(
-                                                  color: const Color(0xFF10B981)
-                                                      .withOpacity(0.5),
+                                                  color: const Color(0xFF10B981).withValues(alpha: 0.5),
                                                   width: 2,
                                                 )
                                               : null,
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF10B981)
-                                                  .withOpacity(0.3),
+                                              color: const Color(0xFF10B981).withValues(alpha: 0.3),
                                               blurRadius: 20,
                                               offset: const Offset(0, 8),
                                             ),
@@ -284,16 +272,11 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                         animation: _sparkleRotation,
                                         builder: (context, child) {
                                           return Transform.rotate(
-                                            angle: _sparkleRotation.value *
-                                                2 *
-                                                3.14159,
+                                            angle: _sparkleRotation.value * 2 * 3.14159,
                                             child: Icon(
                                               Icons.auto_awesome,
                                               size: 32,
-                                              color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.6)
-                                                  : const Color(0xFFFBBF24),
+                                              color: isDark ? Colors.white.withValues(alpha: 0.6) : const Color(0xFFFBBF24),
                                             ),
                                           );
                                         },
@@ -307,16 +290,11 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                         animation: _sparkleRotation,
                                         builder: (context, child) {
                                           return Transform.rotate(
-                                            angle: -_sparkleRotation.value *
-                                                2 *
-                                                3.14159,
+                                            angle: -_sparkleRotation.value * 2 * 3.14159,
                                             child: Icon(
                                               Icons.auto_awesome,
                                               size: 24,
-                                              color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.4)
-                                                  : const Color(0xFFFCD34D),
+                                              color: isDark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFFFCD34D),
                                             ),
                                           );
                                         },
@@ -330,8 +308,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
 
                               // Success Content
                               ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 320),
+                                constraints: const BoxConstraints(maxWidth: 320),
                                 child: Column(
                                   children: [
                                     Text(
@@ -340,9 +317,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                       style: TextStyle(
                                         fontSize: 28,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.onSurface,
+                                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                       ),
                                     ),
 
@@ -353,10 +328,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 18,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.7)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.7),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                         height: 1.5,
                                       ),
                                     ),
@@ -365,24 +337,19 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
 
                                     // Benefits/Features
                                     Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           l10n.youCanNow,
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.6)
-                                                : theme.colorScheme.onSurface
-                                                    .withOpacity(0.6),
+                                            color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                           ),
                                         ),
                                         const SizedBox(height: 8),
                                         Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             _buildFeatureItem(
                                               l10n.sendMoneyToDRC,
@@ -442,10 +409,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: isDark
-                                      ? Colors.white.withOpacity(0.6)
-                                      : theme.colorScheme.onSurface
-                                          .withOpacity(0.6),
+                                  color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                 ),
                               ),
                             );
@@ -483,9 +447,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
               text,
               style: TextStyle(
                 fontSize: 14,
-                color: isDark
-                    ? Colors.white.withOpacity(0.6)
-                    : Colors.grey.shade600,
+                color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.grey.shade600,
               ),
             ),
           ),
@@ -513,8 +475,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: Colors.white
-                            .withOpacity(0.2 + (0.6 * _glowAnimation.value)),
+                        color: Colors.white.withValues(alpha: 0.2 + (0.6 * _glowAnimation.value)),
                         shape: BoxShape.circle,
                       ),
                     ),

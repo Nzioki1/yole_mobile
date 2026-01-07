@@ -28,10 +28,8 @@ class KYCOTPScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCOTPScreen> createState() => _KYCOTPScreenState();
 }
 
-class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
-    with TickerProviderStateMixin {
-  final List<TextEditingController> _otpControllers =
-      List.generate(6, (_) => TextEditingController());
+class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProviderStateMixin {
+  final List<TextEditingController> _otpControllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _otpFocusNodes = List.generate(6, (_) => FocusNode());
   bool _isVerifying = false;
   int _countdown = 60;
@@ -225,9 +223,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.1)
-                            : theme.colorScheme.outline.withOpacity(0.3),
+                        color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -245,9 +241,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                         },
                         icon: Icon(
                           Icons.arrow_back,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                         ),
                       ),
                       Expanded(
@@ -257,9 +251,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
+                            color: isDark ? Colors.white : theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -281,9 +273,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                           l10n.stepXofY(2, 4),
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.7)
-                                : theme.colorScheme.onSurface.withOpacity(0.7),
+                            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         Text(
@@ -291,9 +281,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark
-                                ? Colors.white
-                                : theme.colorScheme.onSurface,
+                            color: isDark ? Colors.white : theme.colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -301,11 +289,8 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                     const SizedBox(height: 8),
                     LinearProgressIndicator(
                       value: 0.5,
-                      backgroundColor: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : theme.colorScheme.outline.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF3B82F6)),
+                      backgroundColor: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
+                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B82F6)),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
@@ -315,8 +300,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
               // Content (make scrollable to avoid keyboard overlap)
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     child: Column(
@@ -342,19 +326,13 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                                             : const LinearGradient(
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
-                                                colors: [
-                                                  Color(0xFF3B82F6),
-                                                  Color(0xFF8B5CF6)
-                                                ],
+                                                colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                                               ),
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.1)
-                                            : null,
+                                        color: isDark ? Colors.white.withValues(alpha: 0.1) : null,
                                         borderRadius: BorderRadius.circular(40),
                                         border: isDark
                                             ? Border.all(
-                                                color: Colors.white
-                                                    .withOpacity(0.2),
+                                                color: Colors.white.withValues(alpha: 0.2),
                                                 width: 1,
                                               )
                                             : null,
@@ -371,8 +349,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
 
                                   // Content
                                   ConstrainedBox(
-                                    constraints:
-                                        const BoxConstraints(maxWidth: 320),
+                                    constraints: const BoxConstraints(maxWidth: 320),
                                     child: Column(
                                       children: [
                                         Text(
@@ -381,22 +358,16 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                                           style: TextStyle(
                                             fontSize: 24,
                                             fontWeight: FontWeight.bold,
-                                            color: isDark
-                                                ? Colors.white
-                                                : theme.colorScheme.onSurface,
+                                            color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                           ),
                                         ),
                                         const SizedBox(height: 16),
                                         Text(
-                                          l10n.enterSixDigitCodeWeSentTo(
-                                              phoneNumber),
+                                          l10n.enterSixDigitCodeWeSentTo(phoneNumber),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
                                             fontSize: 16,
-                                            color: isDark
-                                                ? Colors.white.withOpacity(0.7)
-                                                : theme.colorScheme.onSurface
-                                                    .withOpacity(0.7),
+                                            color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                             height: 1.5,
                                           ),
                                         ),
@@ -426,75 +397,47 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.w600,
-                                              color: isDark
-                                                  ? Colors.white
-                                                  : theme.colorScheme.onSurface,
+                                              color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                             ),
                                             decoration: InputDecoration(
                                               counterText: '',
                                               filled: true,
-                                              fillColor: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.05)
-                                                  : Colors.white,
+                                              fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
                                               border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                borderRadius: BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: _otpControllers[index]
-                                                          .text
-                                                          .isNotEmpty
+                                                  color: _otpControllers[index].text.isNotEmpty
                                                       ? const Color(0xFF3B82F6)
-                                                      : (isDark
-                                                          ? Colors.white
-                                                              .withOpacity(0.2)
-                                                          : theme.colorScheme
-                                                              .outline),
+                                                      : (isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline),
                                                   width: 2,
                                                 ),
                                               ),
                                               enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                borderRadius: BorderRadius.circular(12),
                                                 borderSide: BorderSide(
-                                                  color: _otpControllers[index]
-                                                          .text
-                                                          .isNotEmpty
+                                                  color: _otpControllers[index].text.isNotEmpty
                                                       ? const Color(0xFF3B82F6)
-                                                      : (isDark
-                                                          ? Colors.white
-                                                              .withOpacity(0.2)
-                                                          : theme.colorScheme
-                                                              .outline),
+                                                      : (isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline),
                                                   width: 2,
                                                 ),
                                               ),
-                                              focusedBorder:
-                                                  const OutlineInputBorder(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(12)),
+                                              focusedBorder: const OutlineInputBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(12)),
                                                 borderSide: BorderSide(
                                                   color: Color(0xFF3B82F6),
                                                   width: 2,
                                                 ),
                                               ),
                                             ),
-                                            onChanged: (value) =>
-                                                _handleOtpChange(index, value),
+                                            onChanged: (value) => _handleOtpChange(index, value),
                                             onTap: () {
                                               // Clear field on tap for better UX
-                                              _otpControllers[index].selection =
-                                                  TextSelection.fromPosition(
-                                                TextPosition(
-                                                    offset:
-                                                        _otpControllers[index]
-                                                            .text
-                                                            .length),
+                                              _otpControllers[index].selection = TextSelection.fromPosition(
+                                                TextPosition(offset: _otpControllers[index].text.length),
                                               );
                                             },
                                             inputFormatters: [
-                                              FilteringTextInputFormatter
-                                                  .digitsOnly,
+                                              FilteringTextInputFormatter.digitsOnly,
                                             ],
                                           ),
                                         ),
@@ -511,62 +454,42 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                                         l10n.didntReceiveCode,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.6)
-                                              : theme.colorScheme.onSurface
-                                                  .withOpacity(0.6),
+                                          color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                         ),
                                       ),
                                       const SizedBox(height: 8),
                                       GestureDetector(
-                                        onTap: _canResend
-                                            ? _handleResendOTP
-                                            : null,
+                                        onTap: _canResend ? _handleResendOTP : null,
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 16, vertical: 8),
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                           child: _canResend
                                               ? Text(
                                                   l10n.resend,
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w500,
-                                                    color: isDark
-                                                        ? const Color(
-                                                            0xFF3B82F6)
-                                                        : theme.colorScheme
-                                                            .primary,
+                                                    color: isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary,
                                                   ),
                                                 )
                                               : Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
+                                                  mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     Icon(
                                                       Icons.access_time,
                                                       size: 12,
                                                       color: isDark
-                                                          ? Colors.white
-                                                              .withOpacity(0.3)
-                                                          : theme.colorScheme
-                                                              .onSurface
-                                                              .withOpacity(0.3),
+                                                          ? Colors.white.withValues(alpha: 0.3)
+                                                          : theme.colorScheme.onSurface.withValues(alpha: 0.3),
                                                     ),
                                                     const SizedBox(width: 4),
                                                     Text(
                                                       '${_countdown}s',
                                                       style: TextStyle(
                                                         fontSize: 14,
-                                                        fontWeight:
-                                                            FontWeight.w500,
+                                                        fontWeight: FontWeight.w500,
                                                         color: isDark
-                                                            ? Colors.white
-                                                                .withOpacity(
-                                                                    0.3)
-                                                            : theme.colorScheme
-                                                                .onSurface
-                                                                .withOpacity(
-                                                                    0.3),
+                                                            ? Colors.white.withValues(alpha: 0.3)
+                                                            : theme.colorScheme.onSurface.withValues(alpha: 0.3),
                                                       ),
                                                     ),
                                                   ],
@@ -588,14 +511,11 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                           animation: _fadeAnimation,
                           builder: (context, child) {
                             return Transform.translate(
-                              offset:
-                                  Offset(0, 20 * (1 - _fadeAnimation.value)),
+                              offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
                               child: Opacity(
                                 opacity: _fadeAnimation.value,
                                 child: GradientButton(
-                                  onPressed: (_isOtpComplete && !_isVerifying)
-                                      ? _handleVerifyOTP
-                                      : null,
+                                  onPressed: (_isOtpComplete && !_isVerifying) ? _handleVerifyOTP : null,
                                   enabled: _isOtpComplete && !_isVerifying,
                                   child: _isVerifying
                                       ? const SizedBox(
@@ -603,9 +523,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                                           height: 20,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
+                                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                           ),
                                         )
                                       : Text(

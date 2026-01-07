@@ -103,8 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: l10n.darkMode,
                   trailing: Switch(
                     value: ref.watch(themeProvider).isDarkMode,
-                    onChanged: (value) =>
-                        ref.read(themeProvider.notifier).setThemeMode(value),
+                    onChanged: (value) => ref.read(themeProvider.notifier).setThemeMode(value),
                     activeColor: theme.colorScheme.primary,
                   ),
                   theme: theme,
@@ -136,7 +135,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: GradientButton(
-                      onPressed: () => _showLogoutConfirmation(context, ref),
+                    onPressed: () => _showLogoutConfirmation(context, ref),
                     gradient: const LinearGradient(
                       colors: [Color(0xFFE53E3E), Color(0xFFC53030)],
                     ),
@@ -156,7 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final user = authState.user;
-    
+
     // Get existing overrides
     final overridesFuture = storage.getProfileOverrides();
 
@@ -166,7 +165,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         future: overridesFuture,
         builder: (context, snapshot) {
           final overrides = snapshot.data ?? {};
-          
+
           return _EditPersonalInfoDialog(
             theme: theme,
             l10n: l10n,
@@ -175,7 +174,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onSave: (newOverrides) async {
               await storage.saveProfileOverrides(newOverrides);
               if (mounted) {
-                  Navigator.pop(context);
+                Navigator.pop(context);
                 setState(() {});
               }
             },
@@ -265,9 +264,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDarkMode
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.2),
+                      color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -300,8 +297,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle(
-                          'How to Send Money', isDarkMode),
+                      _buildSectionTitle('How to Send Money', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           '1. Select "Send Money" from the home screen\n'
@@ -312,8 +308,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           '6. Review and confirm the transaction',
                           isDarkMode),
                       const SizedBox(height: 24),
-                      _buildSectionTitle(
-                          'How to Add Recipients', isDarkMode),
+                      _buildSectionTitle('How to Add Recipients', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           '1. Go to the Favorites tab\n'
@@ -356,9 +351,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isDarkMode
-                              ? Colors.white.withOpacity(0.1)
-                              : Colors.blue.withOpacity(0.1),
+                          color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -373,22 +366,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            _buildContactItem(
-                                Icons.email_outlined,
-                                'support@mpf.co.ke',
-                                isDarkMode),
+                            _buildContactItem(Icons.email_outlined, 'support@mpf.co.ke', isDarkMode),
                             const SizedBox(height: 8),
-                            _buildContactItem(
-                                Icons.phone_outlined,
-                                '+254 727 205699',
-                                isDarkMode),
+                            _buildContactItem(Icons.phone_outlined, '+254 727 205699', isDarkMode),
                             const SizedBox(height: 8),
                             Text(
                               'Available 24/7',
                               style: TextStyle(
-                                color: isDarkMode
-                                    ? Colors.white70
-                                    : Colors.grey[600],
+                                color: isDarkMode ? Colors.white70 : Colors.grey[600],
                                 fontSize: 14,
                               ),
                             ),
@@ -424,9 +409,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDarkMode
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.2),
+                      color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -459,8 +442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle(
-                          '1. Acceptance of Terms', isDarkMode),
+                      _buildSectionTitle('1. Acceptance of Terms', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'By accessing and using this mobile application, you accept and agree to be bound by these Terms & Conditions. If you do not agree to these terms, please do not use our services.',
@@ -490,8 +472,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           'Fees are displayed before you confirm each transaction. Fees may vary based on transaction amount, destination country, and payment method selected.',
                           isDarkMode),
                       const SizedBox(height: 24),
-                      _buildSectionTitle(
-                          '6. Limitation of Liability', isDarkMode),
+                      _buildSectionTitle('6. Limitation of Liability', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'We are not liable for any indirect, incidental, or consequential damages arising from your use of our service. Our liability is limited to the amount of the transaction.',
@@ -552,9 +533,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDarkMode
-                          ? Colors.white.withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.2),
+                      color: isDarkMode ? Colors.white.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -587,8 +566,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle(
-                          '1. Information We Collect', isDarkMode),
+                      _buildSectionTitle('1. Information We Collect', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'We collect personal information including:\n'
@@ -598,8 +576,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           '- Usage data and preferences',
                           isDarkMode),
                       const SizedBox(height: 24),
-                      _buildSectionTitle(
-                          '2. How We Use Your Information', isDarkMode),
+                      _buildSectionTitle('2. How We Use Your Information', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'We use your information to:\n'
@@ -650,8 +627,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           'You can manage cookie preferences in your device settings.',
                           isDarkMode),
                       const SizedBox(height: 24),
-                      _buildSectionTitle(
-                          '7. Third-Party Services', isDarkMode),
+                      _buildSectionTitle('7. Third-Party Services', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'Our app may integrate with third-party services for payment processing and analytics. These services have their own privacy policies governing data handling.',
@@ -663,8 +639,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           'Our service is not intended for users under 18 years of age. We do not knowingly collect personal information from children.',
                           isDarkMode),
                       const SizedBox(height: 24),
-                      _buildSectionTitle(
-                          '9. Changes to Privacy Policy', isDarkMode),
+                      _buildSectionTitle('9. Changes to Privacy Policy', isDarkMode),
                       const SizedBox(height: 8),
                       _buildSectionContent(
                           'We may update this Privacy Policy periodically. We will notify you of significant changes. Continued use of the service after changes indicates acceptance.',
@@ -738,7 +713,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
   }
-
 }
 
 class _ProfileHeader extends ConsumerStatefulWidget {
@@ -785,8 +759,8 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.white.withOpacity(0.15),
-                      Colors.white.withOpacity(0.05),
+                      Colors.white.withValues(alpha: 0.15),
+                      Colors.white.withValues(alpha: 0.05),
                     ],
                   ),
                 ),
@@ -798,17 +772,12 @@ class _ProfileHeaderState extends ConsumerState<_ProfileHeader> {
                 future: widget.storage.getProfileOverrides(),
                 builder: (context, snapshot) {
                   final overrides = snapshot.data ?? {};
-                  final name = (overrides['name'] as String?)?.trim().isNotEmpty == true
-                      ? overrides['name'] as String
-                      : (user?.name ?? '');
-                  final surname = (overrides['surname'] as String?)?.trim().isNotEmpty == true
-                      ? overrides['surname'] as String
-                      : (user?.surname ?? '');
+                  final name = (overrides['name'] as String?)?.trim().isNotEmpty == true ? overrides['name'] as String : (user?.name ?? '');
+                  final surname =
+                      (overrides['surname'] as String?)?.trim().isNotEmpty == true ? overrides['surname'] as String : (user?.surname ?? '');
                   final avatarPath = overrides['avatarPath'] as String?;
 
-                  final fullName = (name.isNotEmpty || surname.isNotEmpty)
-                      ? '$name $surname'.trim()
-                      : '—';
+                  final fullName = (name.isNotEmpty || surname.isNotEmpty) ? '$name $surname'.trim() : '—';
                   final initials = _computeInitials(name, surname);
 
                   return Column(
@@ -982,14 +951,12 @@ class _PersonalInformationCard extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
+          color: theme.brightness == Brightness.dark ? const Color(0xFF2B2F58) : const Color(0xFFE5E7EB),
         ),
         boxShadow: theme.brightness == Brightness.light
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -1002,18 +969,10 @@ class _PersonalInformationCard extends StatelessWidget {
           final overrides = snapshot.data ?? {};
           final user = authState.user;
 
-          final name = (overrides['name'] as String?)?.trim().isNotEmpty == true
-              ? overrides['name'] as String
-              : (user?.name ?? '');
-          final surname = (overrides['surname'] as String?)?.trim().isNotEmpty == true
-              ? overrides['surname'] as String
-              : (user?.surname ?? '');
-          final email = (overrides['email'] as String?)?.trim().isNotEmpty == true
-              ? overrides['email'] as String
-              : (user?.email ?? '');
-          final phone = (overrides['phone'] as String?)?.trim().isNotEmpty == true
-              ? overrides['phone'] as String
-              : (user?.phone ?? '');
+          final name = (overrides['name'] as String?)?.trim().isNotEmpty == true ? overrides['name'] as String : (user?.name ?? '');
+          final surname = (overrides['surname'] as String?)?.trim().isNotEmpty == true ? overrides['surname'] as String : (user?.surname ?? '');
+          final email = (overrides['email'] as String?)?.trim().isNotEmpty == true ? overrides['email'] as String : (user?.email ?? '');
+          final phone = (overrides['phone'] as String?)?.trim().isNotEmpty == true ? overrides['phone'] as String : (user?.phone ?? '');
           final dateOfBirthStr = overrides['dateOfBirth'] as String?;
           final address = overrides['address'] as String? ?? '';
 
@@ -1024,9 +983,7 @@ class _PersonalInformationCard extends StatelessWidget {
             } catch (_) {}
           }
 
-          final fullName = (name.isNotEmpty || surname.isNotEmpty)
-              ? '$name $surname'.trim()
-              : '—';
+          final fullName = (name.isNotEmpty || surname.isNotEmpty) ? '$name $surname'.trim() : '—';
 
           return Column(
             children: [
@@ -1080,9 +1037,7 @@ class _PersonalInformationCard extends StatelessWidget {
               _InfoField(
                 icon: Icons.calendar_today_outlined,
                 label: 'Date of Birth',
-                value: dateOfBirth != null
-                    ? '${dateOfBirth.day}/${dateOfBirth.month}/${dateOfBirth.year}'
-                    : '—',
+                value: dateOfBirth != null ? '${dateOfBirth.day}/${dateOfBirth.month}/${dateOfBirth.year}' : '—',
                 theme: theme,
               ),
               const Divider(height: 1, indent: 72),
@@ -1125,7 +1080,7 @@ class _InfoField extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -1142,7 +1097,7 @@ class _InfoField extends StatelessWidget {
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withOpacity(0.6),
+                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1198,13 +1153,13 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
     final phone = (widget.initialOverrides['phone'] as String?)?.trim() ?? widget.user?.phone ?? '';
     final address = widget.initialOverrides['address'] as String? ?? '';
     final dateOfBirthStr = widget.initialOverrides['dateOfBirth'] as String?;
-    
+
     _firstNameController = TextEditingController(text: name);
     _lastNameController = TextEditingController(text: surname);
     _emailController = TextEditingController(text: email);
     _phoneController = TextEditingController(text: phone);
     _addressController = TextEditingController(text: address);
-    
+
     if (dateOfBirthStr != null && dateOfBirthStr.isNotEmpty) {
       try {
         _dateOfBirth = DateTime.parse(dateOfBirthStr);
@@ -1344,9 +1299,7 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
                     suffixIcon: const Icon(Icons.calendar_today),
                   ),
                   child: Text(
-                    _dateOfBirth != null
-                        ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}'
-                        : 'Select date',
+                    _dateOfBirth != null ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}' : 'Select date',
                   ),
                 ),
               ),
@@ -1429,14 +1382,12 @@ class _ProfileTile extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
+          color: theme.brightness == Brightness.dark ? const Color(0xFF2B2F58) : const Color(0xFFE5E7EB),
         ),
         boxShadow: theme.brightness == Brightness.light
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

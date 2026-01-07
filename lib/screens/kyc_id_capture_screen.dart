@@ -17,8 +17,7 @@ class KYCIdCaptureScreen extends ConsumerStatefulWidget {
   ConsumerState<KYCIdCaptureScreen> createState() => _KYCIdCaptureScreenState();
 }
 
-class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
-    with TickerProviderStateMixin {
+class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen> with TickerProviderStateMixin {
   DocumentType? selectedDocType;
   Map<String, bool> uploadedSides = {'front': false, 'back': false};
   Map<String, String> documentPaths = {'front': '', 'back': ''};
@@ -67,8 +66,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     final appNotifier = ref.read(appProvider.notifier);
 
     return Scaffold(
-      backgroundColor:
-          appState.isDark ? const Color(0xFF19173d) : theme.colorScheme.surface,
+      backgroundColor: appState.isDark ? const Color(0xFF19173d) : theme.colorScheme.surface,
       body: Container(
         decoration: appState.isDark
             ? const BoxDecoration(
@@ -91,10 +89,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                     children: [
                       _buildHeaderContent(appState),
                       const SizedBox(height: 32),
-                      if (selectedDocType == null)
-                        _buildDocumentTypeSelection(appState)
-                      else
-                        _buildDocumentUploadInterface(appState),
+                      if (selectedDocType == null) _buildDocumentTypeSelection(appState) else _buildDocumentUploadInterface(appState),
                     ],
                   ),
                 ),
@@ -114,9 +109,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : Theme.of(context).dividerColor,
+            color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : Theme.of(context).dividerColor,
           ),
         ),
       ),
@@ -127,9 +120,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             icon: const Icon(Icons.arrow_back),
             style: IconButton.styleFrom(
               minimumSize: const Size(44, 44),
-              backgroundColor: appState.isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.transparent,
+              backgroundColor: appState.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.transparent,
             ),
           ),
           Expanded(
@@ -162,9 +153,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
               Text(
                 l10n.stepXofY(3, 4),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: appState.isDark
-                      ? Colors.white.withOpacity(0.7)
-                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                  color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               Text(
@@ -179,9 +168,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: 0.75,
-            backgroundColor: appState.isDark
-                ? Colors.white.withOpacity(0.1)
-                : theme.colorScheme.onSurface.withOpacity(0.1),
+            backgroundColor: appState.isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation<Color>(
               theme.colorScheme.primary,
             ),
@@ -213,9 +200,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             Text(
               l10n.takeClearPhotoOfId,
               style: theme.textTheme.bodyLarge?.copyWith(
-                color: appState.isDark
-                    ? Colors.white.withOpacity(0.7)
-                    : theme.colorScheme.onSurface.withOpacity(0.7),
+                color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -265,8 +250,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Card(
                     child: InkWell(
-                      onTap: () => _handleDocumentTypeSelect(
-                          docType['id'] as DocumentType),
+                      onTap: () => _handleDocumentTypeSelect(docType['id'] as DocumentType),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -276,18 +260,13 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: appState.isDark
-                                    ? Colors.white.withOpacity(0.1)
-                                    : theme.colorScheme.primary
-                                        .withOpacity(0.1),
+                                color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
                                 docType['icon'] as IconData,
                                 size: 24,
-                                color: appState.isDark
-                                    ? Colors.white
-                                    : theme.colorScheme.primary,
+                                color: appState.isDark ? Colors.white : theme.colorScheme.primary,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -297,21 +276,17 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                                 children: [
                                   Text(
                                     docType['title'] as String,
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
+                                    style: theme.textTheme.titleMedium?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color:
-                                          appState.isDark ? Colors.white : null,
+                                      color: appState.isDark ? Colors.white : null,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     docType['subtitle'] as String,
                                     style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: appState.isDark
-                                          ? Colors.white.withOpacity(0.6)
-                                          : theme.colorScheme.onSurface
-                                              .withOpacity(0.6),
+                                      color:
+                                          appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -323,9 +298,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: appState.isDark
-                                      ? Colors.white.withOpacity(0.3)
-                                      : theme.dividerColor,
+                                  color: appState.isDark ? Colors.white.withValues(alpha: 0.3) : theme.dividerColor,
                                   width: 2,
                                 ),
                               ),
@@ -346,8 +319,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final docType = selectedDocType!;
-    final docTypeName =
-        docType == DocumentType.nationalId ? l10n.nationalId : l10n.passport;
+    final docTypeName = docType == DocumentType.nationalId ? l10n.nationalId : l10n.passport;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -365,9 +337,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                   }),
                   icon: const Icon(Icons.arrow_back),
                   style: IconButton.styleFrom(
-                    backgroundColor: appState.isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : theme.colorScheme.onSurface.withOpacity(0.05),
+                    backgroundColor: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -436,10 +406,10 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.green.withOpacity(0.3),
+                    color: Colors.green.withValues(alpha: 0.3),
                   ),
                 ),
                 child: const Icon(
@@ -467,17 +437,13 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: appState.isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : theme.colorScheme.onSurface.withOpacity(0.1),
+                  color: appState.isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.onSurface.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.file_upload_outlined,
                   size: 32,
-                  color: appState.isDark
-                      ? Colors.white.withOpacity(0.7)
-                      : theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: appState.isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 20),
@@ -540,9 +506,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: appState.isDark
-            ? Colors.white.withOpacity(0.05)
-            : theme.colorScheme.onSurface.withOpacity(0.05),
+        color: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.onSurface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -552,9 +516,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             l10n.makeSureDocument,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
-              color: appState.isDark
-                  ? Colors.white.withOpacity(0.8)
-                  : theme.colorScheme.onSurface.withOpacity(0.8),
+              color: appState.isDark ? Colors.white.withValues(alpha: 0.8) : theme.colorScheme.onSurface.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 8),
@@ -566,18 +528,14 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
                     Text(
                       '• ',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: appState.isDark
-                            ? Colors.white.withOpacity(0.6)
-                            : theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     Expanded(
                       child: Text(
                         requirement,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: appState.isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: appState.isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ),
@@ -600,7 +558,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
             ? () {
                 // Get phone and OTP data from route arguments
                 final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-                
+
                 // Navigate to selfie screen with all collected data
                 Navigator.pushNamed(
                   context,
@@ -640,7 +598,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
     debugPrint('Side: $side');
     debugPrint('Button clicked at: ${DateTime.now()}');
     debugPrint('Method called successfully - handler is working!');
-    
+
     try {
       // Show dialog to choose camera or gallery
       debugPrint('Showing image source dialog...');
@@ -692,7 +650,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
       debugPrint('=== KYC ID UPLOAD ERROR ===');
       debugPrint('Error: $e');
       debugPrint('Stack trace: $stackTrace');
-      
+
       if (mounted) {
         String errorMessage = 'Failed to pick image';
         if (e.toString().contains('permission') || e.toString().contains('Permission')) {
@@ -702,7 +660,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
         } else {
           errorMessage = 'Failed to pick image: ${e.toString()}';
         }
-        
+
         debugPrint('Showing error message to user: $errorMessage');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -727,7 +685,7 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
 
   Widget _buildIdNumberInput(AppState appState) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -744,23 +702,17 @@ class _KYCIdCaptureScreenState extends ConsumerState<KYCIdCaptureScreen>
           decoration: InputDecoration(
             hintText: 'Enter your ID number',
             filled: true,
-            fillColor: appState.isDark
-                ? Colors.white.withOpacity(0.05)
-                : theme.colorScheme.surface,
+            fillColor: appState.isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: appState.isDark
-                    ? Colors.white.withOpacity(0.2)
-                    : theme.colorScheme.outline,
+                color: appState.isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: appState.isDark
-                    ? Colors.white.withOpacity(0.2)
-                    : theme.colorScheme.outline,
+                color: appState.isDark ? Colors.white.withValues(alpha: 0.2) : theme.colorScheme.outline,
               ),
             ),
             focusedBorder: OutlineInputBorder(

@@ -47,9 +47,7 @@ class YoleLogoCustom extends StatelessWidget {
     return SizedBox(
       width: width,
       height: height,
-      child: enableErrorHandling
-          ? _buildWithErrorHandling(context)
-          : _buildDirect(context),
+      child: enableErrorHandling ? _buildWithErrorHandling(context) : _buildDirect(context),
     );
   }
 
@@ -76,9 +74,7 @@ class YoleLogoCustom extends StatelessWidget {
   /// Fallback text-based logo for error cases
   Widget _buildFallbackLogo(BuildContext context) {
     final effectiveIsDarkTheme = _getEffectiveTheme(context);
-    final textColor = effectiveIsDarkTheme
-        ? Colors.white.withOpacity(0.95)
-        : const Color(0xFF1A1A1A);
+    final textColor = effectiveIsDarkTheme ? Colors.white.withValues(alpha: 0.95) : const Color(0xFF1A1A1A);
 
     return Center(
       child: Text(
@@ -312,8 +308,7 @@ class YoleLogoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(YoleLogoPainter oldDelegate) {
-    return oldDelegate.variant != variant ||
-        oldDelegate.isDarkTheme != isDarkTheme;
+    return oldDelegate.variant != variant || oldDelegate.isDarkTheme != isDarkTheme;
   }
 }
 

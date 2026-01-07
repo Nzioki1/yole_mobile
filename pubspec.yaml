@@ -27,7 +27,9 @@ dependencies:
   intl: ^0.20.2
 
   # Splash screen
-  flutter_native_splash: ^2.4.6
+  # Pin to 2.4.4 for compatibility with older Flutter SDKs that depend
+  # on `path` 1.9.0 (See README for recommended Flutter version).
+  flutter_native_splash: 2.4.4
 
   # Local storage
   shared_preferences: ^2.2.2

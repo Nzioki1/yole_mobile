@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum StatusChipVariant {success, warning, error, neutral, info }
+enum StatusChipVariant { success, warning, error, neutral, info }
 
 class StatusChip extends StatelessWidget {
   final String text;
@@ -16,20 +16,20 @@ class StatusChip extends StatelessWidget {
     Color fg;
     switch (variant) {
       case StatusChipVariant.success:
-        bg = Colors.green.withOpacity(0.12);
+        bg = Colors.green.withValues(alpha: 0.12);
         fg = Colors.green.shade700;
         break;
       case StatusChipVariant.warning:
-        bg = Colors.orange.withOpacity(0.12);
+        bg = Colors.orange.withValues(alpha: 0.12);
         fg = Colors.orange.shade700;
         break;
       case StatusChipVariant.error:
-        bg = Colors.red.withOpacity(0.12);
+        bg = Colors.red.withValues(alpha: 0.12);
         fg = Colors.red.shade700;
         break;
       case StatusChipVariant.neutral:
       default:
-        bg = colors.primary.withOpacity(0.10);
+        bg = colors.primary.withValues(alpha: 0.10);
         fg = colors.primary;
     }
 

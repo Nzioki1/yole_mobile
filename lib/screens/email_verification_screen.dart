@@ -29,13 +29,10 @@ class EmailVerificationScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EmailVerificationScreen> createState() =>
-      _EmailVerificationScreenState();
+  ConsumerState<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
 }
 
-class _EmailVerificationScreenState
-    extends ConsumerState<EmailVerificationScreen>
-    with TickerProviderStateMixin {
+class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScreen> with TickerProviderStateMixin {
   bool _isResending = false;
   int _countdown = 0;
   Timer? _timer;
@@ -174,9 +171,7 @@ class _EmailVerificationScreenState
         });
 
         String errorMessage;
-        if (e.toString().contains('TimeoutException') ||
-            e.toString().contains('SocketException') ||
-            e.toString().contains('Network')) {
+        if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException') || e.toString().contains('Network')) {
           errorMessage = 'Network error. Please check your internet connection.';
         } else {
           errorMessage = 'Failed to send verification email. Please try again.';
@@ -220,9 +215,7 @@ class _EmailVerificationScreenState
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.1)
-                          : theme.colorScheme.outline.withOpacity(0.3),
+                      color: isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.outline.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -240,8 +233,7 @@ class _EmailVerificationScreenState
                       },
                       icon: Icon(
                         Icons.arrow_back,
-                        color:
-                            isDark ? Colors.white : theme.colorScheme.onSurface,
+                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                       ),
                     ),
                     Expanded(
@@ -251,9 +243,7 @@ class _EmailVerificationScreenState
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? Colors.white
-                              : theme.colorScheme.onSurface,
+                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
                         ),
                       ),
                     ),
@@ -266,8 +256,7 @@ class _EmailVerificationScreenState
             // Content
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: Column(
                   children: [
                     // Top Section - Logo & Illustration
@@ -303,19 +292,13 @@ class _EmailVerificationScreenState
                                             : const LinearGradient(
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
-                                                colors: [
-                                                  Color(0xFF3B82F6),
-                                                  Color(0xFF8B5CF6)
-                                                ],
+                                                colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
                                               ),
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.1)
-                                            : null,
+                                        color: isDark ? Colors.white.withValues(alpha: 0.1) : null,
                                         borderRadius: BorderRadius.circular(48),
                                         border: isDark
                                             ? Border.all(
-                                                color: Colors.white
-                                                    .withOpacity(0.2),
+                                                color: Colors.white.withValues(alpha: 0.2),
                                                 width: 1,
                                               )
                                             : null,
@@ -334,8 +317,7 @@ class _EmailVerificationScreenState
 
                               // Content
                               ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 320),
+                                constraints: const BoxConstraints(maxWidth: 320),
                                 child: Column(
                                   children: [
                                     Text(
@@ -343,9 +325,7 @@ class _EmailVerificationScreenState
                                       style: TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.onSurface,
+                                        color: isDark ? Colors.white : theme.colorScheme.onSurface,
                                       ),
                                     ),
                                     const SizedBox(height: 16),
@@ -355,10 +335,7 @@ class _EmailVerificationScreenState
                                       style: TextStyle(
                                         fontSize: 16,
                                         height: 1.5,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.7)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.7),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.7) : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -368,10 +345,7 @@ class _EmailVerificationScreenState
                                       style: TextStyle(
                                         fontSize: 14,
                                         height: 1.5,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.6)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                       ),
                                     ),
                                   ],
@@ -400,8 +374,7 @@ class _EmailVerificationScreenState
                                     if (widget.onContinue != null) {
                                       widget.onContinue!();
                                     } else {
-                                      Navigator.pushNamed(
-                                          context, RouteNames.kyc);
+                                      Navigator.pushNamed(context, RouteNames.kyc);
                                     }
                                   },
                                   child: Text(
@@ -418,20 +391,14 @@ class _EmailVerificationScreenState
                                       l10n.didntReceiveEmail,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.6)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
                                     GestureDetector(
-                                      onTap: _isResending || _countdown > 0
-                                          ? null
-                                          : _handleResendEmail,
+                                      onTap: _isResending || _countdown > 0 ? null : _handleResendEmail,
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8, horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                                         child: _isResending
                                             ? Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -439,17 +406,10 @@ class _EmailVerificationScreenState
                                                   SizedBox(
                                                     width: 16,
                                                     height: 16,
-                                                    child:
-                                                        CircularProgressIndicator(
+                                                    child: CircularProgressIndicator(
                                                       strokeWidth: 2,
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<
-                                                              Color>(
-                                                        isDark
-                                                            ? const Color(
-                                                                0xFF3B82F6)
-                                                            : theme.colorScheme
-                                                                .primary,
+                                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                                        isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary,
                                                       ),
                                                     ),
                                                   ),
@@ -458,50 +418,26 @@ class _EmailVerificationScreenState
                                                     l10n.sending,
                                                     style: TextStyle(
                                                       fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: (_isResending ||
-                                                              _countdown > 0)
+                                                      fontWeight: FontWeight.w500,
+                                                      color: (_isResending || _countdown > 0)
                                                           ? (isDark
-                                                              ? Colors.white
-                                                                  .withOpacity(
-                                                                      0.3)
-                                                              : theme
-                                                                  .colorScheme
-                                                                  .onSurface
-                                                                  .withOpacity(
-                                                                      0.3))
-                                                          : (isDark
-                                                              ? const Color(
-                                                                  0xFF3B82F6)
-                                                              : theme
-                                                                  .colorScheme
-                                                                  .primary),
+                                                              ? Colors.white.withValues(alpha: 0.3)
+                                                              : theme.colorScheme.onSurface.withValues(alpha: 0.3))
+                                                          : (isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary),
                                                     ),
                                                   ),
                                                 ],
                                               )
                                             : Text(
-                                                _countdown > 0
-                                                    ? '${l10n.resendIn} ${_countdown}s'
-                                                    : l10n
-                                                        .resendVerificationEmail,
+                                                _countdown > 0 ? '${l10n.resendIn} ${_countdown}s' : l10n.resendVerificationEmail,
                                                 style: TextStyle(
                                                   fontSize: 14,
                                                   fontWeight: FontWeight.w500,
-                                                  color: (_isResending ||
-                                                          _countdown > 0)
+                                                  color: (_isResending || _countdown > 0)
                                                       ? (isDark
-                                                          ? Colors.white
-                                                              .withOpacity(0.3)
-                                                          : theme.colorScheme
-                                                              .onSurface
-                                                              .withOpacity(0.3))
-                                                      : (isDark
-                                                          ? const Color(
-                                                              0xFF3B82F6)
-                                                          : theme.colorScheme
-                                                              .primary),
+                                                          ? Colors.white.withValues(alpha: 0.3)
+                                                          : theme.colorScheme.onSurface.withValues(alpha: 0.3))
+                                                      : (isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary),
                                                 ),
                                               ),
                                       ),
@@ -519,10 +455,7 @@ class _EmailVerificationScreenState
                                       l10n.wrongEmail,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.6)
-                                            : theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.6) : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                                       ),
                                     ),
                                     GestureDetector(
@@ -539,9 +472,7 @@ class _EmailVerificationScreenState
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
-                                          color: isDark
-                                              ? const Color(0xFF3B82F6)
-                                              : theme.colorScheme.primary,
+                                          color: isDark ? const Color(0xFF3B82F6) : theme.colorScheme.primary,
                                         ),
                                       ),
                                     ),

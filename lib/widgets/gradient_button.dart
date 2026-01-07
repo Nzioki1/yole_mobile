@@ -42,7 +42,7 @@ class GradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -56,7 +56,7 @@ class GradientButton extends StatelessWidget {
             child: Center(
               child: DefaultTextStyle.merge(
                 style: TextStyle(
-                  color: Colors.white.withOpacity(isEnabled ? 1 : 0.6),
+                  color: Colors.white.withValues(alpha: isEnabled ? 1 : 0.6),
                   fontWeight: FontWeight.w600,
                 ),
                 child: child,

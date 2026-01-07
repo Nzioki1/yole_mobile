@@ -10,8 +10,7 @@ class SendMoneyReviewScreen extends ConsumerStatefulWidget {
   const SendMoneyReviewScreen({super.key});
 
   @override
-  ConsumerState<SendMoneyReviewScreen> createState() =>
-      _SendMoneyReviewScreenState();
+  ConsumerState<SendMoneyReviewScreen> createState() => _SendMoneyReviewScreenState();
 }
 
 class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
@@ -34,8 +33,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
 
   Future<void> _loadFees() async {
     print('=== REVIEW SCREEN _loadFees called ===');
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     print('Review screen args: $args');
 
     if (args == null) {
@@ -57,8 +55,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     final theme = Theme.of(context);
     final appState = ref.watch(appProvider);
     final chargesState = ref.watch(chargesProvider);
-    final args =
-        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
     if (args == null) {
       print('ERROR: Review screen args NULL in build - popping back');
@@ -92,14 +89,11 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 32),
-                      _buildReviewCard(
-                          theme, appState, amount, currency, recipient, note),
+                      _buildReviewCard(theme, appState, amount, currency, recipient, note),
                       const SizedBox(height: 24),
-                      _buildFeesSection(theme, appState, amount, currency,
-                          feeAmount, totalAmount, chargesState),
+                      _buildFeesSection(theme, appState, amount, currency, feeAmount, totalAmount, chargesState),
                       const SizedBox(height: 48),
-                      _buildContinueButton(
-                          theme, appState, args, feeAmount, totalAmount),
+                      _buildContinueButton(theme, appState, args, feeAmount, totalAmount),
                     ],
                   ),
                 ),
@@ -148,15 +142,14 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildReviewCard(ThemeData theme, AppState appState, double amount,
-      String currency, String recipient, String? note) {
+  Widget _buildReviewCard(ThemeData theme, AppState appState, double amount, String currency, String recipient, String? note) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -170,11 +163,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildDetailRow(
-              'Amount',
-              '${currency == 'USD' ? '\$' : '€'}${amount.toStringAsFixed(2)} $currency',
-              theme,
-              appState),
+          _buildDetailRow('Amount', '${currency == 'USD' ? '\$' : '€'}${amount.toStringAsFixed(2)} $currency', theme, appState),
           _buildDetailRow('Recipient', recipient, theme, appState),
           if (note != null && note.isNotEmpty) ...[
             _buildDetailRow('Note', note, theme, appState),
@@ -184,8 +173,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildDetailRow(
-      String label, String value, ThemeData theme, AppState appState) {
+  Widget _buildDetailRow(String label, String value, ThemeData theme, AppState appState) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -196,7 +184,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
             child: Text(
               label,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -217,20 +205,14 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
   }
 
   Widget _buildFeesSection(
-      ThemeData theme,
-      AppState appState,
-      double amount,
-      String currency,
-      double feeAmount,
-      double totalAmount,
-      ChargesState chargesState) {
+      ThemeData theme, AppState appState, double amount, String currency, double feeAmount, double totalAmount, ChargesState chargesState) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -253,9 +235,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                   child: Text(
                     chargesState.isLoading ? 'Loading...' : 'Refresh fees',
                     style: TextStyle(
-                      color: appState.isDark
-                          ? const Color(0xFF3B82F6)
-                          : const Color(0xFF3B82F6),
+                      color: appState.isDark ? const Color(0xFF3B82F6) : const Color(0xFF3B82F6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -279,8 +259,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                     Text(
                       chargesState.error!,
                       style: TextStyle(
-                        color:
-                            appState.isDark ? Colors.red[300] : Colors.red[600],
+                        color: appState.isDark ? Colors.red[300] : Colors.red[600],
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -295,22 +274,10 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
               ),
             )
           else ...[
-            _buildFeeRow(
-                'Amount',
-                '${currency == 'USD' ? '\$' : '€'}${amount.toStringAsFixed(2)} $currency',
-                theme,
-                appState),
-            _buildFeeRow(
-                'Fees',
-                '${currency == 'USD' ? '\$' : '€'}${feeAmount.toStringAsFixed(2)} $currency',
-                theme,
-                appState),
+            _buildFeeRow('Amount', '${currency == 'USD' ? '\$' : '€'}${amount.toStringAsFixed(2)} $currency', theme, appState),
+            _buildFeeRow('Fees', '${currency == 'USD' ? '\$' : '€'}${feeAmount.toStringAsFixed(2)} $currency', theme, appState),
             const Divider(),
-            _buildFeeRow(
-                'Total charged',
-                '${currency == 'USD' ? '\$' : '€'}${totalAmount.toStringAsFixed(2)} $currency',
-                theme,
-                appState,
+            _buildFeeRow('Total charged', '${currency == 'USD' ? '\$' : '€'}${totalAmount.toStringAsFixed(2)} $currency', theme, appState,
                 isTotal: true),
             const SizedBox(height: 8),
             Text(
@@ -327,9 +294,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildFeeRow(
-      String label, String value, ThemeData theme, AppState appState,
-      {bool isTotal = false}) {
+  Widget _buildFeeRow(String label, String value, ThemeData theme, AppState appState, {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -338,7 +303,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
           Text(
             label,
             style: TextStyle(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 14,
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -356,8 +321,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
-  Widget _buildContinueButton(ThemeData theme, AppState appState,
-      Map<String, dynamic> args, double feeAmount, double totalAmount) {
+  Widget _buildContinueButton(ThemeData theme, AppState appState, Map<String, dynamic> args, double feeAmount, double totalAmount) {
     return SizedBox(
       height: 48,
       child: GradientButton(

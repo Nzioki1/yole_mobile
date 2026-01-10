@@ -73,7 +73,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _StatCard(
-                          title: 'Transactions This Week',
+                          title: "Week's Transactions",
                           value: '0',
                           icon: Icons.trending_up_rounded,
                         ),
@@ -402,6 +402,9 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            softWrap: true,
             style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 13),
           ),
         ],

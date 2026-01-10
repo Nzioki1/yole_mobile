@@ -77,29 +77,27 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Container(
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(theme, appState),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 32),
-                      _buildReviewCard(theme, appState, amount, currency, recipient, note),
-                      const SizedBox(height: 24),
-                      _buildFeesSection(theme, appState, amount, currency, feeAmount, totalAmount, chargesState),
-                      const SizedBox(height: 48),
-                      _buildContinueButton(theme, appState, args, feeAmount, totalAmount),
-                    ],
-                  ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(theme, appState),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 32),
+                    _buildReviewCard(theme, appState, amount, currency, recipient, note),
+                    const SizedBox(height: 24),
+                    _buildFeesSection(theme, appState, amount, currency, feeAmount, totalAmount, chargesState),
+                    const SizedBox(height: 48),
+                    _buildContinueButton(theme, appState, args, feeAmount, totalAmount),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -21,27 +21,27 @@ class FavoriteContact {
 class FavoritesController extends StateNotifier<List<FavoriteContact>> {
   FavoritesController()
       : super(const [
-          FavoriteContact(
-            id: '1',
-            label: 'Marie',
-            initials: 'MK',
-            phones: ['+243123456789'],
-            countryCode: 'CD',
-          ),
-          FavoriteContact(
-            id: '2',
-            label: 'Joseph',
-            initials: 'JM',
-            phones: ['+243987654321'],
-            countryCode: 'CD',
-          ),
-          FavoriteContact(
-            id: '3',
-            label: 'Grace',
-            initials: 'GT',
-            phones: ['+243555666777'],
-            countryCode: 'CD',
-          ),
+          // FavoriteContact(
+          //   id: '1',
+          //   label: 'Marie',
+          //   initials: 'MK',
+          //   phones: ['+243123456789'],
+          //   countryCode: 'CD',
+          // ),
+          // FavoriteContact(
+          //   id: '2',
+          //   label: 'Joseph',
+          //   initials: 'JM',
+          //   phones: ['+243987654321'],
+          //   countryCode: 'CD',
+          // ),
+          // FavoriteContact(
+          //   id: '3',
+          //   label: 'Grace',
+          //   initials: 'GT',
+          //   phones: ['+243555666777'],
+          //   countryCode: 'CD',
+          // ),
         ]);
 
   void add(FavoriteContact c) => state = [...state, c];
@@ -62,7 +62,6 @@ class FavoritesController extends StateNotifier<List<FavoriteContact>> {
   }
 }
 
-final favoritesProvider =
-    StateNotifierProvider<FavoritesController, List<FavoriteContact>>((ref) {
+final favoritesProvider = StateNotifierProvider<FavoritesController, List<FavoriteContact>>((ref) {
   return FavoritesController();
 });

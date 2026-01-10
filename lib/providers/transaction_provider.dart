@@ -194,8 +194,7 @@ class SendMoneyNotifier extends StateNotifier<SendMoneyState> {
 class TransactionStatusNotifier extends StateNotifier<TransactionStatusState> {
   final TransactionService _transactionService;
 
-  TransactionStatusNotifier(this._transactionService)
-      : super(const TransactionStatusState());
+  TransactionStatusNotifier(this._transactionService) : super(const TransactionStatusState());
 
   Future<void> checkStatus(String orderTrackingId) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -225,8 +224,7 @@ class TransactionStatusNotifier extends StateNotifier<TransactionStatusState> {
 class TransactionsNotifier extends StateNotifier<TransactionsState> {
   final TransactionService _transactionService;
 
-  TransactionsNotifier(this._transactionService)
-      : super(const TransactionsState());
+  TransactionsNotifier(this._transactionService) : super(const TransactionsState());
 
   Future<void> loadTransactions({
     bool refresh = false,
@@ -234,6 +232,12 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
     String? fromDate,
     String? toDate,
   }) async {
+    // If this method is called from a widget life-cycle (build/initState/etc.),
+    // deferring the execution to the next event loop prevents modifying a
+    // provider synchronously during widget build which would trigger a
+    // `tried to modify a provider while the widget tree was building` error.
+    // Using a zero-duration delay ensures we resume after the current frame.
+    await Future<void>.delayed(Duration.zero);
     if (refresh) {
       state = state.copyWith(
         transactions: [],
@@ -257,9 +261,7 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
       );
 
       state = state.copyWith(
-        transactions: refresh
-            ? newTransactions
-            : [...state.transactions, ...newTransactions],
+        transactions: refresh ? newTransactions : [...state.transactions, ...newTransactions],
         isLoading: false,
         hasMore: newTransactions.length >= 20,
         currentPage: state.currentPage + 1,
@@ -283,27 +285,22 @@ class TransactionsNotifier extends StateNotifier<TransactionsState> {
 }
 
 /// Providers
-final chargesProvider =
-    StateNotifierProvider<ChargesNotifier, ChargesState>((ref) {
+final chargesProvider = StateNotifierProvider<ChargesNotifier, ChargesState>((ref) {
   final transactionService = ref.watch(transactionServiceProvider);
   return ChargesNotifier(transactionService);
 });
 
-final sendMoneyProvider =
-    StateNotifierProvider<SendMoneyNotifier, SendMoneyState>((ref) {
+final sendMoneyProvider = StateNotifierProvider<SendMoneyNotifier, SendMoneyState>((ref) {
   final transactionService = ref.watch(transactionServiceProvider);
   return SendMoneyNotifier(transactionService);
 });
 
-final transactionStatusProvider =
-    StateNotifierProvider<TransactionStatusNotifier, TransactionStatusState>(
-        (ref) {
+final transactionStatusProvider = StateNotifierProvider<TransactionStatusNotifier, TransactionStatusState>((ref) {
   final transactionService = ref.watch(transactionServiceProvider);
   return TransactionStatusNotifier(transactionService);
 });
 
-final transactionsListProvider =
-    StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
+final transactionsListProvider = StateNotifierProvider<TransactionsNotifier, TransactionsState>((ref) {
   final transactionService = ref.watch(transactionServiceProvider);
   return TransactionsNotifier(transactionService);
 });

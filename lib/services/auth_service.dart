@@ -18,6 +18,7 @@ class AuthService implements AuthServiceInterface {
         _storage = storage;
 
   /// Login user - password required
+  @override
   Future<AuthResponse> login(String email, String password) async {
     try {
       // Validate inputs before sending
@@ -40,8 +41,7 @@ class AuthService implements AuthServiceInterface {
         final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
 
         // Store tokens with expiry and user data
-        await _storage.saveAccessToken(
-            authResponse.accessToken, authResponse.expiresIn);
+        await _storage.saveAccessToken(authResponse.accessToken, authResponse.expiresIn);
         if (authResponse.refreshToken != null) {
           await _storage.saveRefreshToken(authResponse.refreshToken!);
         }
@@ -54,7 +54,7 @@ class AuthService implements AuthServiceInterface {
           // Login response has valid user data - use it and skip /me call
           await _storage.saveUserProfile(authResponse.user);
           await _storage.saveLastLogin();
-          
+
           // Return immediately with user data from login response
           return authResponse;
         } else {
@@ -62,7 +62,7 @@ class AuthService implements AuthServiceInterface {
           // But do it in background (non-blocking) to return login immediately
           await _storage.saveUserProfile(authResponse.user);
           await _storage.saveLastLogin();
-          
+
           // Fetch full profile in background (non-blocking)
           Future.microtask(() async {
             try {
@@ -73,7 +73,7 @@ class AuthService implements AuthServiceInterface {
               print('Warning: Could not fetch user profile in background: $e');
             }
           });
-          
+
           // Return immediately with user data from login response
           return authResponse;
         }
@@ -88,6 +88,7 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Register new user - password required
+  @override
   Future<AuthResponse> register({
     required String email,
     required String name,
@@ -106,15 +107,13 @@ class AuthService implements AuthServiceInterface {
         'password_confirmation': passwordConfirmation,
       };
 
-      final response =
-          await _api.post('/register', body: body, useFormData: true);
+      final response = await _api.post('/register', body: body, useFormData: true);
 
       if (response.statusCode == 201) {
         final authResponse = AuthResponse.fromJson(jsonDecode(response.body));
 
         // Store tokens with expiry and user data
-        await _storage.saveAccessToken(
-            authResponse.accessToken, authResponse.expiresIn);
+        await _storage.saveAccessToken(authResponse.accessToken, authResponse.expiresIn);
         if (authResponse.refreshToken != null) {
           await _storage.saveRefreshToken(authResponse.refreshToken!);
         }
@@ -136,6 +135,7 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Logout user - clear local data immediately, API call in background
+  @override
   Future<void> logout() async {
     // Clear local data immediately for fast response
     await _storage.clearTokens();
@@ -147,13 +147,13 @@ class AuthService implements AuthServiceInterface {
       _api.post('/logout', requiresAuth: true).catchError((e) {
         // Log error but don't block UI
         print('Background logout API call failed: $e');
-        return http.Response(
-            '', 500); // Return a dummy response to satisfy the type
+        return http.Response('', 500); // Return a dummy response to satisfy the type
       });
     }
   }
 
   /// Refresh authentication token
+  @override
   Future<String> refreshToken() async {
     try {
       final refreshToken = await _storage.getRefreshToken();
@@ -186,10 +186,12 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Get user profile with shorter timeout for faster response
+  @override
   Future<UserProfile> getProfile({Duration? timeout}) async {
     try {
       // Use shorter timeout for profile calls (5 seconds default)
-      final response = await _api.get('/me', 
+      final response = await _api.get(
+        '/me',
         requiresAuth: true,
         timeout: timeout ?? const Duration(seconds: 5),
       );
@@ -212,16 +214,19 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Check if user is authenticated
+  @override
   Future<bool> isAuthenticated() async {
     return await _storage.isLoggedIn() && _api.isAuthenticated;
   }
 
   /// Get current user profile from storage
+  @override
   Future<UserProfile?> getCurrentUser() async {
     return await _storage.getUserProfile();
   }
 
   /// Check authentication status
+  @override
   Future<bool> checkAuthStatus() async {
     try {
       final token = await _storage.getAccessToken();
@@ -252,6 +257,7 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Initialize authentication from stored data
+  @override
   Future<bool> initializeAuth() async {
     try {
       final isAuthenticated = await checkAuthStatus();
@@ -269,6 +275,7 @@ class AuthService implements AuthServiceInterface {
   }
 
   /// Send password reset email
+  @override
   Future<void> sendPasswordReset(String email) async {
     try {
       final response = await _api.post('/password/forgot', body: {

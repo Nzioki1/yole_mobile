@@ -19,7 +19,13 @@ This audit identifies which screens in the YOLE mobile application are connected
   - ✅ **Connected**: Uses `AuthService.register()` → `POST /register`
   - **Status**: Successfully posting registration data
   - **Provider**: `authProvider` → `AuthService`
-  - **Note**: Has fallback to `MockAuthService` on failure (line 234)
+  - ✅ **Countries API**: Uses `countriesProvider` → `DataService.getCountries()` → `GET /countries`
+  - **Provider Details**: 
+    - Provider: `countriesProvider` (FutureProvider in `lib/providers/api_providers.dart`)
+    - Service: `DataService.getCountries()`
+    - Endpoint: `GET /countries`
+    - Implementation: Lines 237-265 in create_account_screen.dart
+    - Handles loading, error, and data states for country dropdown
 
 - **Logout** (`lib/providers/auth_provider.dart`)
   - ✅ **Connected**: Uses `AuthService.logout()` → `POST /logout`
@@ -116,11 +122,11 @@ This audit identifies which screens in the YOLE mobile application are connected
 
 | Category | Connected | Not Connected | Total |
 |----------|-----------|---------------|-------|
-| Authentication | 4 | 0 | 4 |
+| Authentication | 5 | 0 | 5 |
 | Send Money | 3 | 0 | 3 |
 | KYC Flow | 0 | 6 | 6 |
 | Email Verification | 0 | 1 | 1 |
-| **TOTAL** | **7** | **7** | **14** |
+| **TOTAL** | **8** | **7** | **15** |
 
 ---
 
@@ -179,6 +185,7 @@ The KYC flow should work as follows:
 Based on codebase analysis:
 - `POST /login` - ✅ Connected
 - `POST /register` - ✅ Connected
+- `GET /countries` - ✅ Connected (Create Account Screen)
 - `POST /logout` - ✅ Connected
 - `POST /password/forgot` - ✅ Connected
 - `POST /charges` - ✅ Connected

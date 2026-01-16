@@ -4,6 +4,7 @@ import '../services/storage_service.dart';
 import '../services/auth_service.dart';
 import '../services/transaction_service.dart';
 import '../services/data_service.dart';
+import '../models/api/country.dart';
 
 /// Provider for YoleApiService
 final yoleApiServiceProvider = Provider<YoleApiService>((ref) {
@@ -33,6 +34,12 @@ final transactionServiceProvider = Provider<TransactionService>((ref) {
 final dataServiceProvider = Provider<DataService>((ref) {
   final api = ref.watch(yoleApiServiceProvider);
   return DataService(api: api);
+});
+
+/// Provider for fetching countries from API
+final countriesProvider = FutureProvider<List<Country>>((ref) async {
+  final dataService = ref.watch(dataServiceProvider);
+  return dataService.getCountries();
 });
 
 /// Note: KycService provider is defined in kyc_provider.dart

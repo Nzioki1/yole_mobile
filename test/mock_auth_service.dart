@@ -4,6 +4,7 @@ import '../lib/providers/auth_provider.dart';
 /// Mock authentication service for testing when backend is unavailable
 class MockAuthService implements AuthServiceInterface {
   /// Mock login - always succeeds for testing (password optional)
+  @override
   Future<AuthResponse> login(String email, String password) async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
@@ -17,8 +18,7 @@ class MockAuthService implements AuthServiceInterface {
     // Mock successful login
     return AuthResponse(
       accessToken: 'mock_access_token_${DateTime.now().millisecondsSinceEpoch}',
-      refreshToken:
-          'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+      refreshToken: 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
       tokenType: 'Bearer',
       expiresIn: 3600,
       user: UserProfile(
@@ -35,6 +35,8 @@ class MockAuthService implements AuthServiceInterface {
       ),
     );
   }
+
+  @override
 
   /// Mock register - always succeeds for testing
   Future<AuthResponse> register({
@@ -66,8 +68,7 @@ class MockAuthService implements AuthServiceInterface {
     // Mock successful registration
     return AuthResponse(
       accessToken: 'mock_access_token_${DateTime.now().millisecondsSinceEpoch}',
-      refreshToken:
-          'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+      refreshToken: 'mock_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
       tokenType: 'Bearer',
       expiresIn: 3600,
       user: UserProfile(
@@ -86,17 +87,20 @@ class MockAuthService implements AuthServiceInterface {
   }
 
   /// Mock logout
+  @override
   Future<void> logout() async {
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
   /// Mock token refresh
+  @override
   Future<String> refreshToken() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return 'mock_refreshed_token_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   /// Mock get profile
+  @override
   Future<UserProfile> getProfile() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return UserProfile(
@@ -114,11 +118,13 @@ class MockAuthService implements AuthServiceInterface {
   }
 
   /// Mock check if authenticated
+  @override
   Future<bool> isAuthenticated() async {
     return true;
   }
 
   /// Mock get current user
+  @override
   Future<UserProfile?> getCurrentUser() async {
     return UserProfile(
       id: '1',
@@ -135,18 +141,21 @@ class MockAuthService implements AuthServiceInterface {
   }
 
   /// Mock initialize auth - return false to prevent auto-login
+  @override
   Future<bool> initializeAuth() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return false; // Changed to false to prevent automatic login
   }
 
   /// Mock check auth status
+  @override
   Future<bool> checkAuthStatus() async {
     await Future.delayed(const Duration(milliseconds: 500));
     return true;
   }
 
   /// Mock send password reset
+  @override
   Future<void> sendPasswordReset(String email) async {
     await Future.delayed(const Duration(seconds: 1));
   }

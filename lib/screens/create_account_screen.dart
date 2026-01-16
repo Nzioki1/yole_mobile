@@ -6,6 +6,7 @@ import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/api_providers.dart';
 import '../theme/register_spacing.dart';
 
 class CreateAccountScreen extends ConsumerStatefulWidget {
@@ -25,7 +26,6 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   bool _showPassword = false;
   bool _showConfirmPassword = false;
   String? _countryCode;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -43,6 +43,8 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
     final themeState = ref.watch(themeProvider);
     final isDark = themeState.isDarkMode;
     final l10n = AppLocalizations.of(context)!;
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -233,33 +235,50 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
                             const SizedBox(height: RegisterSpacing.stackGap),
                             _LabeledField(
                               label: l10n.country,
-                              child: DropdownButtonFormField<String>(
-                                value: _countryCode,
-                                decoration: _inputDecoration(l10n.selectYourCountry),
-                                icon: Icon(Icons.keyboard_arrow_down, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
-                                items: const [
-                                  DropdownMenuItem(value: 'KE', child: Text('🇰🇪 Kenya')),
-                                  DropdownMenuItem(value: 'NG', child: Text('🇳🇬 Nigeria')),
-                                  DropdownMenuItem(value: 'GH', child: Text('🇬🇭 Ghana')),
-                                  DropdownMenuItem(value: 'UG', child: Text('🇺🇬 Uganda')),
-                                  DropdownMenuItem(value: 'TZ', child: Text('🇹🇿 Tanzania')),
-                                  DropdownMenuItem(value: 'ZA', child: Text('🇿🇦 South Africa')),
-                                  DropdownMenuItem(value: 'CD', child: Text('🇨🇩 DRC')),
-                                  DropdownMenuItem(value: 'FR', child: Text('🇫🇷 France')),
-                                  DropdownMenuItem(value: 'DE', child: Text('🇩🇪 Germany')),
-                                  DropdownMenuItem(value: 'US', child: Text('🇺🇸 United States')),
-                                ],
-                                onChanged: (v) => setState(() => _countryCode = v),
-                                validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseSelectCountry : null,
-                              ),
+                              child: ref.watch(countriesProvider).when(
+                                    data: (countries) => DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      initialValue: _countryCode,
+                                      decoration: _inputDecoration(l10n.selectYourCountry),
+                                      icon: Icon(Icons.keyboard_arrow_down, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                                      items: countries
+                                          .map((country) => DropdownMenuItem(
+                                                value: country.code,
+                                                child: Text(country.displayName),
+                                              ))
+                                          .toList(),
+                                      onChanged: (v) => setState(() => _countryCode = v),
+                                      validator: (v) => (v == null || v.isEmpty) ? l10n.pleaseSelectCountry : null,
+                                    ),
+                                    loading: () => DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      initialValue: _countryCode,
+                                      decoration: _inputDecoration(l10n.selectYourCountry),
+                                      items: const [],
+                                      onChanged: null,
+                                      icon: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
+                                    error: (err, stack) => DropdownButtonFormField<String>(
+                                      isExpanded: true,
+                                      initialValue: _countryCode,
+                                      decoration: _inputDecoration(l10n.selectYourCountry),
+                                      items: const [],
+                                      onChanged: null,
+                                      hint: Text('Error loading countries'),
+                                    ),
+                                  ),
                             ),
                             const SizedBox(height: RegisterSpacing.ctaSectionPT),
                             GradientButton(
                               height: RegisterSpacing.ctaBtnH,
                               borderRadius: RegisterSpacing.cardRadius,
-                              onPressed: _isLoading ? null : _onCreateAccount,
-                              enabled: !_isLoading,
-                              child: _isLoading
+                              onPressed: isLoading ? null : _onCreateAccount,
+                              enabled: !isLoading,
+                              child: isLoading
                                   ? SizedBox(
                                       width: 20,
                                       height: 20,
@@ -298,62 +317,31 @@ class _CreateAccountScreenState extends ConsumerState<CreateAccountScreen> {
   }
 
   Future<void> _onCreateAccount() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Prevent multiple simultaneous submissions
-      if (_isLoading) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      setState(() {
-        _isLoading = true;
-      });
+    final success = await ref.read(authProvider.notifier).register(
+          email: _emailCtrl.text.trim(),
+          name: _firstNameCtrl.text.trim(),
+          surname: _lastNameCtrl.text.trim(),
+          password: _passwordCtrl.text.trim(),
+          passwordConfirmation: _passwordCtrl.text.trim(),
+          country: _countryCode ?? 'CD',
+        );
 
-      try {
-        // Attempt registration with auth provider
-        final success = await ref.read(authProvider.notifier).register(
-              email: _emailCtrl.text.trim(),
-              name: _firstNameCtrl.text.trim(),
-              surname: _lastNameCtrl.text.trim(),
-              password: _passwordCtrl.text.trim(),
-              passwordConfirmation: _passwordCtrl.text.trim(),
-              country: _countryCode ?? 'CD',
-            );
+    if (!mounted) return;
 
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-
-          if (success) {
-            // Navigate to email verification on successful registration
-            Navigator.pushNamed(context, RouteNames.emailVerification);
-          } else {
-            // Show error message from auth provider
-            final authState = ref.read(authProvider);
-            if (authState.error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(authState.error!),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  duration: const Duration(seconds: 4),
-                ),
-              );
-            }
-          }
-        }
-      } catch (e) {
-        // Show error message if registration fails
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Registration failed: $e'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
+    if (success) {
+      Navigator.pushNamed(context, RouteNames.emailVerification);
+    } else {
+      final authState = ref.read(authProvider);
+      if (authState.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authState.error!),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }

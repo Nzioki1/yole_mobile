@@ -71,8 +71,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
     print('🌐 LOCALE CHANGED: ${currentLocale.languageCode}');
 
     return MaterialApp(
-      key: ValueKey(currentLocale
-          .languageCode), // Force complete rebuild on locale change
+      key: ValueKey(currentLocale.languageCode), // Force complete rebuild on locale change
       navigatorKey: navigatorKey, // Global navigator key for stack rebuild
       title: 'Yole',
       debugShowCheckedModeBanner: false,
@@ -115,9 +114,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
         primary: Color(0xFF4DA3FF),
         secondary: Color(0xFF7B4DFF),
         surface: Colors.white,
-        background: Color(0xFFF7F8FC),
         onSurface: Colors.black,
-        onBackground: Colors.black,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFFF7F8FC),
@@ -137,21 +134,14 @@ class _YoleAppState extends ConsumerState<YoleApp> {
         ),
       ),
       textTheme: const TextTheme(
-        displayLarge:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
-        displayMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        displaySmall:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        headlineMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        headlineSmall:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        displayLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
+        displayMedium: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        displaySmall: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        headlineMedium: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        headlineSmall: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
         titleLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        titleMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        titleSmall:
-            TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+        titleMedium: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+        titleSmall: TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
         bodyLarge: TextStyle(color: Colors.black87),
         bodyMedium: TextStyle(color: Colors.black87),
         bodySmall: TextStyle(color: Colors.black54),
@@ -171,9 +161,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
         primary: Color(0xFF4DA3FF),
         secondary: Color(0xFF7B4DFF),
         surface: Color(0xFF11163A),
-        background: Color(0xFF0E1230),
         onSurface: Colors.white,
-        onBackground: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF0E1230),
@@ -193,21 +181,14 @@ class _YoleAppState extends ConsumerState<YoleApp> {
         ),
       ),
       textTheme: const TextTheme(
-        displayLarge:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-        displayMedium:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-        displaySmall:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        headlineMedium:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-        headlineSmall:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        displayLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+        displayMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        displaySmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        headlineMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        headlineSmall: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-        titleMedium:
-            TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        titleSmall:
-            TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
+        titleMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        titleSmall: TextStyle(color: Colors.white70, fontWeight: FontWeight.w500),
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white),
         bodySmall: TextStyle(color: Colors.white60),
@@ -227,16 +208,14 @@ class ThemeLifecycleWatcher extends ConsumerStatefulWidget {
   ConsumerState<ThemeLifecycleWatcher> createState() => _ThemeLifecycleWatcherState();
 }
 
-class _ThemeLifecycleWatcherState extends ConsumerState<ThemeLifecycleWatcher>
-    with WidgetsBindingObserver {
+class _ThemeLifecycleWatcherState extends ConsumerState<ThemeLifecycleWatcher> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Apply time-based theme once on startup
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(themeProvider.notifier)
-          .applyTimeBasedThemeIfEnabled(DateTime.now());
+      ref.read(themeProvider.notifier).applyTimeBasedThemeIfEnabled(DateTime.now());
     });
   }
 
@@ -249,9 +228,7 @@ class _ThemeLifecycleWatcherState extends ConsumerState<ThemeLifecycleWatcher>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      ref
-          .read(themeProvider.notifier)
-          .applyTimeBasedThemeIfEnabled(DateTime.now());
+      ref.read(themeProvider.notifier).applyTimeBasedThemeIfEnabled(DateTime.now());
     }
   }
 

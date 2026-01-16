@@ -104,7 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: Switch(
                     value: ref.watch(themeProvider).isDarkMode,
                     onChanged: (value) => ref.read(themeProvider.notifier).setThemeMode(value),
-                    activeColor: theme.colorScheme.primary,
+                    activeThumbColor: theme.colorScheme.primary,
                   ),
                   theme: theme,
                 ),

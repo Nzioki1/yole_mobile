@@ -15,7 +15,7 @@ void main() {
     });
 
     test('Validate all API endpoints and generate report', () async {
-      print('\n' + '=' * 60);
+      print('\n${'=' * 60}');
       print('YOLE API VALIDATION TEST');
       print('=' * 60 + '\n');
 
@@ -36,7 +36,7 @@ void main() {
       expect(results, isNotEmpty);
       expect(results.length, equals(16));
 
-      print('\n' + '=' * 60);
+      print('\n${'=' * 60}');
       print('VALIDATION COMPLETE');
       print('=' * 60);
     });

@@ -95,7 +95,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
       builder: (context, child) {
         final wrapped = MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaleFactor: 1.0, // Prevent text scaling issues
+            textScaler: TextScaler.linear(1.0), // Prevent text scaling issues
           ),
           child: child!,
         );

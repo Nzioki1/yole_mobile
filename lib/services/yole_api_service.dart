@@ -7,8 +7,7 @@ import 'storage_service.dart';
 /// Base API service for YOLE backend integration
 class YoleApiService {
   static const String baseUrl = 'https://yolepesa.masterpiecefusion.com/api';
-  static const String apiKey =
-      '8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY';
+  static const String apiKey = '8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY';
 
   final http.Client _client;
   String? _authToken;
@@ -90,7 +89,7 @@ class YoleApiService {
             print('Method: POST (Form Data)');
             print('Headers: $formHeaders');
             print('Form Data (encoded): $formDataString');
-            
+
             // Send URL-encoded form data as string body
             requestFuture = _client.post(uri, headers: formHeaders, body: formDataString);
           } else {
@@ -124,8 +123,7 @@ class YoleApiService {
         },
       );
 
-      print(
-          'API Response: ${method} $endpoint - Status: ${response.statusCode}');
+      print('API Response: $method $endpoint - Status: ${response.statusCode}');
       if (response.statusCode >= 400) {
         print('Response Body: ${response.body}');
       }
@@ -147,10 +145,10 @@ class YoleApiService {
       // 422 Unprocessable Entity - validation error
       try {
         final errorBody = jsonDecode(response.body);
-        
+
         // Extract detailed error message
         String errorMessage;
-        
+
         // Check for nested error structure
         if (errorBody['message'] != null) {
           errorMessage = errorBody['message'].toString();
@@ -163,51 +161,46 @@ class YoleApiService {
             final errorList = <String>[];
             errors.forEach((key, value) {
               if (value is List && value.isNotEmpty) {
-                errorList.add('${key}: ${value.first}');
+                errorList.add('$key: ${value.first}');
               } else if (value is String) {
-                errorList.add('${key}: $value');
+                errorList.add('$key: $value');
               }
             });
-            errorMessage = errorList.isNotEmpty 
-                ? errorList.join('\n')
-                : 'Validation error. Please check your input.';
+            errorMessage = errorList.isNotEmpty ? errorList.join('\n') : 'Validation error. Please check your input.';
           } else {
             errorMessage = errors.toString();
           }
         } else {
           errorMessage = 'Validation error. Please check your input.';
         }
-        
+
         // Log detailed error for debugging
         print('=== 422 VALIDATION ERROR ===');
         print('Endpoint: $method $endpoint');
         print('Response Body: ${response.body}');
         print('Extracted Error: $errorMessage');
-        
+
         throw YoleApiException(errorMessage, 422);
       } catch (e) {
         if (e is YoleApiException) rethrow;
-        
+
         // If JSON decode fails, log raw response
         print('=== 422 ERROR (JSON decode failed) ===');
         print('Endpoint: $method $endpoint');
         print('Raw Response: ${response.body}');
         print('Error: $e');
-        
-        throw YoleApiException(
-            'Validation error. Please check your input.', 422);
+
+        throw YoleApiException('Validation error. Please check your input.', 422);
       }
     } else if (response.statusCode >= 500) {
-      throw YoleApiException(
-          'Server error - Please try again later', response.statusCode);
+      throw YoleApiException('Server error - Please try again later', response.statusCode);
     }
 
     return response;
   }
 
   /// GET request
-  Future<http.Response> get(String endpoint,
-      {bool requiresAuth = false, Duration? timeout}) async {
+  Future<http.Response> get(String endpoint, {bool requiresAuth = false, Duration? timeout}) async {
     return _request('GET', endpoint, requiresAuth: requiresAuth, timeout: timeout);
   }
 
@@ -218,8 +211,7 @@ class YoleApiService {
     bool requiresAuth = false,
     bool useFormData = false,
   }) async {
-    return _request('POST', endpoint,
-        body: body, requiresAuth: requiresAuth, useFormData: useFormData);
+    return _request('POST', endpoint, body: body, requiresAuth: requiresAuth, useFormData: useFormData);
   }
 
   /// PUT request
@@ -232,8 +224,7 @@ class YoleApiService {
   }
 
   /// DELETE request
-  Future<http.Response> delete(String endpoint,
-      {bool requiresAuth = false}) async {
+  Future<http.Response> delete(String endpoint, {bool requiresAuth = false}) async {
     return _request('DELETE', endpoint, requiresAuth: requiresAuth);
   }
 
@@ -386,8 +377,7 @@ class YoleApiService {
       } else if (response.statusCode == 404) {
         throw YoleApiException('Not found - Resource does not exist', 404);
       } else if (response.statusCode >= 500) {
-        throw YoleApiException(
-            'Server error - Please try again later', response.statusCode);
+        throw YoleApiException('Server error - Please try again later', response.statusCode);
       }
 
       return response;
@@ -468,6 +458,5 @@ class YoleApiException implements Exception {
   const YoleApiException(this.message, [this.statusCode]);
 
   @override
-  String toString() =>
-      'YoleApiException: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
+  String toString() => 'YoleApiException: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
 }

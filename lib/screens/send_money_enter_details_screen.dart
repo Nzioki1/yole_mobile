@@ -20,7 +20,7 @@ class _SendMoneyEnterDetailsScreenState extends ConsumerState<SendMoneyEnterDeta
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
 
-  String _selectedCurrency = 'USD'; // Always USD
+  final String _selectedCurrency = 'USD'; // Always USD
   String? _selectedRecipient;
   String? _selectedRecipientPhone;
   String? _selectedRecipientCountry;
@@ -487,7 +487,7 @@ class _SendMoneyEnterDetailsScreenState extends ConsumerState<SendMoneyEnterDeta
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedRecipientCountry,
+          initialValue: _selectedRecipientCountry,
           decoration: InputDecoration(
             hintText: l10n.selectRecipientCountry,
             hintStyle: TextStyle(
@@ -551,7 +551,7 @@ class _SendMoneyEnterDetailsScreenState extends ConsumerState<SendMoneyEnterDeta
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: _selectedPaymentMethod,
+          initialValue: _selectedPaymentMethod,
           decoration: InputDecoration(
             hintText: l10n.selectPaymentMethod,
             hintStyle: TextStyle(

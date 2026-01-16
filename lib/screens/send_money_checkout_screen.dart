@@ -56,7 +56,7 @@ class _SendMoneyCheckoutScreenState
           (args['phoneNumber'] as String?);
       final String? recipientCountry =
           (args['recipientCountry'] as String?) ?? (args['country'] as String?);
-      final String? paymentMethod =
+      final String paymentMethod =
           (args['paymentMethod'] as String?) ?? 'mobile_money';
       final String? recipient = args['recipient'] as String?;
 

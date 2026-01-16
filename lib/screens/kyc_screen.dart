@@ -174,7 +174,7 @@ class _KYCScreenState extends ConsumerState<KYCScreen> with TickerProviderStateM
           _documentPaths[type] = pickedFile.path;
         });
         HapticFeedback.lightImpact();
-        debugPrint('State updated - ${type} uploaded: ${_uploadedDocs[type]}');
+        debugPrint('State updated - $type uploaded: ${_uploadedDocs[type]}');
       } else if (pickedFile == null && mounted) {
         debugPrint('User cancelled image selection');
         // User cancelled - no error needed

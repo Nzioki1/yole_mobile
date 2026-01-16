@@ -28,8 +28,7 @@ class DataService {
           countries = responseData;
         } else if (responseData is Map && responseData.containsKey('data')) {
           countries = responseData['data'] ?? [];
-        } else if (responseData is Map &&
-            responseData.containsKey('countries')) {
+        } else if (responseData is Map && responseData.containsKey('countries')) {
           countries = responseData['countries'] ?? [];
         } else {
           print('Unexpected countries response format: $responseData');
@@ -65,13 +64,6 @@ class DataService {
       if (e is YoleApiException) rethrow;
       throw YoleApiException('Failed to get system status: $e');
     }
-  }
-
-  /// Get countries with caching
-  Future<List<Country>> getCountriesCached() async {
-    // In a real implementation, you might want to cache this data
-    // For now, just call the API directly
-    return getCountries();
   }
 
   /// Search countries by name

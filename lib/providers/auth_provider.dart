@@ -152,12 +152,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       print('Error details: ${e.toString()}');
 
       String errorMessage;
-      if (e.toString().contains('TimeoutException') ||
-          e.toString().contains('SocketException') ||
-          e.toString().contains('Network')) {
+      if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException') || e.toString().contains('Network')) {
         errorMessage = 'Network error. Please check your internet connection.';
-      } else if (e.toString().contains('401') ||
-          e.toString().contains('Unauthorized')) {
+      } else if (e.toString().contains('401') || e.toString().contains('Unauthorized')) {
         errorMessage = 'Invalid email or password.';
       } else if (e.toString().contains('YoleApiException')) {
         // Extract actual error message
@@ -268,9 +265,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return true;
     } catch (e) {
       String errorMessage;
-      if (e.toString().contains('TimeoutException') ||
-          e.toString().contains('SocketException') ||
-          e.toString().contains('Network')) {
+      if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException') || e.toString().contains('Network')) {
         errorMessage = 'Network error. Please check your internet connection.';
       } else if (e.toString().contains('YoleApiException')) {
         // Extract actual error message
@@ -290,6 +285,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  /// Refresh user profile from server
+  Future<void> refreshProfile() async {
+    try {
+      final user = await _authService.getProfile();
+      state = state.copyWith(
+        user: user,
+        error: null,
+      );
+    } catch (e) {
+      // Log error but don't change auth state
+      print('Failed to refresh profile: $e');
+    }
   }
 }
 

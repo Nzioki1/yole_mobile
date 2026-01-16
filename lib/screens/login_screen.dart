@@ -400,6 +400,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (success && mounted) {
       // Navigate to main app on successful login
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pushNamedAndRemoveUntil(widget.postLoginRoute, (route) => false);
     }
     // Error handling is done in the provider and displayed in the UI

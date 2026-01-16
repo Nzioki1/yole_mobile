@@ -11,11 +11,11 @@ class YoleLogoLight extends StatelessWidget {
   final double height;
 
   const YoleLogoLight({
-    Key? key,
+    super.key,
     this.className = "",
     this.width = 120,
     this.height = 48,
-  }) : super(key: key);
+  });
 
   static const String _svgLight = '''
 <svg 
@@ -77,11 +77,11 @@ class YoleLogoDark extends StatelessWidget {
   final double height;
 
   const YoleLogoDark({
-    Key? key,
+    super.key,
     this.className = "",
     this.width = 120,
     this.height = 48,
-  }) : super(key: key);
+  });
 
   static const String _svgDark = '''
 <svg 
@@ -149,7 +149,7 @@ class YoleLogo extends StatelessWidget {
   final bool enableAutoTheme; // Enable automatic theme detection
 
   const YoleLogo({
-    Key? key,
+    super.key,
     this.variant,
     this.isDarkTheme, // Backward compatibility
     this.className = "",
@@ -160,13 +160,12 @@ class YoleLogo extends StatelessWidget {
     this.letterSpacing = 2.0, // Kept for compatibility
     this.fontWeight = FontWeight.w800, // Kept for compatibility
     this.enableAutoTheme = true, // Enable automatic theme detection
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final resolvedSize = size ?? height ?? 48.0;
-    final resolvedWidth =
-        width ?? (resolvedSize * 2.5); // Maintain aspect ratio
+    final resolvedWidth = width ?? (resolvedSize * 2.5); // Maintain aspect ratio
 
     // Determine effective variant with backward compatibility
     final effectiveVariant = _getEffectiveVariant(context);
@@ -205,9 +204,7 @@ class YoleLogo extends StatelessWidget {
 
     // Auto-detect theme if enabled
     if (enableAutoTheme) {
-      return _isDarkTheme(context)
-          ? YoleLogoVariant.dark
-          : YoleLogoVariant.light;
+      return _isDarkTheme(context) ? YoleLogoVariant.dark : YoleLogoVariant.light;
     }
 
     // Default to light theme

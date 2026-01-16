@@ -49,10 +49,7 @@ class ApiReportGenerator {
     final authIssues = results.where((r) => r.isAuthIssue).length;
     final down = results.where((r) => r.isDown).length;
 
-    final avgResponseTime = results
-            .where((r) => r.responseTimeMs > 0)
-            .map((r) => r.responseTimeMs)
-            .fold(0, (sum, time) => sum + time) /
+    final avgResponseTime = results.where((r) => r.responseTimeMs > 0).map((r) => r.responseTimeMs).fold(0, (sum, time) => sum + time) /
         results.where((r) => r.responseTimeMs > 0).length;
 
     return '''## Summary
@@ -78,8 +75,7 @@ class ApiReportGenerator {
       final name = result.name;
       final method = result.method;
       final status = result.statusEmoji;
-      final responseTime =
-          result.responseTimeMs > 0 ? '${result.responseTimeMs}ms' : 'N/A';
+      final responseTime = result.responseTimeMs > 0 ? '${result.responseTimeMs}ms' : 'N/A';
       final notes = result.error ?? 'Working';
 
       buffer.writeln('| $name | $method | $status | $responseTime | $notes |');
@@ -94,11 +90,10 @@ class ApiReportGenerator {
 
     buffer.writeln('### ${result.name}');
     buffer.writeln();
-    buffer.writeln('- **Endpoint:** \`${result.endpoint}\`');
-    buffer.writeln('- **Method:** \`${result.method}\`');
-    buffer
-        .writeln('- **Requires Auth:** ${result.requiresAuth ? "Yes" : "No"}');
-    buffer.writeln('- **Status Code:** \`${result.statusCode}\`');
+    buffer.writeln('- **Endpoint:** `${result.endpoint}`');
+    buffer.writeln('- **Method:** `${result.method}`');
+    buffer.writeln('- **Requires Auth:** ${result.requiresAuth ? "Yes" : "No"}');
+    buffer.writeln('- **Status Code:** `${result.statusCode}`');
     buffer.writeln('- **Status:** ${result.statusEmoji}');
     buffer.writeln('- **Response Time:** ${result.responseTimeMs}ms');
 
@@ -107,8 +102,7 @@ class ApiReportGenerator {
     }
 
     if (result.responseBody != null) {
-      buffer.writeln(
-          '- **Response Keys:** ${result.responseBody!.keys.join(", ")}');
+      buffer.writeln('- **Response Keys:** ${result.responseBody!.keys.join(", ")}');
     }
 
     return buffer.toString();

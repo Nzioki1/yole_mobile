@@ -190,10 +190,6 @@ class YoleLogoPainter extends CustomPainter {
 
   /// Fallback painting for error cases
   void _paintFallback(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..color = isDarkTheme ? Colors.white : Colors.black;
-
     // Draw simple "YOLE" text as fallback
     final textPainter = TextPainter(
       text: const TextSpan(

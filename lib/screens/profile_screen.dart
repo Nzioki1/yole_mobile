@@ -238,22 +238,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  void _showPersonalInfo(BuildContext context) {
-    // TODO: Implement personal info screen
-  }
-
-  void _showPhoneNumber(BuildContext context) {
-    // TODO: Implement phone number screen
-  }
-
-  void _showEmailAddress(BuildContext context) {
-    // TODO: Implement email address screen
-  }
-
-  void _showChangePassword(BuildContext context) {
-    // TODO: Implement change password screen
-  }
-
   void _showHelpCenter(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -981,15 +965,7 @@ class _PersonalInformationCard extends StatelessWidget {
           final surname = (overrides['surname'] as String?)?.trim().isNotEmpty == true ? overrides['surname'] as String : (user?.surname ?? '');
           final email = (overrides['email'] as String?)?.trim().isNotEmpty == true ? overrides['email'] as String : (user?.email ?? '');
           final phone = (overrides['phone'] as String?)?.trim().isNotEmpty == true ? overrides['phone'] as String : (user?.phone ?? '');
-          final dateOfBirthStr = overrides['dateOfBirth'] as String?;
-          final address = overrides['address'] as String? ?? '';
-
-          DateTime? dateOfBirth;
-          if (dateOfBirthStr != null && dateOfBirthStr.isNotEmpty) {
-            try {
-              dateOfBirth = DateTime.parse(dateOfBirthStr);
-            } catch (_) {}
-          }
+          final country = (overrides['country'] as String?)?.trim().isNotEmpty == true ? overrides['country'] as String : (user?.country ?? '');
 
           final fullName = (name.isNotEmpty || surname.isNotEmpty) ? '$name $surname'.trim() : '—';
 
@@ -1041,19 +1017,11 @@ class _PersonalInformationCard extends StatelessWidget {
                 theme: theme,
               ),
               const Divider(height: 1, indent: 72),
-              // Date of Birth Field
+              // Country Field
               _InfoField(
-                icon: Icons.calendar_today_outlined,
-                label: 'Date of Birth',
-                value: dateOfBirth != null ? '${dateOfBirth.day}/${dateOfBirth.month}/${dateOfBirth.year}' : '—',
-                theme: theme,
-              ),
-              const Divider(height: 1, indent: 72),
-              // Address Field
-              _InfoField(
-                icon: Icons.location_on_outlined,
-                label: 'Address',
-                value: address.isNotEmpty ? address : '—',
+                icon: Icons.public_outlined,
+                label: 'Country',
+                value: country.isNotEmpty ? country : '—',
                 theme: theme,
               ),
               const SizedBox(height: 20),
@@ -1149,8 +1117,7 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
-  late TextEditingController _addressController;
-  DateTime? _dateOfBirth;
+  late TextEditingController _countryController;
 
   @override
   void initState() {
@@ -1159,20 +1126,13 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
     final surname = (widget.initialOverrides['surname'] as String?)?.trim() ?? widget.user?.surname ?? '';
     final email = (widget.initialOverrides['email'] as String?)?.trim() ?? widget.user?.email ?? '';
     final phone = (widget.initialOverrides['phone'] as String?)?.trim() ?? widget.user?.phone ?? '';
-    final address = widget.initialOverrides['address'] as String? ?? '';
-    final dateOfBirthStr = widget.initialOverrides['dateOfBirth'] as String?;
+    final country = (widget.initialOverrides['country'] as String?)?.trim() ?? widget.user?.country ?? '';
 
     _firstNameController = TextEditingController(text: name);
     _lastNameController = TextEditingController(text: surname);
     _emailController = TextEditingController(text: email);
     _phoneController = TextEditingController(text: phone);
-    _addressController = TextEditingController(text: address);
-
-    if (dateOfBirthStr != null && dateOfBirthStr.isNotEmpty) {
-      try {
-        _dateOfBirth = DateTime.parse(dateOfBirthStr);
-      } catch (_) {}
-    }
+    _countryController = TextEditingController(text: country);
   }
 
   @override
@@ -1181,22 +1141,8 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
     _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
+    _countryController.dispose();
     super.dispose();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dateOfBirth ?? DateTime.now().subtract(const Duration(days: 365 * 18)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _dateOfBirth = picked;
-      });
-    }
   }
 
   void _save() {
@@ -1206,8 +1152,7 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
         'surname': _lastNameController.text.trim(),
         'email': _emailController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'address': _addressController.text.trim(),
-        if (_dateOfBirth != null) 'dateOfBirth': _dateOfBirth!.toIso8601String(),
+        'country': _countryController.text.trim(),
       };
       widget.onSave(overrides);
     }
@@ -1295,33 +1240,15 @@ class _EditPersonalInfoDialogState extends State<_EditPersonalInfoDialog> {
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 16),
-              // Date of Birth
-              InkWell(
-                onTap: () => _selectDate(context),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Date of Birth',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: const Icon(Icons.calendar_today),
-                  ),
-                  child: Text(
-                    _dateOfBirth != null ? '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}' : 'Select date',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Address
+              // Country
               TextFormField(
-                controller: _addressController,
+                controller: _countryController,
                 decoration: InputDecoration(
-                  labelText: 'Address',
+                  labelText: 'Country',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                maxLines: 3,
               ),
             ],
           ),

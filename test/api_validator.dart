@@ -39,8 +39,7 @@ class ApiValidationResult {
 /// Service to validate YOLE API endpoints
 class ApiValidator {
   static const String baseUrl = 'https://yolepesa.masterpiecefusion.com/api';
-  static const String apiKey =
-      '8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY';
+  static const String apiKey = '8dmPM4Yhv-zSfAXuQmu)hyrBkq(NHTPQ9uvWqhLt_Wka*zQpLY';
 
   final http.Client _client = http.Client();
 
@@ -59,8 +58,6 @@ class ApiValidator {
 
   /// Validate all API endpoints
   Future<List<ApiValidationResult>> validateAll() async {
-    print('🔍 Starting API validation...\n');
-
     final results = <ApiValidationResult>[];
 
     // Test public endpoints first
@@ -90,26 +87,22 @@ class ApiValidator {
       results.add(await _testSendEmailVerification());
       await _delay();
 
-      results.add(
-          await _testRequestBodyEndpoint('Get Charges', 'POST', '/charges', {
+      results.add(await _testRequestBodyEndpoint('Get Charges', 'POST', '/charges', {
         'amount': testAmount,
         'currency': testCurrency,
         'recipient_country': testCountryCode,
       }));
       await _delay();
 
-      results.add(await _testRequestBodyEndpoint(
-          'Get Service Charge', 'POST', '/yole-charges', null));
+      results.add(await _testRequestBodyEndpoint('Get Service Charge', 'POST', '/yole-charges', null));
       await _delay();
 
-      results.add(await _testRequestBodyEndpoint(
-          'Transaction Status', 'POST', '/transaction/status', {
+      results.add(await _testRequestBodyEndpoint('Transaction Status', 'POST', '/transaction/status', {
         'order_tracking_id': 'test_order_id',
       }));
       await _delay();
 
-      results.add(
-          await _testRequestBodyEndpoint('Send Money', 'POST', '/send-money', {
+      results.add(await _testRequestBodyEndpoint('Send Money', 'POST', '/send-money', {
         'sending_amount': testAmount,
         'recipient_country': testCountryCode,
         'phone_number': testPhone,
@@ -119,16 +112,14 @@ class ApiValidator {
       results.add(await _testGetTransactions());
       await _delay();
 
-      results.add(await _testRequestBodyEndpoint(
-          'Validate KYC', 'POST', '/validate-kyc', {
+      results.add(await _testRequestBodyEndpoint('Validate KYC', 'POST', '/validate-kyc', {
         'phone_number': testPhone,
         'otp_code': '12345',
         'id_number': '1234567',
       }));
       await _delay();
 
-      results.add(await _testRequestBodyEndpoint(
-          'Send SMS OTP', 'POST', '/sms/send-otp', {
+      results.add(await _testRequestBodyEndpoint('Send SMS OTP', 'POST', '/sms/send-otp', {
         'phone_code': testPhoneCode,
         'phone': testPhone,
       }));
@@ -137,7 +128,6 @@ class ApiValidator {
       results.add(await _testLogout());
     }
 
-    print('\n✅ Validation complete!\n');
     return results;
   }
 
@@ -195,14 +185,10 @@ class ApiValidator {
 
   /// Test Status endpoint
   Future<ApiValidationResult> _testStatus() async {
-    print('Testing GET /status...');
     try {
       final response = await _makeRequest('GET', '/status');
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Get Status',
         endpoint: '/status',
@@ -228,14 +214,10 @@ class ApiValidator {
 
   /// Test Get Countries endpoint
   Future<ApiValidationResult> _testGetCountries() async {
-    print('Testing GET /countries...');
     try {
       final response = await _makeRequest('GET', '/countries');
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Get Countries',
         endpoint: '/countries',
@@ -261,24 +243,19 @@ class ApiValidator {
 
   /// Test Login endpoint
   Future<ApiValidationResult> _testLogin() async {
-    print('Testing POST /login...');
     try {
       final response = await _makeRequest('POST', '/login', body: {
         'email': testEmail,
         'password': testPassword,
       });
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
       if (response.statusCode == 200 && responseBody != null) {
         _accessToken = responseBody['access_token'] as String?;
         _refreshToken = responseBody['refresh_token'] as String?;
-        print('  ✅ Login successful, token obtained');
       }
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Login',
         endpoint: '/login',
@@ -304,11 +281,9 @@ class ApiValidator {
 
   /// Test Register endpoint
   Future<ApiValidationResult> _testRegister() async {
-    print('Testing POST /register...');
     try {
       // Use unique email to avoid conflicts
-      final uniqueEmail =
-          'validator_${DateTime.now().millisecondsSinceEpoch}@test.com';
+      final uniqueEmail = 'validator_${DateTime.now().millisecondsSinceEpoch}@test.com';
 
       final response = await _makeRequest('POST', '/register', body: {
         'email': uniqueEmail,
@@ -319,11 +294,8 @@ class ApiValidator {
         'country': testCountry,
       });
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Register',
         endpoint: '/register',
@@ -349,12 +321,9 @@ class ApiValidator {
 
   /// Test Forgot Password endpoint
   Future<ApiValidationResult> _testForgotPassword() async {
-    print('Testing POST /password/forgot...');
     try {
-      final response =
-          await _makeRequest('POST', '/password/forgot?email=$testEmail');
+      final response = await _makeRequest('POST', '/password/forgot?email=$testEmail');
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Forgot Password',
         endpoint: '/password/forgot',
@@ -379,7 +348,6 @@ class ApiValidator {
 
   /// Test My Profile endpoint
   Future<ApiValidationResult> _testMyProfile() async {
-    print('Testing GET /me...');
     try {
       final response = await _makeRequest(
         'GET',
@@ -389,11 +357,8 @@ class ApiValidator {
         },
       );
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'My Profile',
         endpoint: '/me',
@@ -419,9 +384,7 @@ class ApiValidator {
 
   /// Test Refresh Token endpoint
   Future<ApiValidationResult> _testRefreshToken() async {
-    print('Testing POST /refresh-token...');
     if (_refreshToken == null) {
-      print('  ⚠️  No refresh token available');
       return ApiValidationResult(
         name: 'Refresh Token',
         endpoint: '/refresh-token',
@@ -442,11 +405,8 @@ class ApiValidator {
         },
       );
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Refresh Token',
         endpoint: '/refresh-token',
@@ -472,7 +432,6 @@ class ApiValidator {
 
   /// Test Send Email Verification endpoint
   Future<ApiValidationResult> _testSendEmailVerification() async {
-    print('Testing POST /email/verification-notification...');
     try {
       final response = await _makeRequest(
         'POST',
@@ -482,7 +441,6 @@ class ApiValidator {
         },
       );
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Send Email Verification',
         endpoint: '/email/verification-notification',
@@ -507,7 +465,6 @@ class ApiValidator {
 
   /// Test Get Transactions endpoint
   Future<ApiValidationResult> _testGetTransactions() async {
-    print('Testing GET /transactions...');
     try {
       final response = await _makeRequest(
         'GET',
@@ -517,11 +474,8 @@ class ApiValidator {
         },
       );
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Get Transactions',
         endpoint: '/transactions',
@@ -547,7 +501,6 @@ class ApiValidator {
 
   /// Test Logout endpoint
   Future<ApiValidationResult> _testLogout() async {
-    print('Testing POST /logout...');
     try {
       final response = await _makeRequest(
         'POST',
@@ -557,7 +510,6 @@ class ApiValidator {
         },
       );
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: 'Logout',
         endpoint: '/logout',
@@ -587,7 +539,6 @@ class ApiValidator {
     String endpoint,
     Map<String, dynamic>? body,
   ) async {
-    print('Testing $method $endpoint...');
     try {
       final response = await _makeRequest(
         method,
@@ -598,11 +549,8 @@ class ApiValidator {
         },
       );
 
-      final responseBody = response.body.isNotEmpty
-          ? jsonDecode(response.body) as Map<String, dynamic>?
-          : null;
+      final responseBody = response.body.isNotEmpty ? jsonDecode(response.body) as Map<String, dynamic>? : null;
 
-      print('  Status: ${response.statusCode}');
       return ApiValidationResult(
         name: name,
         endpoint: endpoint,
@@ -611,9 +559,7 @@ class ApiValidator {
         statusCode: response.statusCode,
         responseTimeMs: (response.duration?.inMilliseconds).toInt(),
         responseBody: responseBody,
-        error: response.statusCode != 200 && response.statusCode != 201
-            ? 'Request failed'
-            : null,
+        error: response.statusCode != 200 && response.statusCode != 201 ? 'Request failed' : null,
       );
     } catch (e) {
       return ApiValidationResult(

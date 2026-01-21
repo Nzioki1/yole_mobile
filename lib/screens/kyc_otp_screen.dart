@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/kyc_provider.dart';
 
 /// KYC OTP Screen - One-time password verification step
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -84,6 +85,11 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     Future.delayed(const Duration(milliseconds: 300), () {
       _iconController.forward();
     });
+
+    // Send OTP when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _sendOtp();
+    });
   }
 
   @override
@@ -133,6 +139,24 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     }
   }
 
+  /// Sends OTP to the user's phone number via API
+  Future<void> _sendOtp() async {
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final phoneCode = args?['phoneCode'] ?? '+1';
+    final phoneNumber = args?['phoneNumber'] ?? widget.phoneNumber ?? '';
+
+    if (phoneNumber.isNotEmpty) {
+      // Clean phone number - remove spaces and common formatting
+      final cleanPhone = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
+
+      // Send OTP via provider - updates UI via state watching
+      await ref.read(otpSendProvider.notifier).sendOtp(
+            phoneCode: phoneCode,
+            phone: cleanPhone,
+          );
+    }
+  }
+
   Future<void> _handleVerifyOTP() async {
     if (!_isOtpComplete) return;
 
@@ -145,12 +169,9 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     // Get OTP code from controllers
     final otpCode = _otpControllers.map((c) => c.text).join();
 
-    // Note: OTP verification happens as part of validateKyc endpoint
-    // So we just store the OTP code and proceed to ID capture
+    // OTP verification happens as part of validateKyc endpoint
+    // We store the OTP code and proceed to ID capture
     // The OTP will be verified when we submit the complete KYC
-
-    // Simulate brief delay for UX
-    await Future.delayed(const Duration(milliseconds: 500));
 
     if (mounted) {
       setState(() {
@@ -179,6 +200,8 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     }
   }
 
+  /// Resends OTP to user's phone number
+  /// Resets countdown and calls API to send new OTP
   void _handleResendOTP() {
     setState(() {
       _countdown = 60;
@@ -186,6 +209,9 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     });
     _startCountdown();
     HapticFeedback.lightImpact();
+
+    // Resend OTP via API
+    _sendOtp();
   }
 
   bool get _isOtpComplete {
@@ -198,6 +224,7 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
     final l10n = AppLocalizations.of(context)!;
     final isDark = widget.isDarkTheme || theme.brightness == Brightness.dark;
     final phoneNumber = widget.phoneNumber ?? '+1 (555) 123-4567';
+    final otpState = ref.watch(otpSendProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -260,6 +287,32 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen> with TickerProvider
                   ),
                 ),
               ),
+
+              // Error banner if OTP sending failed
+              if (otpState.error != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  color: Colors.red.withValues(alpha: 0.1),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          otpState.error!,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // Progress
               Container(

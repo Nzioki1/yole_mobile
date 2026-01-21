@@ -38,7 +38,7 @@ dependencies:
   image_picker: ^1.0.4
 
   # PesaPal API integration
-  webview_flutter: ^4.13.1  # For PesaPal iframe
+  webview_flutter: ^4.10.0  # Downgrade to stable version
   http: ^1.1.2              # For API calls
   crypto: ^3.0.3            # For authentication
   url_launcher: ^6.2.2      # For opening PesaPal in browser

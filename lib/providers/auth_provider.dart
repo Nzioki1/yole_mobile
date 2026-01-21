@@ -146,11 +146,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       return true;
     } catch (e) {
-      // Do not fallback to mock - show actual error
-      print('Login failed: $e');
-      print('Error type: ${e.runtimeType}');
-      print('Error details: ${e.toString()}');
-
       String errorMessage;
       if (e.toString().contains('TimeoutException') || e.toString().contains('SocketException') || e.toString().contains('Network')) {
         errorMessage = 'Network error. Please check your internet connection.';
@@ -222,7 +217,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       return true;
     } catch (e) {
-      print('Real auth service failed: $e, falling back to mock service');
       return false;
     }
   }

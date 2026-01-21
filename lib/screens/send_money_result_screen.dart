@@ -47,30 +47,28 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: Container(
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 48),
-                      _buildStatusIcon(theme, appState, transactionStatusState),
-                      const SizedBox(height: 24),
-                      _buildStatusTitle(theme, appState, transactionStatusState),
-                      const SizedBox(height: 16),
-                      _buildStatusMessage(theme, appState, transactionStatusState),
-                      const SizedBox(height: 32),
-                      _buildTransactionDetails(theme, appState, transactionStatusState),
-                    ],
-                  ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 48),
+                    _buildStatusIcon(theme, appState, transactionStatusState),
+                    const SizedBox(height: 24),
+                    _buildStatusTitle(theme, appState, transactionStatusState),
+                    const SizedBox(height: 16),
+                    _buildStatusMessage(theme, appState, transactionStatusState),
+                    const SizedBox(height: 32),
+                    _buildTransactionDetails(theme, appState, transactionStatusState),
+                  ],
                 ),
               ),
-              _buildActionButtons(theme, appState, context, transactionStatusState),
-            ],
-          ),
+            ),
+            _buildActionButtons(theme, appState, context, transactionStatusState),
+          ],
         ),
       ),
     );

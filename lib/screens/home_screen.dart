@@ -9,11 +9,10 @@ class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   /// Get time-based greeting
-  String _getTimeBasedGreeting(BuildContext context) {
+  String _getTimeBasedGreeting(BuildContext context, WidgetRef ref) {
     final hour = DateTime.now().hour;
 
-    // Get user's first name, default to "John" if not available
-    final firstName = 'John'; // TODO: Get from authProvider user object
+    final firstName = ref.watch(authProvider).user?.name ?? '';
 
     if (hour >= 5 && hour < 12) {
       return 'Good morning, $firstName 👋';
@@ -48,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          _getTimeBasedGreeting(context),
+                          _getTimeBasedGreeting(context, ref),
                           style: theme.textTheme.titleLarge?.copyWith(
                             color: theme.colorScheme.onSurface, // THEME: Dynamic text
                             fontSize: 22,

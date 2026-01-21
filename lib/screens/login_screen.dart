@@ -293,9 +293,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Log In button - Enhanced prominence
+                        // Log In button
                         SizedBox(
-                          height: 48, // Reduced height to match LoginSpacing.loginBtnH
+                          height: 48,
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(

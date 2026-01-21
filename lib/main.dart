@@ -66,10 +66,6 @@ class _YoleAppState extends ConsumerState<YoleApp> {
       });
     }
 
-    // Debug print to verify theme and locale changes
-    print('🎨 THEME CHANGED: ${isDarkMode ? 'DARK' : 'LIGHT'}');
-    print('🌐 LOCALE CHANGED: ${currentLocale.languageCode}');
-
     return MaterialApp(
       key: ValueKey(currentLocale.languageCode), // Force complete rebuild on locale change
       navigatorKey: navigatorKey, // Global navigator key for stack rebuild

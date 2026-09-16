@@ -28,17 +28,18 @@ enum JournalStatus {
 }
 
 model Customer {
-  id                String   @id @default(cuid())
-  email             String?  @unique
-  phoneE164         String?  @unique
+  id                String          @id @default(cuid())
+  email             String?         @unique
+  phoneE164         String?         @unique
   firstName         String
   lastName          String
   passwordHash      String?
-  segment           String   @default("OPEN_MARKET")
-  status            String   @default("ACTIVE")
+  segment           String          @default("OPEN_MARKET")
+  status            String          @default("ACTIVE")
   enrolledByAgentId String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime        @default(now())
   wallets           Wallet[]
+  kycSubmissions    KycSubmission[]
 }
 
 model Wallet {
@@ -91,4 +92,29 @@ model IdempotencyRecord {
   requestHash  String
   responseJson Json
   createdAt    DateTime @default(now())
+}
+
+enum KycStatus {
+  PENDING_REVIEW
+  AUTO_APPROVED
+  APPROVED
+  REJECTED
+}
+
+model KycSubmission {
+  id                 String    @id @default(cuid())
+  customerId         String
+  customer           Customer  @relation(fields: [customerId], references: [id])
+  idNumber           String
+  phoneE164          String
+  idDocumentPath     String
+  selfiePath         String
+  status             KycStatus @default(PENDING_REVIEW)
+  screeningHit       Boolean   @default(false)
+  screeningRef       String?
+  decision           String?
+  decisionReason     String?
+  decidedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }

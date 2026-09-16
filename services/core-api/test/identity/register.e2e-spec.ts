@@ -1,25 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { PrismaClient } from '@prisma/client';
 import { AppModule } from '../../src/app.module';
+import { InMemoryCustomerStore } from '../../src/common/stores/customer.store';
+import { InMemoryWalletStore } from '../../src/common/stores/wallet.store';
+import { InMemoryLedgerStore } from '../../src/common/stores/ledger.store';
 
 describe('Auth - Register (e2e)', () => {
   let app: INestApplication;
-  let prisma: PrismaClient;
+  let customerStore: InMemoryCustomerStore;
+  let walletStore: InMemoryWalletStore;
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
-    await prisma.$connect();
-
-    // Clean up test data
-    await prisma.posting.deleteMany();
-    await prisma.journalEntry.deleteMany();
-    await prisma.idempotencyRecord.deleteMany();
-    await prisma.walletPocket.deleteMany();
-    await prisma.wallet.deleteMany();
-    await prisma.customer.deleteMany();
-
     const moduleRef: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -27,17 +19,19 @@ describe('Auth - Register (e2e)', () => {
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
     await app.init();
+
+    // Get store instances for verification
+    customerStore = moduleRef.get<InMemoryCustomerStore>(InMemoryCustomerStore);
+    walletStore = moduleRef.get<InMemoryWalletStore>(InMemoryWalletStore);
+  });
+
+  beforeEach(() => {
+    // Clear stores before each test
+    customerStore.clear();
+    walletStore.clear();
   });
 
   afterAll(async () => {
-    // Clean up
-    await prisma.posting.deleteMany();
-    await prisma.journalEntry.deleteMany();
-    await prisma.idempotencyRecord.deleteMany();
-    await prisma.walletPocket.deleteMany();
-    await prisma.wallet.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.$disconnect();
     await app.close();
   });
 
@@ -58,32 +52,24 @@ describe('Auth - Register (e2e)', () => {
     const customerId = res.body.customerId;
 
     // Verify customer was created
-    const customer = await prisma.customer.findUnique({
-      where: { id: customerId },
-      include: {
-        wallets: {
-          include: {
-            pockets: true,
-          },
-        },
-      },
-    });
-
+    const customer = await customerStore.findById(customerId);
     expect(customer).toBeDefined();
     expect(customer?.email).toBe('ada@example.com');
     expect(customer?.firstName).toBe('Ada');
     expect(customer?.lastName).toBe('Lovelace');
 
     // Verify wallet with CDF and USD pockets was created
-    expect(customer?.wallets).toHaveLength(1);
-    const wallet = customer?.wallets[0];
-    expect(wallet?.pockets).toHaveLength(2);
+    const wallets = await walletStore.findWalletsByCustomerId(customerId);
+    expect(wallets).toHaveLength(1);
 
-    const currencies = wallet?.pockets.map((p) => p.currency).sort();
+    const pockets = await walletStore.findPocketsByWalletId(wallets[0].id);
+    expect(pockets).toHaveLength(2);
+
+    const currencies = pockets.map((p) => p.currency).sort();
     expect(currencies).toEqual(['CDF', 'USD']);
 
     // Verify pockets start at 0
-    wallet?.pockets.forEach((pocket) => {
+    pockets.forEach((pocket) => {
       expect(pocket.ledgerMinor).toBe(0n);
       expect(pocket.blockedMinor).toBe(0n);
       expect(pocket.pendingOutMinor).toBe(0n);

@@ -4,6 +4,8 @@ import { PassportModule } from '@nestjs/passport';
 import { IdentityService } from './identity.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { OtpService } from './otp.service';
+import { ConsoleOtpSender } from './otp.port';
 import { CustomersModule } from '../customers/customers.module';
 
 @Module({
@@ -16,7 +18,15 @@ import { CustomersModule } from '../customers/customers.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [IdentityService, JwtStrategy],
+  providers: [
+    IdentityService,
+    JwtStrategy,
+    OtpService,
+    {
+      provide: 'OTP_SENDER',
+      useClass: ConsoleOtpSender,
+    },
+  ],
   exports: [IdentityService],
 })
 export class IdentityModule {}

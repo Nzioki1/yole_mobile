@@ -33,6 +33,7 @@ model Customer {
   phoneE164         String?  @unique
   firstName         String
   lastName          String
+  passwordHash      String?
   segment           String   @default("OPEN_MARKET")
   status            String   @default("ACTIVE")
   enrolledByAgentId String?

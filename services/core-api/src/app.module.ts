@@ -7,6 +7,7 @@ import { LedgerModule } from './modules/ledger/ledger.module';
 import { KycModule } from './modules/kyc/kyc.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { AgentsModule } from './modules/agents/agents.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AgentsModule } from './modules/agents/agents.module';
     KycModule,
     PaymentsModule,
     AgentsModule,
+    AdminModule,
   ],
   controllers: [HealthController],
   providers: [],

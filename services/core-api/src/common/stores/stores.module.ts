@@ -4,6 +4,7 @@ import { InMemoryWalletStore } from './wallet.store';
 import { InMemoryLedgerStore } from './ledger.store';
 import { InMemoryKycStore } from './kyc.store';
 import { InMemoryPaymentStore } from './payment.store';
+import { InMemoryAgentStore } from './agent.store';
 
 @Global()
 @Module({
@@ -13,6 +14,7 @@ import { InMemoryPaymentStore } from './payment.store';
     InMemoryLedgerStore,
     InMemoryKycStore,
     InMemoryPaymentStore,
+    InMemoryAgentStore,
   ],
   exports: [
     InMemoryCustomerStore,
@@ -20,6 +22,7 @@ import { InMemoryPaymentStore } from './payment.store';
     InMemoryLedgerStore,
     InMemoryKycStore,
     InMemoryPaymentStore,
+    InMemoryAgentStore,
   ],
 })
 export class StoresModule {}

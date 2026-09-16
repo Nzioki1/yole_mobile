@@ -4,9 +4,16 @@ import { StoresModule } from './common/stores/stores.module';
 import { IdentityModule } from './modules/identity/identity.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { LedgerModule } from './modules/ledger/ledger.module';
+import { KycModule } from './modules/kyc/kyc.module';
 
 @Module({
-  imports: [StoresModule, IdentityModule, CustomersModule, LedgerModule],
+  imports: [
+    StoresModule,
+    IdentityModule,
+    CustomersModule,
+    LedgerModule,
+    KycModule,
+  ],
   controllers: [HealthController],
   providers: [],
 })

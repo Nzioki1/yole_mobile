@@ -3,7 +3,7 @@ import { LedgerService } from '../ledger/ledger.service';
 import { InMemoryWalletStore } from '../../common/stores/wallet.store';
 import { CurrencyCode } from '../../common/stores/types';
 
-interface Employer {
+export interface Employer {
   id: string;
   name: string;
   taxId: string;

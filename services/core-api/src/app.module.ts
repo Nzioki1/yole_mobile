@@ -8,6 +8,8 @@ import { KycModule } from './modules/kyc/kyc.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { AgentsModule } from './modules/agents/agents.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { PayrollModule } from './modules/payroll/payroll.module';
+import { CreditModule } from './modules/credit/credit.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { AdminModule } from './modules/admin/admin.module';
     PaymentsModule,
     AgentsModule,
     AdminModule,
+    PayrollModule,
+    CreditModule,
   ],
   controllers: [HealthController],
   providers: [],

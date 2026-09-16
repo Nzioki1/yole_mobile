@@ -17,9 +17,16 @@ export interface SubmitKycInput {
 export class KycService {
   constructor(
     private kycStore: InMemoryKycStore,
-    private storage: KycStoragePort,
-    private screening: ScreeningPort,
-  ) {}
+  ) {
+    // Use concrete implementations for Phase 1
+    this.storage = new (require('./kyc-storage.port').LocalFileSystemStorage)(
+      './services/core-api/.data/kyc',
+    );
+    this.screening = new (require('./screening.port').StubScreeningService)();
+  }
+
+  private storage: KycStoragePort;
+  private screening: ScreeningPort;
 
   async submitKyc(input: SubmitKycInput) {
     // Save files

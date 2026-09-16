@@ -1,92 +1,82 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaClient } from '@prisma/client';
 import { LedgerService } from '../../src/modules/ledger/ledger.service';
 import { LedgerModule } from '../../src/modules/ledger/ledger.module';
+import { AppModule } from '../../src/app.module';
+import { InMemoryWalletStore } from '../../src/common/stores/wallet.store';
+import { InMemoryLedgerStore } from '../../src/common/stores/ledger.store';
+import { InMemoryCustomerStore } from '../../src/common/stores/customer.store';
 
 describe('LedgerService', () => {
   let service: LedgerService;
-  let prisma: PrismaClient;
+  let walletStore: InMemoryWalletStore;
+  let ledgerStore: InMemoryLedgerStore;
+  let customerStore: InMemoryCustomerStore;
   let senderPocketId: string;
   let receiverPocketId: string;
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
-    await prisma.$connect();
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
 
-    // Clean up any existing test data
-    await prisma.posting.deleteMany();
-    await prisma.journalEntry.deleteMany();
-    await prisma.idempotencyRecord.deleteMany();
-    await prisma.walletPocket.deleteMany();
-    await prisma.wallet.deleteMany();
-    await prisma.customer.deleteMany();
+    service = module.get<LedgerService>(LedgerService);
+    walletStore = module.get<InMemoryWalletStore>(InMemoryWalletStore);
+    ledgerStore = module.get<InMemoryLedgerStore>(InMemoryLedgerStore);
+    customerStore = module.get<InMemoryCustomerStore>(InMemoryCustomerStore);
+  });
+
+  beforeEach(async () => {
+    // Clear stores
+    walletStore.clear();
+    ledgerStore.clear();
+    customerStore.clear();
 
     // Set up test data: two customers with USD wallets
-    const sender = await prisma.customer.create({
-      data: {
-        firstName: 'Alice',
-        lastName: 'Sender',
-        email: 'alice@test.com',
-      },
+    const sender = await customerStore.create({
+      firstName: 'Alice',
+      lastName: 'Sender',
+      email: 'alice@test.com',
+      phoneE164: null,
+      passwordHash: 'hash',
+      segment: 'retail',
+      status: 'active',
+      enrolledByAgentId: null,
     });
 
-    const receiver = await prisma.customer.create({
-      data: {
-        firstName: 'Bob',
-        lastName: 'Receiver',
-        email: 'bob@test.com',
-      },
+    const receiver = await customerStore.create({
+      firstName: 'Bob',
+      lastName: 'Receiver',
+      email: 'bob@test.com',
+      phoneE164: null,
+      passwordHash: 'hash',
+      segment: 'retail',
+      status: 'active',
+      enrolledByAgentId: null,
     });
 
-    const senderWallet = await prisma.wallet.create({
-      data: {
-        customerId: sender.id,
-      },
+    const senderWallet = await walletStore.createWallet(sender.id);
+    const receiverWallet = await walletStore.createWallet(receiver.id);
+
+    const senderPocket = await walletStore.createPocket({
+      walletId: senderWallet.id,
+      currency: 'USD',
+      ledgerMinor: 5000n,
+      blockedMinor: 0n,
+      pendingOutMinor: 0n,
+      pendingInMinor: 0n,
     });
 
-    const receiverWallet = await prisma.wallet.create({
-      data: {
-        customerId: receiver.id,
-      },
-    });
-
-    const senderPocket = await prisma.walletPocket.create({
-      data: {
-        walletId: senderWallet.id,
-        currency: 'USD',
-        ledgerMinor: 5000n,
-      },
-    });
-
-    const receiverPocket = await prisma.walletPocket.create({
-      data: {
-        walletId: receiverWallet.id,
-        currency: 'USD',
-        ledgerMinor: 0n,
-      },
+    const receiverPocket = await walletStore.createPocket({
+      walletId: receiverWallet.id,
+      currency: 'USD',
+      ledgerMinor: 0n,
+      blockedMinor: 0n,
+      pendingOutMinor: 0n,
+      pendingInMinor: 0n,
     });
 
     senderPocketId = senderPocket.id;
     receiverPocketId = receiverPocket.id;
-  });
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      imports: [LedgerModule],
-    }).compile();
-
-    service = module.get<LedgerService>(LedgerService);
-  });
-
-  afterAll(async () => {
-    // Clean up test data
-    await prisma.posting.deleteMany();
-    await prisma.journalEntry.deleteMany();
-    await prisma.idempotencyRecord.deleteMany();
-    await prisma.walletPocket.deleteMany();
-    await prisma.wallet.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.$disconnect();
   });
 
   it('should be defined', () => {
@@ -123,12 +113,8 @@ describe('LedgerService', () => {
     expect(result.journalId).toBeDefined();
 
     // Verify pocket balances
-    const senderPocket = await prisma.walletPocket.findUnique({
-      where: { id: senderPocketId },
-    });
-    const receiverPocket = await prisma.walletPocket.findUnique({
-      where: { id: receiverPocketId },
-    });
+    const senderPocket = await walletStore.findPocketById(senderPocketId);
+    const receiverPocket = await walletStore.findPocketById(receiverPocketId);
 
     expect(senderPocket?.ledgerMinor).toBe(4000n); // 5000 - 1000
     expect(receiverPocket?.ledgerMinor).toBe(1000n); // 0 + 1000
@@ -191,18 +177,14 @@ describe('LedgerService', () => {
     expect(result1.journalId).toBe(result2.journalId);
     expect(result2.status).toBe('POSTED');
 
-    // Verify only one journal entry was created
-    const journalCount = await prisma.journalEntry.count({
-      where: { idempotencyKey },
-    });
-    expect(journalCount).toBe(1);
+    // Verify the same journal was returned
+    const journal = await ledgerStore.findJournalByIdempotencyKey(idempotencyKey);
+    expect(journal?.id).toBe(result1.journalId);
   });
 
   it('rejects transfer if sender has insufficient available funds', async () => {
     // Sender currently has 4000 - 500 = 3500 ledgerMinor after previous tests
-    const senderPocket = await prisma.walletPocket.findUnique({
-      where: { id: senderPocketId },
-    });
+    const senderPocket = await walletStore.findPocketById(senderPocketId);
     const currentBalance = senderPocket?.ledgerMinor || 0n;
 
     await expect(

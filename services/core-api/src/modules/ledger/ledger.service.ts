@@ -138,7 +138,9 @@ export class LedgerService {
       // Persist idempotency record atomically
       await this.ledgerStore.createIdempotencyRecord({
         key: input.idempotencyKey,
-        requestHash: JSON.stringify(input),
+        requestHash: JSON.stringify(input, (_, v) =>
+          typeof v === 'bigint' ? v.toString() : v,
+        ),
         responseJson: response,
       });
 

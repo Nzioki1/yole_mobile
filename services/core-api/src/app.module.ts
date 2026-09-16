@@ -13,6 +13,7 @@ import { CreditModule } from './modules/credit/credit.module';
 import { CardsModule } from './modules/cards/cards.module';
 import { RemittanceModule } from './modules/remittance/remittance.module';
 import { FxModule } from './modules/fx/fx.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { FxModule } from './modules/fx/fx.module';
     CardsModule,
     RemittanceModule,
     FxModule,
+    WalletsModule,
   ],
   controllers: [HealthController],
   providers: [],

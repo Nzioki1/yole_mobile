@@ -1,5 +1,41 @@
 # Yole Flutter + NestJS Core API Integration
 
+## Auth Flow - Mock Core-API (Updated)
+
+**The customer Flutter app now authenticates against the mock NestJS core-api instead of the old Pesapal backend.**
+
+### Architecture Changes
+
+- **Old:** `AuthService` → `YoleApiService` → `https://yolepesa.masterpiecefusion.com/api`
+- **New:** `CoreAuthService` → `CoreApiService` → `http://localhost:3000` (mock NestJS API)
+
+The new `CoreAuthService` implements the same `AuthServiceInterface` but calls the local mock backend for all auth operations.
+
+### Auth Endpoints
+
+- **Register:** `POST /v1/auth/register` - Returns `{customerId, accessToken, customer}`
+- **Login:** `POST /v1/auth/login` - Returns `{customerId, accessToken, customer}`
+- **JWT Storage:** Tokens stored via `flutter_secure_storage` and attached to all requests as `Authorization: Bearer <token>`
+
+### Verify Backend is Working
+
+```bash
+# Start backend
+cd services/core-api && pnpm dev
+
+# Test register
+curl -X POST http://localhost:3000/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@yole.com","password":"demo123","firstName":"Demo","lastName":"User"}'
+
+# Test login
+curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@yole.com","password":"demo123"}'
+```
+
+Both should return JSON with `customerId`, `accessToken`, and a `customer` object.
+
 ## Prerequisites
 
 - Node.js 18+ and pnpm

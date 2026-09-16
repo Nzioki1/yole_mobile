@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { LedgerService } from '../ledger/ledger.service';
 import { InMemoryWalletStore } from '../../common/stores/wallet.store';
 
-interface FxRate {
+export interface FxRate {
   id: string;
   fromCurrency: string;
   toCurrency: string;

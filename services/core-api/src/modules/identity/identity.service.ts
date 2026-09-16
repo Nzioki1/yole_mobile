@@ -19,6 +19,7 @@ export interface LoginInput {
 export interface AuthResult {
   customerId: string;
   accessToken: string;
+  customer?: any; // Full customer object for client convenience
 }
 
 @Injectable()
@@ -56,6 +57,14 @@ export class IdentityService {
     return {
       customerId: customer.id,
       accessToken,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phoneE164: customer.phoneE164,
+        status: customer.status,
+      },
     };
   }
 
@@ -84,6 +93,14 @@ export class IdentityService {
     return {
       customerId: customer.id,
       accessToken,
+      customer: {
+        id: customer.id,
+        email: customer.email,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phoneE164: customer.phoneE164,
+        status: customer.status,
+      },
     };
   }
 

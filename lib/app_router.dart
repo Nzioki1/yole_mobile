@@ -25,6 +25,10 @@ import 'screens/send_money_result_screen.dart';
 import 'screens/cards_screen.dart';
 import 'screens/credit_screen.dart';
 import 'screens/fx_screen.dart';
+import 'screens/payment_rail_picker_screen.dart';
+import 'screens/payment_form_screen.dart';
+import 'screens/payment_quote_screen.dart';
+import 'screens/payment_result_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -129,6 +133,47 @@ class AppRouter {
 
       case '/fx':
         return MaterialPageRoute(builder: (_) => const FxScreen());
+
+      // Multi-rail payment flow
+      case '/payment/picker':
+        return MaterialPageRoute(builder: (_) => const PaymentRailPickerScreen());
+
+      case '/payment/w2w':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentFormScreen(railType: 'W2W'),
+        );
+
+      case '/payment/mno':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentFormScreen(railType: 'MNO_OUT'),
+        );
+
+      case '/payment/bank':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentFormScreen(railType: 'BANK_OUT'),
+        );
+
+      case '/payment/bill':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentFormScreen(railType: 'BILL'),
+        );
+
+      case '/payment/airtime':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentFormScreen(railType: 'AIRTIME'),
+        );
+
+      case '/payment/quote':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentQuoteScreen(),
+          settings: settings,
+        );
+
+      case '/payment/result':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentResultScreen(),
+          settings: settings,
+        );
 
       // Optional futures
       case RouteNames.language:

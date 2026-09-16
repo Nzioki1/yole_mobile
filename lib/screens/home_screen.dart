@@ -354,13 +354,13 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.send_rounded,
           label: 'Pay / Send',
           color: const Color(0xFF4DA3FF),
-          onTap: () => Navigator.of(context).pushNamed(RouteNames.sendMoneyEnterDetails),
+          onTap: () => Navigator.of(context).pushNamed('/payment/picker'),
         ),
         _QuickActionButton(
           icon: Icons.receipt_outlined,
           label: 'Bills',
           color: const Color(0xFF7B4DFF),
-          onTap: () => _showComingSoon(context, 'Bills & Airtime'),
+          onTap: () => Navigator.of(context).pushNamed('/payment/bill'),
         ),
         _QuickActionButton(
           icon: Icons.verified_user_outlined,
@@ -387,22 +387,6 @@ class _QuickActionsGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).pushNamed('/fx'),
         ),
       ],
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Coming Soon'),
-        content: Text('$feature payment feature is under development.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
     );
   }
 }

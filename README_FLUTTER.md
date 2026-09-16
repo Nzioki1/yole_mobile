@@ -90,13 +90,31 @@ The customer app home screen now features a modern neo-bank hub with:
 1. **Greeting & Profile:** Dynamic time-based greeting with real user name from auth storage
 2. **Wallet Cards:** CDF and USD balance cards fetched from `GET /v1/wallets/me` (pull-to-refresh enabled)
 3. **Quick Actions Grid:** 6-button grid for:
-   - **Pay / Send:** Multi-rail payment (W2W, MNO, bank) via mock quote/confirm
-   - **Bills & Airtime:** Mock bill/airtime payment (coming soon dialog)
+   - **Pay / Send:** Multi-rail payment picker → choose rail → enter details → quote → confirm
+   - **Bills:** Direct bill payment form (BILL rail type)
+   - **Airtime:** Direct airtime purchase form (AIRTIME rail type)
    - **KYC:** Existing KYC flow screens
    - **Cards:** Virtual cards screen (`POST /v1/cards`, `GET /v1/cards`)
    - **Credit:** Salary advance & loans (`GET /v1/credit/eligibility`, `POST /v1/credit/loans`)
    - **FX:** Currency exchange (`GET /v1/fx/rates`, `POST /v1/fx/convert`)
 4. **Recent Activity:** Last 3 payments from `GET /v1/payments` (empty state if none)
+
+### Multi-Rail Payment Flow
+**Rails Supported:** W2W (wallet-to-wallet), MNO (mobile money out), Bank transfer, Bills, Airtime
+
+**Flow:**
+1. **Pick Rail:** User selects payment method from rail picker
+2. **Enter Details:** Form fields adapt to selected rail:
+   - W2W: recipient customer ID
+   - MNO/Airtime: phone number
+   - Bank: account number + bank code
+   - Bill: biller code + account number
+3. **Quote:** `POST /v1/payments/quote` returns amount, fee, total
+4. **Review:** User reviews payment details and total amount
+5. **Confirm:** `POST /v1/payments/confirm` with Idempotency-Key
+6. **Result:** Success/failure screen with payment ID or error
+
+All payments use JWT auth via CoreApiService against mock core-api (localhost:3000).
 
 ### Navigation
 Bottom tabs remain unchanged: **Home | Activity | Favorites | Profile**

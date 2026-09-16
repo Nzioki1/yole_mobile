@@ -18,6 +18,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!customer) {
       return null;
     }
-    return { customerId: customer.id, email: customer.email };
+    // Return sub for most controllers + customerId for KYC compatibility
+    return { 
+      sub: customer.id, 
+      customerId: customer.id, 
+      email: customer.email 
+    };
   }
 }

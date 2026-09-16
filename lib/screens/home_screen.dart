@@ -32,7 +32,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final response = await _api.getMyWallets();
       final walletsList = response['wallets'] as List<dynamic>? ?? [];
-      setState(() => _wallets = walletsList);
+      
+      // Flatten pockets into per-currency display format
+      final displayWallets = <Map<String, dynamic>>[];
+      for (final wallet in walletsList) {
+        final walletId = wallet['id'] as String?;
+        final pockets = wallet['pockets'] as List<dynamic>? ?? [];
+        
+        for (final pocket in pockets) {
+          displayWallets.add({
+            'walletId': walletId,
+            'pocketId': pocket['id'],
+            'currency': pocket['currency'],
+            'availableMinor': pocket['availableMinor'],
+            'ledgerMinor': pocket['ledgerMinor'],
+          });
+        }
+      }
+      
+      setState(() => _wallets = displayWallets);
     } catch (e) {
       debugPrint('Error loading wallets: $e');
     } finally {

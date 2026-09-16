@@ -32,10 +32,11 @@ export class AgentsService {
 
     // Create float wallet with CDF and USD pockets
     const floatWallet = await this.walletStore.createWallet('FLOAT');
+    // Seed with initial float for Phase 1 mock demos
     await this.walletStore.createPocket({
       walletId: floatWallet.id,
       currency: 'CDF',
-      ledgerMinor: 0n,
+      ledgerMinor: 50_000_000n, // 500,000.00 CDF initial float
       blockedMinor: 0n,
       pendingOutMinor: 0n,
       pendingInMinor: 0n,
@@ -43,7 +44,7 @@ export class AgentsService {
     await this.walletStore.createPocket({
       walletId: floatWallet.id,
       currency: 'USD',
-      ledgerMinor: 0n,
+      ledgerMinor: 10_000_000n, // 100,000.00 USD initial float
       blockedMinor: 0n,
       pendingOutMinor: 0n,
       pendingInMinor: 0n,

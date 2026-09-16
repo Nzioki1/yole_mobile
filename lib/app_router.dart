@@ -22,6 +22,9 @@ import 'screens/send_money_review_screen.dart';
 // import 'screens/send_money_payment_screen.dart'; // REMOVED - redundant payment selection screen
 import 'screens/send_money_checkout_screen.dart';
 import 'screens/send_money_result_screen.dart';
+import 'screens/cards_screen.dart';
+import 'screens/credit_screen.dart';
+import 'screens/fx_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -116,6 +119,16 @@ class AppRouter {
 
       case RouteNames.sendMoneyResult:
         return MaterialPageRoute(builder: (_) => const SendMoneyResultScreen());
+
+      // Neo-bank features
+      case '/cards':
+        return MaterialPageRoute(builder: (_) => const CardsScreen());
+
+      case '/credit':
+        return MaterialPageRoute(builder: (_) => const CreditScreen());
+
+      case '/fx':
+        return MaterialPageRoute(builder: (_) => const FxScreen());
 
       // Optional futures
       case RouteNames.language:

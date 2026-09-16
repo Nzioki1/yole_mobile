@@ -82,6 +82,27 @@ flutter run --dart-define=API_BASE_URL=http://localhost:3000
 flutter run --dart-define=API_BASE_URL=http://192.168.1.X:3000
 ```
 
+## Neo-Bank Home Hub
+
+The customer app home screen now features a modern neo-bank hub with:
+
+### Home After Login
+1. **Greeting & Profile:** Dynamic time-based greeting with real user name from auth storage
+2. **Wallet Cards:** CDF and USD balance cards fetched from `GET /v1/wallets/me` (pull-to-refresh enabled)
+3. **Quick Actions Grid:** 6-button grid for:
+   - **Pay / Send:** Multi-rail payment (W2W, MNO, bank) via mock quote/confirm
+   - **Bills & Airtime:** Mock bill/airtime payment (coming soon dialog)
+   - **KYC:** Existing KYC flow screens
+   - **Cards:** Virtual cards screen (`POST /v1/cards`, `GET /v1/cards`)
+   - **Credit:** Salary advance & loans (`GET /v1/credit/eligibility`, `POST /v1/credit/loans`)
+   - **FX:** Currency exchange (`GET /v1/fx/rates`, `POST /v1/fx/convert`)
+4. **Recent Activity:** Last 3 payments from `GET /v1/payments` (empty state if none)
+
+### Navigation
+Bottom tabs remain unchanged: **Home | Activity | Favorites | Profile**
+
+All quick action screens reuse existing components and are wired to the mock core-api.
+
 ## Features Wired to Core API
 
 ### Authentication

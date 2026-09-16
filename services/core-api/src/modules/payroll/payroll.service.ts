@@ -95,8 +95,8 @@ export class PayrollService {
         idempotencyKey: `salary-${empId}-${Date.now()}`,
         yoleReference: `SALARY-${empId}`,
         correlationId: employerId,
-        actorType: 'employer',
-        actorId: employerId,
+        actorType: 'system',
+        actorId: `employer-${employerId}`,
         currency: employee.currency,
         postings: [
           {

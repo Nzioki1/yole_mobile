@@ -31,10 +31,12 @@ class CoreAuthService implements AuthServiceInterface {
         email: customer['email'] as String,
         name: customer['firstName'] as String? ?? '',
         surname: customer['lastName'] as String? ?? '',
-        phoneNumber: customer['phoneE164'] as String?,
-        emailVerified: true, // Mock backend doesn't track this yet
-        kycVerified: false,
+        phone: customer['phoneE164'] as String?,
         country: 'CD', // Default, not returned by mock API
+        isEmailVerified: true, // Mock backend doesn't track this yet
+        isPhoneVerified: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       
       // Save to storage
@@ -45,6 +47,7 @@ class CoreAuthService implements AuthServiceInterface {
       return AuthResponse(
         accessToken: accessToken,
         refreshToken: null, // Mock backend doesn't provide refresh tokens yet
+        tokenType: 'bearer',
         expiresIn: 3600,
         user: user,
       );
@@ -83,10 +86,12 @@ class CoreAuthService implements AuthServiceInterface {
         email: customer['email'] as String,
         name: customer['firstName'] as String? ?? name,
         surname: customer['lastName'] as String? ?? surname,
-        phoneNumber: customer['phoneE164'] as String?,
-        emailVerified: true, // Mock backend doesn't track this yet
-        kycVerified: false,
+        phone: customer['phoneE164'] as String?,
         country: country,
+        isEmailVerified: true, // Mock backend doesn't track this yet
+        isPhoneVerified: false,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
       
       // Save to storage
@@ -97,6 +102,7 @@ class CoreAuthService implements AuthServiceInterface {
       return AuthResponse(
         accessToken: accessToken,
         refreshToken: null, // Mock backend doesn't provide refresh tokens yet
+        tokenType: 'bearer',
         expiresIn: 3600,
         user: user,
       );

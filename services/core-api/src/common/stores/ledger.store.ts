@@ -75,6 +75,10 @@ export class InMemoryLedgerStore implements LedgerStore {
     return id ? this.journals.get(id) || null : null;
   }
 
+  async listJournals(): Promise<JournalEntry[]> {
+    return Array.from(this.journals.values());
+  }
+
   async createPosting(data: Omit<Posting, 'id'>): Promise<Posting> {
     const posting: Posting = {
       ...data,

@@ -199,4 +199,64 @@ export class AdminService {
       monthlyLimitMinor: config.monthlyLimitMinor.toString(),
     };
   }
+
+  /**
+   * Recon: daily summary from journals
+   */
+  async getDailySummary(date: string) {
+    const journals = await this.ledgerStore.listJournals();
+    const dayStart = new Date(date);
+    const dayEnd = new Date(date);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const dayJournals = journals.filter((j) => {
+      const jDate = new Date(j.createdAt);
+      return jDate >= dayStart && jDate < dayEnd;
+    });
+
+    return {
+      date,
+      totalJournals: dayJournals.length,
+      postedJournals: dayJournals.filter((j) => j.status === 'POSTED').length,
+    };
+  }
+
+  /**
+   * Case management stub
+   */
+  private cases = new Map();
+  private caseIdCounter = 1;
+
+  async createCase(input: { type: string; description: string; customerId?: string }) {
+    const caseId = `case_${this.caseIdCounter++}`;
+    const caseData = {
+      id: caseId,
+      type: input.type,
+      description: input.description,
+      customerId: input.customerId,
+      status: 'OPEN',
+      createdAt: new Date(),
+    };
+    this.cases.set(caseId, caseData);
+    return caseData;
+  }
+
+  async updateCase(caseId: string, decision: string) {
+    const caseData = this.cases.get(caseId);
+    if (!caseData) {
+      throw new Error('Case not found');
+    }
+    caseData.status = decision;
+    caseData.decidedAt = new Date();
+    this.cases.set(caseId, caseData);
+    return caseData;
+  }
+
+  async listCases(status?: string) {
+    const allCases = Array.from(this.cases.values());
+    if (status) {
+      return allCases.filter((c) => c.status === status);
+    }
+    return allCases;
+  }
 }

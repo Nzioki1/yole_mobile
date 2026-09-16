@@ -76,4 +76,26 @@ export class AdminController {
   ) {
     return this.adminService.createLimitConfig(body);
   }
+
+  @Get('recon/daily')
+  async getDailySummary(@Query('date') date: string) {
+    return this.adminService.getDailySummary(date);
+  }
+
+  @Post('cases')
+  async createCase(
+    @Body() body: { type: string; description: string; customerId?: string },
+  ) {
+    return this.adminService.createCase(body);
+  }
+
+  @Get('cases')
+  async listCases(@Query('status') status?: string) {
+    return this.adminService.listCases(status);
+  }
+
+  @Post('cases/:id/decision')
+  async updateCase(@Param('id') id: string, @Body() body: { decision: string }) {
+    return this.adminService.updateCase(id, body.decision);
+  }
 }

@@ -11,6 +11,8 @@ import { AdminModule } from './modules/admin/admin.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { CreditModule } from './modules/credit/credit.module';
 import { CardsModule } from './modules/cards/cards.module';
+import { RemittanceModule } from './modules/remittance/remittance.module';
+import { FxModule } from './modules/fx/fx.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { CardsModule } from './modules/cards/cards.module';
     PayrollModule,
     CreditModule,
     CardsModule,
+    RemittanceModule,
+    FxModule,
   ],
   controllers: [HealthController],
   providers: [],

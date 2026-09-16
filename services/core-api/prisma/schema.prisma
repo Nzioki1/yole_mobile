@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CurrencyCode {
+  CDF
+  USD
+}
+
+enum PocketKind {
+  AVAILABLE
+  LEDGER
+}
+
+enum JournalStatus {
+  PENDING
+  POSTED
+  FAILED
+  REVERSED
+}
+
+model Customer {
+  id                String   @id @default(cuid())
+  email             String?  @unique
+  phoneE164         String?  @unique
+  firstName         String
+  lastName          String
+  segment           String   @default("OPEN_MARKET")
+  status            String   @default("ACTIVE")
+  enrolledByAgentId String?
+  createdAt         DateTime @default(now())
+  wallets           Wallet[]
+}
+
+model Wallet {
+  id         String         @id @default(cuid())
+  customerId String
+  customer   Customer       @relation(fields: [customerId], references: [id])
+  pockets    WalletPocket[]
+}
+
+model WalletPocket {
+  id              String       @id @default(cuid())
+  walletId        String
+  wallet          Wallet       @relation(fields: [walletId], references: [id])
+  currency        CurrencyCode
+  ledgerMinor     BigInt       @default(0)
+  blockedMinor    BigInt       @default(0)
+  pendingOutMinor BigInt       @default(0)
+  pendingInMinor  BigInt       @default(0)
+
+  @@unique([walletId, currency])
+}
+
+model JournalEntry {
+  id               String        @id @default(cuid())
+  yoleReference    String        @unique
+  idempotencyKey   String        @unique
+  status           JournalStatus
+  currency         CurrencyCode
+  correlationId    String
+  actorType        String
+  actorId          String?
+  externalRefsJson Json?
+  createdAt        DateTime      @default(now())
+  postings         Posting[]
+}
+
+model Posting {
+  id             String       @id @default(cuid())
+  journalId      String
+  journal        JournalEntry @relation(fields: [journalId], references: [id])
+  accountCode    String
+  direction      String
+  amountMinor    BigInt
+  currency       CurrencyCode
+  walletPocketId String?
+}
+
+model IdempotencyRecord {
+  key          String   @id
+  requestHash  String
+  responseJson Json
+  createdAt    DateTime @default(now())
+}

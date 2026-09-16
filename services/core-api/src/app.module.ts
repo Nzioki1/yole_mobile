@@ -10,6 +10,7 @@ import { AgentsModule } from './modules/agents/agents.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { PayrollModule } from './modules/payroll/payroll.module';
 import { CreditModule } from './modules/credit/credit.module';
+import { CardsModule } from './modules/cards/cards.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CreditModule } from './modules/credit/credit.module';
     AdminModule,
     PayrollModule,
     CreditModule,
+    CardsModule,
   ],
   controllers: [HealthController],
   providers: [],

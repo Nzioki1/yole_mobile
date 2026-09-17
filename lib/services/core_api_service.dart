@@ -372,6 +372,35 @@ class CoreApiService {
     }
   }
 
+  /// Credit: List loans
+  Future<List<dynamic>> listLoans() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/credit/loans'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data : (data['loans'] as List? ?? []);
+    } else {
+      throw Exception('List loans failed: ${response.body}');
+    }
+  }
+
+  /// Credit: Get loan detail
+  Future<Map<String, dynamic>> getLoan(String loanId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/credit/loans/$loanId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Get loan failed: ${response.body}');
+    }
+  }
+
   /// Cards: Issue
   Future<Map<String, dynamic>> issueCard({
     required String walletPocketId,

@@ -24,6 +24,8 @@ import 'screens/send_money_checkout_screen.dart';
 import 'screens/send_money_result_screen.dart';
 import 'screens/cards_screen.dart';
 import 'screens/credit_screen.dart';
+import 'screens/credit_apply_screen.dart';
+import 'screens/credit_loan_detail_screen.dart';
 import 'screens/fx_screen.dart';
 import 'screens/payment_rail_picker_screen.dart';
 import 'screens/payment_form_screen.dart';
@@ -233,6 +235,36 @@ class AppRouter {
         }
         return MaterialPageRoute(
           builder: (_) => TransactionDetailScreen(paymentId: paymentId),
+        );
+
+      case RouteNames.creditApply:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final type = args?['type'] as String?;
+        if (type == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Credit type required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CreditApplyScreen(type: type),
+        );
+
+      case RouteNames.creditDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final loanId = args?['loanId'] as String?;
+        if (loanId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Loan ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CreditLoanDetailScreen(loanId: loanId),
         );
 
       // Fallback

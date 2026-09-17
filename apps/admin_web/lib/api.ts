@@ -101,6 +101,19 @@ export class AdminApiClient {
     });
   }
 
+  async importEmployees(employerId: string, employees: { customerId: string; salaryMinor: string; currency: string }[]) {
+    return this.request(`/v1/admin/payroll/employers/${employerId}/employees/import`, {
+      method: 'POST',
+      body: JSON.stringify({ employees }),
+    });
+  }
+
+  async creditSalaries(employerId: string) {
+    return this.request(`/v1/admin/payroll/employers/${employerId}/salary/credit`, {
+      method: 'POST',
+    });
+  }
+
   // Recon & Cases
   async getDailySummary(date: string) {
     return this.request(`/v1/admin/recon/daily?date=${date}`);

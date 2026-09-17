@@ -189,7 +189,7 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
 
 ---
 
-### Part D: Admin Monitoring & Operations
+### Part D: Admin Monitoring & Operations (Phase 1)
 
 **1. Customer 360**
 - Admin Web → "Customer 360" module
@@ -232,6 +232,59 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
 - **Fees:** Currently shows mock message (calculated in PaymentsService: 1% or 100 minor)
 - **Limits:** Currently shows mock message (hardcoded TIER_1: USD $1k daily / $10k monthly)
 - UI ready for future config API integration
+
+---
+
+### Part E: Admin Payroll Operations (Phase 2)
+
+**1. Create Employer**
+- Admin Web → "Payroll" module
+- Click "+ Create Employer"
+- Fill form:
+  - Company Name: `ACME Corp`
+  - Tax ID: `TAX12345`
+- Click "Create Employer"
+- Employer appears in list
+
+**2. Import Employees**
+- Click on employer from list
+- Click "📋 Import Employees"
+- Paste employee data (format: `customerId,salaryMinor,currency`)
+  - Example:
+    ```
+    cust_abc123,50000,USD
+    cust_def456,75000,USD
+    cust_ghi789,100000,CDF
+    ```
+  - Note: Use actual customer IDs from registered customers
+  - Salary in minor units (50000 = $500.00)
+- Click "Import Employees"
+- Employees count updates
+
+**3. Credit Salaries**
+- On employer detail page
+- Click "💰 Credit Salaries to All Employees"
+- Confirm action
+- View success result showing:
+  - Successful credits count
+  - Failed credits count (if any)
+
+**4. Verify Customer Wallet Credited**
+- Navigate to Customer 360
+- Enter a customer ID from the import list
+- Check:
+  - **Wallet balance** increased by salary amount
+  - **Recent payments** shows `SALARY_CREDIT` payment
+  - **Amount** matches imported salary
+  - **Status** is `POSTED`
+
+**Demo Flow:**
+1. Register 2-3 customers via customer app (note their IDs)
+2. Admin → Create employer
+3. Admin → Import those customer IDs with salaries
+4. Admin → Credit salaries
+5. Admin → Verify via Customer 360
+6. Customer → Check wallet balance in customer app
 
 ---
 
@@ -345,6 +398,16 @@ Agent App → Enter Customer ID + Amount → Cash In
 - `GET /v1/admin/config/fees` - List fee configs
 - `GET /v1/admin/config/limits` - List limit configs
 - `GET /v1/admin/wallets/:id` - Get wallet (for agent float)
+- `GET /v1/admin/payroll/employers` - List employers
+- `POST /v1/admin/payroll/employers` - Create employer
+- `POST /v1/admin/payroll/employers/:id/employees/import` - Import employees
+- `POST /v1/admin/payroll/employers/:id/salary/credit` - Credit salaries
+
+### Credit APIs (JWT Bearer)
+- `GET /v1/credit/eligibility/:type` - Check credit eligibility
+- `POST /v1/credit/loans` - Request loan
+- `GET /v1/credit/loans` - List customer loans
+- `GET /v1/credit/loans/:id` - Get loan detail
 
 ---
 

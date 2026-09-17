@@ -201,7 +201,7 @@ export class OfflineDemoStore {
         id: customerId,
         firstName: 'Unknown',
         lastName: 'Customer',
-        email: `${customerId}@demo.yole.com`,
+        email: `${customerId}@demo.postefinance.com`,
         password: '',
         phoneE164: null,
         segment: 'OPEN',

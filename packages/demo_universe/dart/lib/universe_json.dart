@@ -68,7 +68,7 @@ const String kUniverseJson = r'''{
   "staff": [
     {
       "id": "staff_admin",
-      "email": "admin@yole.com",
+      "email": "admin@postefinance.com",
       "password": "Password1!",
       "role": "ADMIN",
       "firstName": "Ada",
@@ -76,7 +76,7 @@ const String kUniverseJson = r'''{
     },
     {
       "id": "staff_ops",
-      "email": "ops@yole.com",
+      "email": "ops@postefinance.com",
       "password": "Password1!",
       "role": "OPS",
       "firstName": "Omar",
@@ -84,7 +84,7 @@ const String kUniverseJson = r'''{
     },
     {
       "id": "staff_support",
-      "email": "support@yole.com",
+      "email": "support@postefinance.com",
       "password": "Password1!",
       "role": "SUPPORT",
       "firstName": "Sara",
@@ -92,7 +92,7 @@ const String kUniverseJson = r'''{
     },
     {
       "id": "staff_finance",
-      "email": "finance@yole.com",
+      "email": "finance@postefinance.com",
       "password": "Password1!",
       "role": "FINANCE",
       "firstName": "Fiona",
@@ -102,7 +102,7 @@ const String kUniverseJson = r'''{
   "customers": [
     {
       "id": "cust_kasee",
-      "email": "kasee.demo@yole.com",
+      "email": "kasee.demo@postefinance.com",
       "password": "Password1!",
       "phoneE164": "+243990000001",
       "firstName": "Kasee",
@@ -115,7 +115,7 @@ const String kUniverseJson = r'''{
     },
     {
       "id": "cust_amina",
-      "email": "amina.payroll@yole.com",
+      "email": "amina.payroll@postefinance.com",
       "password": "Password1!",
       "phoneE164": "+243990000002",
       "firstName": "Amina",
@@ -217,7 +217,7 @@ const String kUniverseJson = r'''{
       "firstName": "Claude",
       "lastName": "Mokonzi",
       "phoneE164": "+243810111111",
-      "email": "agent001@yole-agents.cd",
+      "email": "agent001@postefinance-agents.cd",
       "password": "Password1!",
       "floatCdfMinor": 500000000,
       "floatUsdMinor": 200000,
@@ -231,7 +231,7 @@ const String kUniverseJson = r'''{
       "firstName": "Beatrice",
       "lastName": "Nzuzi",
       "phoneE164": "+243810222222",
-      "email": "bnzuzi@yole-agents.cd",
+      "email": "bnzuzi@postefinance-agents.cd",
       "password": "Password1!",
       "floatCdfMinor": 250000000,
       "floatUsdMinor": 100000,

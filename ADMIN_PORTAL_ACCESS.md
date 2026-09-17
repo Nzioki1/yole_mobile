@@ -35,10 +35,10 @@ All passwords: `Password1!`
 
 | Email | Role | Access |
 |-------|------|--------|
-| admin@yole.com | ADMIN | Full access to all modules |
-| ops@yole.com | OPS | KYC, Agents, Payments, Recon, Cases |
-| support@yole.com | SUPPORT | Customer 360, Cases only |
-| finance@yole.com | FINANCE | Payments, Cards, Payroll, Fees & Limits, Recon |
+| admin@postefinance.com | ADMIN | Full access to all modules |
+| ops@postefinance.com | OPS | KYC, Agents, Payments, Recon, Cases |
+| support@postefinance.com | SUPPORT | Customer 360, Cases only |
+| finance@postefinance.com | FINANCE | Payments, Cards, Payroll, Fees & Limits, Recon |
 
 ## Quick Demo Flow
 

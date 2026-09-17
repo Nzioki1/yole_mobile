@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
-import 'react-perfect-scrollbar/dist/css/styles.css';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,11 +15,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {/* Color Admin v5.5.2 default theme (teal) */}
+      <head>
         <link rel="stylesheet" href="/assets/css/default/app.min.css" />
-        {children}
-      </body>
+        <link rel="icon" href="/assets/img/brand/poste-finance-mark.png" />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

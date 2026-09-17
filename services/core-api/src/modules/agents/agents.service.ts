@@ -35,7 +35,7 @@ export class AgentsService {
     await this.walletStore.createPocket({
       walletId: floatWallet.id,
       currency: 'CDF',
-      ledgerMinor: 0n,
+      ledgerMinor: 50000000n,
       blockedMinor: 0n,
       pendingOutMinor: 0n,
       pendingInMinor: 0n,
@@ -43,7 +43,7 @@ export class AgentsService {
     await this.walletStore.createPocket({
       walletId: floatWallet.id,
       currency: 'USD',
-      ledgerMinor: 0n,
+      ledgerMinor: 10000000n,
       blockedMinor: 0n,
       pendingOutMinor: 0n,
       pendingInMinor: 0n,

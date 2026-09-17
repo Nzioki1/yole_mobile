@@ -97,10 +97,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 32),
 
                         // Prominent Poste Finance Logo - Much larger and dominant
-                        Image.asset(
-                          'assets/brand/poste-finance-logo.png',
-                          height: 80,
-                          fit: BoxFit.contain,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.65,
+                          ),
+                          child: Image.asset(
+                            'assets/brand/poste-finance-logo.png',
+                            height: 44,
+                            fit: BoxFit.contain,
+                          ),
                         ),
 
                         const SizedBox(height: 24),

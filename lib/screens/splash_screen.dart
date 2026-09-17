@@ -105,12 +105,17 @@ class SplashScreenFlutter extends ConsumerWidget {
                     durationMs: 800,
                     beginOffset: const Offset(0, 30),
                     child: Center(
-                      child: Image.asset(
-                        isDark
-                            ? 'assets/brand/poste-finance-logo-light.png'
-                            : 'assets/brand/poste-finance-logo.png',
-                        height: 80,
-                        fit: BoxFit.contain,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.65,
+                        ),
+                        child: Image.asset(
+                          isDark
+                              ? 'assets/brand/poste-finance-logo-light.png'
+                              : 'assets/brand/poste-finance-logo.png',
+                          height: 44,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
@@ -129,37 +134,6 @@ class SplashScreenFlutter extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Tagline
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                    maxWidth: 320), // max-w-xs
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (Widget child,
-                                      Animation<double> animation) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
-                                  },
-                                  child: Text(
-                                    l10n.sendMoneyDescription,
-                                    key: ValueKey(l10n.sendMoneyDescription),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.5,
-                                      letterSpacing: 0.2,
-                                      fontFamily:
-                                          'Inter', // Clean, readable sans-serif
-                                      color: isDark
-                                          ? Colors.white.withOpacity(
-                                              0.70) // text-white/70
-                                          : const Color(
-                                              0xFF475569), // text-slate-600
-                                    ),
-                                  ),
-                                ),
-                              ),
 
                               const SizedBox(
                                   height: 20 + 16), // space-y-5 + pt-4

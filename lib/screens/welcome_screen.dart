@@ -125,10 +125,15 @@ class WelcomeScreen extends ConsumerWidget {
                         const SizedBox(height: 32),
 
                         // --- Poste Finance Logo ---
-                        Image.asset(
-                          'assets/brand/poste-finance-logo.png',
-                          height: 70,
-                          fit: BoxFit.contain,
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.65,
+                          ),
+                          child: Image.asset(
+                            'assets/brand/poste-finance-logo.png',
+                            height: 40,
+                            fit: BoxFit.contain,
+                          ),
                         ),
 
                         const SizedBox(height: 24),

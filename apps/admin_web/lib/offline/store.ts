@@ -915,7 +915,7 @@ export class OfflineDemoStore {
     const pack = {
       exportedAt: nowIso(),
       format: 'yole-demo-export/v1',
-      filename: 'yole-demo-export.json',
+      filename: 'poste-finance-demo-export.json',
       honesty: this.getHonesty(),
       customers: this.u.customers.map(({ password: _p, ...rest }) => rest),
       wallets: this.u.wallets,

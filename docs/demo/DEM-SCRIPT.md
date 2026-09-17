@@ -49,12 +49,12 @@ flutter run -d chrome --dart-define=OFFLINE_DEMO=true
 
 | Persona | Login | Password / ID | Role |
 | --- | --- | --- | --- |
-| Admin | `admin@yole.com` | `Password1!` | Staff ADMIN |
-| Ops | `ops@yole.com` | `Password1!` | Staff OPS |
-| Support | `support@yole.com` | `Password1!` | Staff SUPPORT |
-| Finance | `finance@yole.com` | `Password1!` | Staff FINANCE |
-| Kasee | `kasee.demo@yole.com` (`cust_kasee`) | `Password1!` | Open-market customer |
-| Amina | `amina.payroll@yole.com` (`cust_amina`) | `Password1!` | Corporate employee @ `emp_poste` |
+| Admin | `admin@postefinance.com` | `Password1!` | Staff ADMIN |
+| Ops | `ops@postefinance.com` | `Password1!` | Staff OPS |
+| Support | `support@postefinance.com` | `Password1!` | Staff SUPPORT |
+| Finance | `finance@postefinance.com` | `Password1!` | Staff FINANCE |
+| Kasee | `kasee.demo@postefinance.com` (`cust_kasee`) | `Password1!` | Open-market customer |
+| Amina | `amina.payroll@postefinance.com` (`cust_amina`) | `Password1!` | Corporate employee @ `emp_poste` |
 | Agent | **`agent-001`** | (paste Agent ID) | Float / enroll / cash |
 
 Other stable IDs: `emp_poste` (Poste Demo SARL), journals/payments/loans/cards as in `meta.demBookmarks`.
@@ -111,7 +111,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 
 1. Stop API `:3000`. Start customer with `--dart-define=OFFLINE_DEMO=true`.
 2. Confirm offline / no live API affordance where shown.
-3. **Option A (seeded login):** Log in `kasee.demo@yole.com` / `Password1!` → Home shows **CDF + USD** wallets.
+3. **Option A (seeded login):** Log in `kasee.demo@postefinance.com` / `Password1!` → Home shows **CDF + USD** wallets.
 4. **Option B (register walk):** Create account → enter phone → OTP **`123456`** → eKYC submit (mock docs) → land on home with wallets.
 5. **Pass:** Home loads with dual currency wallets; Network has no `:3000`.
 
@@ -122,7 +122,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 **Apps:** Admin  
 **Seed:** `apr_fee_w2w_001` → `admin/products+approvals`
 
-1. Login `admin@yole.com` / `Password1!`. Header shows **Offline demo — no live API**.
+1. Login `admin@postefinance.com` / `Password1!`. Header shows **Offline demo — no live API**.
 2. Sidebar → **Products & rules** (`/dashboard/products`) — list products + fee/limit rows.
 3. Sidebar → **Pending approvals** (`/dashboard/approvals`) — row `apr_fee_w2w_001` (FEE_CHANGE).
 4. Click **Approve** (or **Reject**). Status updates; fee change applies on approve.
@@ -136,7 +136,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 **Seed:** `cust_amina`, `loan_amina_active_001`, `emp_poste`
 
 1. **Admin:** Payroll → employer **Poste Demo SARL** (`emp_poste`) — employees + salary history for Amina.
-2. **Customer:** Login `amina.payroll@yole.com` / `Password1!` → **Credit** → Salary Advance eligible from salary history → apply / view terms → PIN → wallet credit + loan.
+2. **Customer:** Login `amina.payroll@postefinance.com` / `Password1!` → **Credit** → Salary Advance eligible from salary history → apply / view terms → PIN → wallet credit + loan.
 3. **Admin:** Customer 360 → paste `cust_amina` → see active loan `loan_amina_active_001` + **installment schedule**.
 4. **Pass:** Eligibility is salary-driven (not always-true); 360 shows schedule; IDs match across apps (pre-seeded).
 
@@ -173,7 +173,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 **Apps:** Customer + Admin payments / 360 / recon  
 **Seed payments:** `pay_kasee_w2w_001`, `pay_kasee_mno_001`, `pay_kasee_bank_001`, `pay_kasee_bill_001`
 
-1. Customer login `kasee.demo@yole.com` / `Password1!`.
+1. Customer login `kasee.demo@postefinance.com` / `Password1!`.
 2. History / Pay: open each rail receipt (W2W, MNO, bank, bill) — journal IDs present.
 3. Admin → Payments search / Customer 360 `cust_kasee` — same payment + journal IDs.
 4. Optional: Agent `agent-001` cash-in history appears as **pre-seeded** journals (not live sync).
@@ -248,7 +248,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 **Path:** `/dashboard/export`
 
 1. Sidebar → **Export pack**.
-2. Click **Download yole-demo-export.json**.
+2. Click **Download poste-finance-demo-export.json**.
 3. File non-empty; contains customers / wallets / loans / txns / cases (universe-derived).
 4. **Pass:** Download succeeds with API stopped.
 
@@ -283,9 +283,9 @@ Run with **core-api stopped** and offline flags on. Tick when observed.
 
 ### Personas / IDs
 
-- [ ] `admin@yole.com` / `Password1!` logs into admin
-- [ ] `kasee.demo@yole.com` / `Password1!` customer
-- [ ] `amina.payroll@yole.com` / `Password1!` customer
+- [ ] `admin@postefinance.com` / `Password1!` logs into admin
+- [ ] `kasee.demo@postefinance.com` / `Password1!` customer
+- [ ] `amina.payroll@postefinance.com` / `Password1!` customer
 - [ ] Agent login **`agent-001`**
 
 ### DEM walks
@@ -301,7 +301,7 @@ Run with **core-api stopped** and offline flags on. Tick when observed.
 - [ ] **DEM-09** AML confidential Investigate → Recommend → checker
 - [ ] **DEM-10** resilience storyboard banner + balanced journals
 - [ ] **DEM-11** Run EOD on `recon_2026-09-16`
-- [ ] **DEM-12** Download `yole-demo-export.json` non-empty
+- [ ] **DEM-12** Download `poste-finance-demo-export.json` non-empty
 
 ### Reset
 

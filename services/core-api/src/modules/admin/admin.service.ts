@@ -3,6 +3,8 @@ import { InMemoryCustomerStore } from '../../common/stores/customer.store';
 import { InMemoryWalletStore } from '../../common/stores/wallet.store';
 import { InMemoryPaymentStore } from '../../common/stores/payment.store';
 import { InMemoryLedgerStore } from '../../common/stores/ledger.store';
+import { InMemoryAgentStore } from '../../common/stores/agent.store';
+import { InMemoryKycStore } from '../../common/stores/kyc.store';
 import { CardsService } from '../cards/cards.service';
 
 // Simple in-memory config store for fees/limits
@@ -34,6 +36,8 @@ export class AdminService {
     private walletStore: InMemoryWalletStore,
     private paymentStore: InMemoryPaymentStore,
     private ledgerStore: InMemoryLedgerStore,
+    private agentStore: InMemoryAgentStore,
+    private kycStore: InMemoryKycStore,
     private cardsService: CardsService,
   ) {
     // Seed some default configs
@@ -264,5 +268,57 @@ export class AdminService {
 
   async listCards(customerId?: string) {
     return this.cardsService.listAllCards(customerId);
+  }
+
+  /**
+   * Dashboard summary with KPIs and chart data
+   */
+  async getDashboardSummary() {
+    const allPayments = await this.paymentStore.list({});
+    const allKyc = Array.from((await this.kycStore.findByStatus('PENDING_REVIEW')).values() || []);
+    const allAgents = await this.agentStore.list();
+    const allCases = this.listCases();
+    const allCards = await this.cardsService.listAllCards();
+
+    // Get today's date range for payments
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayPayments = allPayments.filter(p => {
+      const pDate = new Date(p.createdAt);
+      return pDate >= today;
+    });
+
+    // Group payments by status
+    const paymentsByStatus = allPayments.reduce((acc, p) => {
+      acc[p.status] = (acc[p.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Group payments by type (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentPayments = allPayments.filter(p => new Date(p.createdAt) >= sevenDaysAgo);
+    const paymentsByType = recentPayments.reduce((acc, p) => {
+      acc[p.type] = (acc[p.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      kpis: {
+        pendingKyc: allKyc.length,
+        openCases: (await allCases).filter((c: any) => c.status === 'OPEN').length,
+        paymentsToday: todayPayments.length,
+        activeAgents: allAgents.length,
+        totalCards: allCards.length,
+      },
+      paymentsByStatus: Object.entries(paymentsByStatus).map(([status, count]) => ({
+        status,
+        count,
+      })),
+      paymentsByType: Object.entries(paymentsByType).map(([type, count]) => ({
+        type,
+        count,
+      })),
+    };
   }
 }

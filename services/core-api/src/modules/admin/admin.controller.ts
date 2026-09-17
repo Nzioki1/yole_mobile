@@ -103,4 +103,9 @@ export class AdminController {
   async updateCase(@Param('id') id: string, @Body() body: { decision: string }) {
     return this.adminService.updateCase(id, body.decision);
   }
+
+  @Get('dashboard/summary')
+  async getDashboardSummary() {
+    return this.adminService.getDashboardSummary();
+  }
 }

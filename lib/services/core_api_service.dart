@@ -440,6 +440,99 @@ class CoreApiService {
     }
   }
 
+  /// Cards: Get detail
+  Future<Map<String, dynamic>> getCard(String cardId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/cards/$cardId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Get card failed: ${response.body}');
+    }
+  }
+
+  /// Cards: Freeze
+  Future<Map<String, dynamic>> freezeCard(String cardId) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/cards/$cardId/freeze'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Freeze card failed: ${response.body}');
+    }
+  }
+
+  /// Cards: Activate
+  Future<Map<String, dynamic>> activateCard(String cardId) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/cards/$cardId/activate'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Activate card failed: ${response.body}');
+    }
+  }
+
+  /// Cards: Block
+  Future<Map<String, dynamic>> blockCard(String cardId) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/cards/$cardId/block'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Block card failed: ${response.body}');
+    }
+  }
+
+  /// Cards: Update limits
+  Future<Map<String, dynamic>> updateCardLimits({
+    required String cardId,
+    required String dailyLimitMinor,
+    required String monthlyLimitMinor,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/v1/cards/$cardId/limits'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'dailyLimitMinor': dailyLimitMinor,
+        'monthlyLimitMinor': monthlyLimitMinor,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Update card limits failed: ${response.body}');
+    }
+  }
+
+  /// Cards: List transactions
+  Future<List<dynamic>> getCardTransactions(String cardId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/cards/$cardId/transactions'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data : (data['transactions'] as List? ?? []);
+    } else {
+      throw Exception('Get card transactions failed: ${response.body}');
+    }
+  }
+
   /// Remittance: Quote inbound
   Future<Map<String, dynamic>> quoteInboundRemittance({
     required String amountMinor,

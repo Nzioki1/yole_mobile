@@ -23,6 +23,8 @@ import 'screens/send_money_review_screen.dart';
 import 'screens/send_money_checkout_screen.dart';
 import 'screens/send_money_result_screen.dart';
 import 'screens/cards_screen.dart';
+import 'screens/card_issue_screen.dart';
+import 'screens/card_detail_screen.dart';
 import 'screens/credit_screen.dart';
 import 'screens/credit_apply_screen.dart';
 import 'screens/credit_loan_detail_screen.dart';
@@ -265,6 +267,24 @@ class AppRouter {
         }
         return MaterialPageRoute(
           builder: (_) => CreditLoanDetailScreen(loanId: loanId),
+        );
+
+      case RouteNames.cardIssue:
+        return MaterialPageRoute(builder: (_) => const CardIssueScreen());
+
+      case RouteNames.cardDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final cardId = args?['cardId'] as String?;
+        if (cardId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Card ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CardDetailScreen(cardId: cardId),
         );
 
       // Fallback

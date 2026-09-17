@@ -19,6 +19,8 @@ class RouteNames {
   static const String transactionDetail = '/transaction-detail';
   static const String creditApply = '/credit-apply';
   static const String creditDetail = '/credit-detail';
+  static const String cardIssue = '/card-issue';
+  static const String cardDetail = '/card-detail';
   static const String favorites = '/favorites';
   static const String emailVerification = '/email-verification';
   static const String forgotPassword = '/forgot-password';

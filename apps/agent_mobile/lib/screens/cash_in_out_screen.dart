@@ -43,16 +43,42 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
             );
 
       if (mounted) {
+        final amount = double.parse(_amountController.text);
+        final currencySymbol = _currency == 'CDF' ? 'FC' : '\$';
+        
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('✅ ${_isCashIn ? "Cash-In" : "Cash-Out"} Complete'),
+            title: Row(
+              children: [
+                Icon(
+                  _isCashIn ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: _isCashIn ? Colors.green : Colors.orange,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
+                Text('${_isCashIn ? "Cash-In" : "Cash-Out"} Complete'),
+              ],
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Journal ID: ${result['journalId']}'),
-                Text('Status: ${result['status']}'),
+                Text(
+                  'Amount: $currencySymbol${amount.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text('Customer: ${_customerIdController.text}'),
+                const Divider(),
+                Text(
+                  'Journal: ${result['journalId']}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                Text(
+                  'Status: ${result['status']}',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
               ],
             ),
             actions: [
@@ -69,8 +95,13 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final errorMsg = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('${_isCashIn ? "Cash-in" : "Cash-out"} failed: $errorMsg'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {

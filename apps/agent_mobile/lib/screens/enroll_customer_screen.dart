@@ -38,16 +38,55 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
       );
 
       if (mounted) {
+        final customerId = result['customerId'] as String? ?? 'N/A';
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
-            title: const Text('✅ Customer Enrolled'),
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 28),
+                SizedBox(width: 8),
+                Text('Customer Enrolled'),
+              ],
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Customer ID: ${result['customerId']}'),
-                Text('Wallet ID: ${result['walletId']}'),
+                const Text(
+                  'Customer ID (for cash-in/W2W):',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: SelectableText(
+                    customerId,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Name: ${_firstNameController.text} ${_lastNameController.text}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                if (result['walletId'] != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Wallet: ${result['walletId']}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ],
             ),
             actions: [
@@ -65,7 +104,11 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Text('Enroll failed: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {

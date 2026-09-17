@@ -89,6 +89,12 @@ export class AdminApiClient {
     return this.request('/v1/admin/config/limits');
   }
 
+  // Cards
+  async listCards(customerId?: string) {
+    const query = customerId ? `?customerId=${customerId}` : '';
+    return this.request(`/v1/admin/cards${query}`);
+  }
+
   // Payroll
   async listEmployers() {
     return this.request('/v1/admin/payroll/employers');

@@ -3,6 +3,7 @@ import { InMemoryCustomerStore } from '../../common/stores/customer.store';
 import { InMemoryWalletStore } from '../../common/stores/wallet.store';
 import { InMemoryPaymentStore } from '../../common/stores/payment.store';
 import { InMemoryLedgerStore } from '../../common/stores/ledger.store';
+import { CardsService } from '../cards/cards.service';
 
 // Simple in-memory config store for fees/limits
 interface FeeConfig {
@@ -33,6 +34,7 @@ export class AdminService {
     private walletStore: InMemoryWalletStore,
     private paymentStore: InMemoryPaymentStore,
     private ledgerStore: InMemoryLedgerStore,
+    private cardsService: CardsService,
   ) {
     // Seed some default configs
     this.seedDefaultConfigs();
@@ -258,5 +260,9 @@ export class AdminService {
       return allCases.filter((c) => c.status === status);
     }
     return allCases;
+  }
+
+  async listCards(customerId?: string) {
+    return this.cardsService.listAllCards(customerId);
   }
 }

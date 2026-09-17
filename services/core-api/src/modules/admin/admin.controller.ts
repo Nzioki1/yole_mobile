@@ -41,6 +41,11 @@ export class AdminController {
     return this.adminService.searchPayments({ customerId, status, type });
   }
 
+  @Get('cards')
+  async listCards(@Query('customerId') customerId?: string) {
+    return this.adminService.listCards(customerId);
+  }
+
   @Get('config/fees')
   async listFeeConfigs() {
     return this.adminService.listFeeConfigs();

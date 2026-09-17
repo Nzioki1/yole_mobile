@@ -141,6 +141,19 @@ export class CardsService {
       }));
   }
 
+  async listAllCards(customerId?: string) {
+    let cards = Array.from(this.cards.values());
+    if (customerId) {
+      cards = cards.filter((c) => c.customerId === customerId);
+    }
+    return cards.map((c) => ({
+      ...c,
+      last4: c.cardNumber.substring(c.cardNumber.length - 4),
+      dailyLimitMinor: c.dailyLimitMinor.toString(),
+      monthlyLimitMinor: c.monthlyLimitMinor.toString(),
+    }));
+  }
+
   async listTransactions(cardId: string, customerId: string) {
     const card = this.cards.get(cardId);
     if (!card || card.customerId !== customerId) {

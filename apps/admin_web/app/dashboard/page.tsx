@@ -23,6 +23,7 @@ export default function DashboardPage() {
     { title: 'KYC Queue', link: '/dashboard/kyc', icon: '📋' },
     { title: 'Agents', link: '/dashboard/agents', icon: '👥' },
     { title: 'Payments Search', link: '/dashboard/payments', icon: '💰' },
+    { title: 'Virtual Cards', link: '/dashboard/cards', icon: '💳' },
     { title: 'Fees & Limits', link: '/dashboard/config', icon: '⚙️' },
     { title: 'Payroll', link: '/dashboard/payroll', icon: '💼' },
     { title: 'Recon & Cases', link: '/dashboard/recon', icon: '📊' },

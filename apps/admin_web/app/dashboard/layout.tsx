@@ -34,6 +34,8 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const pageTitle =
+    pageTitles[pathname] ||
     (pathname.startsWith('/dashboard/payroll/') ? 'Employer Detail' : 'Poste Finance Admin');
 
   useEffect(() => {

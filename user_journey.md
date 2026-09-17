@@ -1,5 +1,7 @@
 # User Journey - YOLE Money Transfer App
 
+> **Poste Finance offline DEM-01…DEM-12:** see [`docs/demo/DEM-SCRIPT.md`](docs/demo/DEM-SCRIPT.md) for offline flags, personas, click paths, honesty banners, Reset demo, and the acceptance checklist. This file remains the legacy Pesapal UX journey and is not rewritten for the offline universe.
+
 This document maps the complete user experience flow for the YOLE money transfer application, from initial app launch through authenticated user flows. Each step mirrors the exact UX design and interactions.
 
 ---

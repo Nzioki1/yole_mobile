@@ -23,10 +23,34 @@ Workspace package name: `demo_universe`.
 ```dart
 import 'package:demo_universe/demo_universe.dart';
 
-final u = DemoUniverse.load(); // reads ../data/universe.json (or pass path:)
+final u = DemoUniverse.load(); // embedded kUniverseJson (web-safe)
 ```
 
-Flutter apps should path-depend on `packages/demo_universe/dart` and optionally declare an asset pointing at `../data/universe.json` (or the synced `dart/assets/universe.json` copy).
+Flutter apps path-depend on `packages/demo_universe/dart`. Runtime load uses embedded `dart/lib/universe_json.dart` (Chrome/web-safe). Authoring source of truth remains `data/universe.json`.
+
+### Extend seed + regenerate Dart embed
+
+1. Edit **`data/universe.json`** only (never hand-edit `dart/lib/universe_json.dart`).
+2. Regenerate the embedded Dart constant from the JSON:
+
+```bash
+cd packages/demo_universe
+node <<'NODE'
+const fs = require('fs');
+const raw = fs.readFileSync('data/universe.json', 'utf8').replace(/\s*$/, '');
+const out =
+  '/// Auto-generated embedded universe.json — do not edit by hand.\n' +
+  "const String kUniverseJson = r'''\n" +
+  raw +
+  "\n''';\n";
+fs.writeFileSync('dart/lib/universe_json.dart', out);
+console.log('Wrote dart/lib/universe_json.dart (' + raw.length + ' chars)');
+NODE
+```
+
+3. Re-run package tests: `pnpm exec vitest run ts/load.test.ts`
+4. Re-run Flutter offline repository tests (customer + agent).
+5. DEM click paths / acceptance: [`docs/demo/DEM-SCRIPT.md`](../../docs/demo/DEM-SCRIPT.md)
 
 ## Honesty banners (in meta.honesty)
 

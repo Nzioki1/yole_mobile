@@ -200,6 +200,21 @@ flutter test
 - Re-login to get fresh JWT token
 - Tokens stored securely in flutter_secure_storage
 
+## Offline Poste Finance demo (Android)
+
+Run without core-api:
+
+```bash
+flutter run -d <android-device-id> --dart-define=OFFLINE_DEMO=true
+```
+
+Demo login (seeded customer `cust_kasee`):
+
+- Email: `kasee.demo@yole.com`
+- Password: `Password1!`
+
+Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory session state; restart resets to seed.
+
 ## Next Steps
 
 When ready for production:

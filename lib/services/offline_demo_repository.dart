@@ -23,7 +23,7 @@ class OfflineDemoRepository {
       _instance ??= createFresh();
 
   /// Load a fresh deep-cloned universe (also replaces [instance]).
-  static OfflineDemoRepository createFresh({) {
+  static OfflineDemoRepository createFresh() {
     final repo = OfflineDemoRepository._(
       DemoUniverse.load(),
     );
@@ -32,7 +32,7 @@ class OfflineDemoRepository {
   }
 
   /// Discard session mutations and reload seed into [instance].
-  static void reset({) {
+  static void reset() {
     createFresh();
   }
 

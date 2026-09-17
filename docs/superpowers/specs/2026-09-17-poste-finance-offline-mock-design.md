@@ -32,7 +32,8 @@ Ship a **fully offline** Android demo of the customer neo-bank app that:
 
 ## Architecture
 
-1. **Config switch** — `USE_MOCK_DATA=true` via `--dart-define=USE_MOCK_DATA=true` (and/or a small local config). When on, providers bind to mock implementations. When off, existing `CoreApiService` path remains available for later.
+1. **Config switch** — `USE_MOCK_DATA=true` via `--dart-define=USE_MOCK_DATA=true` (and/or a small local config). When on, providers bind to mock implementations. When off, existing `CoreApiService` path remains available for later.  
+   *(Implementation note: the canonical flag name in code is `OFFLINE_DEMO`; this design's `USE_MOCK_DATA` refers to the same intent.)*
 2. **Seed pack** — single Dart (preferred) or JSON fixture loaded at startup in mock mode: demo customer, CDF+USD wallets, recent payments, favorites, profile/limits.
 3. **Mock repositories** — implement the same contracts home/pay/history/profile already use (auth, wallets, payments). Return seed data; keep **in-memory session state** so demo actions update balances/history until process restart.
 4. **Branding** — replace user-visible "YOLE" / "Yole" with "Poste Finance" on the customer app strings in scope; do not change theme colors or layout structure.

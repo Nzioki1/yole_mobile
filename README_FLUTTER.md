@@ -215,6 +215,19 @@ Demo login (seeded customer `cust_kasee`):
 
 Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory session state; restart resets to seed.
 
+### Offline demo verification checklist
+
+With `--dart-define=OFFLINE_DEMO=true` and core-api **stopped**:
+
+1. [ ] App title / splash / login show Poste Finance
+2. [ ] Login as `kasee.demo@postefinance.com` / `Password1!`
+3. [ ] Home shows CDF + USD balances (not empty)
+4. [ ] Home recent / History shows seeded payments
+5. [ ] Pay/Send completes and updates balance + history this session
+6. [ ] Profile shows seeded customer
+7. [ ] Airplane mode does not break the above
+8. [ ] `apps/admin_web` unchanged in the PR diff
+
 ## Next Steps
 
 When ready for production:

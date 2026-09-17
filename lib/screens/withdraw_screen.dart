@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import '../providers/api_providers.dart';
-import '../services/core_api_service.dart';
 import '../widgets/pin_confirm_sheet.dart';
 
 /// Withdraw Screen - Send money out to MNO or Bank
@@ -160,11 +158,8 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
         return;
       }
 
-      final idempotencyKey = const Uuid().v4();
-
       final result = await api.confirmPayment(
         paymentId: _quote!['paymentId'],
-        idempotencyKey: idempotencyKey,
       );
 
       if (!mounted) return;

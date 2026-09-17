@@ -80,7 +80,7 @@ class _CreditApplyScreenState extends State<CreditApplyScreen> {
       isScrollControlled: true,
       builder: (context) => PinConfirmSheet(
         title: 'Confirm Loan Application',
-        subtitle: 'Enter your PIN to proceed',
+        message: 'Enter your PIN to proceed',
         onPinEntered: (pin) async {
           return true; // PIN verified in the sheet
         },

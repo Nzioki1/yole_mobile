@@ -35,7 +35,7 @@ class _CardIssueScreenState extends State<CardIssueScreen> {
   Future<void> _loadWallets() async {
     setState(() => _loading = true);
     try {
-      final data = await _api.getWallets();
+      final data = await _api.getMyWallets();
       final wallets = data['wallets'] as List<dynamic>? ?? [];
       setState(() => _wallets = wallets);
     } catch (e) {

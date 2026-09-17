@@ -115,7 +115,7 @@ class _FxScreenState extends State<FxScreen> {
       isScrollControlled: true,
       builder: (context) => PinConfirmSheet(
         title: 'Confirm Currency Exchange',
-        subtitle: 'Enter your PIN to convert funds',
+        message: 'Enter your PIN to convert funds',
         onPinEntered: (pin) async {
           return true; // PIN verified in the sheet
         },

@@ -119,7 +119,7 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
       isScrollControlled: true,
       builder: (context) => PinConfirmSheet(
         title: 'Confirm Remittance',
-        subtitle: 'Enter your PIN to send money abroad',
+        message: 'Enter your PIN to send money abroad',
         onPinEntered: (pin) async {
           return true; // PIN verified in the sheet
         },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '@/lib/api';
+import { mockApi as api } from '@/lib/mockApi';
 
 export default function ReconPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);

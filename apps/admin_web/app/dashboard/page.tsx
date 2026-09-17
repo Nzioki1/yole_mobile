@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { authService } from '@/lib/auth';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+import { mockApi as api } from '@/lib/mockApi';
 
 const COLORS = {
   teal: '#00acac',
@@ -40,72 +38,8 @@ export default function DashboardPage() {
   const loadDashboardSummary = async () => {
     setLoading(true);
     try {
-      const token = authService.getToken();
-      
-      // Try the new dashboard summary endpoint
-      try {
-        const response = await fetch(`${API_BASE_URL}/v1/admin/dashboard/summary`, {
-          headers: {
-            'X-Admin-API-Key': 'dev-admin-key',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setSummary(data);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {
-        console.warn('Dashboard summary endpoint not available, using fallback');
-      }
-
-      // Fallback: aggregate from individual endpoints
-      const [agentsRes, kycRes, paymentsRes, casesRes, cardsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/v1/admin/agents`, {
-          headers: { 'X-Admin-API-Key': 'dev-admin-key', ...(token && { 'Authorization': `Bearer ${token}` }) },
-        }).catch(() => null),
-        fetch(`${API_BASE_URL}/v1/admin/kyc/submissions?status=PENDING_REVIEW`, {
-          headers: { 'X-Admin-API-Key': 'dev-admin-key', ...(token && { 'Authorization': `Bearer ${token}` }) },
-        }).catch(() => null),
-        fetch(`${API_BASE_URL}/v1/admin/payments/search`, {
-          headers: { 'X-Admin-API-Key': 'dev-admin-key', ...(token && { 'Authorization': `Bearer ${token}` }) },
-        }).catch(() => null),
-        fetch(`${API_BASE_URL}/v1/admin/cases?status=OPEN`, {
-          headers: { 'X-Admin-API-Key': 'dev-admin-key', ...(token && { 'Authorization': `Bearer ${token}` }) },
-        }).catch(() => null),
-        fetch(`${API_BASE_URL}/v1/admin/cards`, {
-          headers: { 'X-Admin-API-Key': 'dev-admin-key', ...(token && { 'Authorization': `Bearer ${token}` }) },
-        }).catch(() => null),
-      ]);
-
-      const agents = agentsRes?.ok ? await agentsRes.json() : [];
-      const kyc = kycRes?.ok ? await kycRes.json() : [];
-      const payments = paymentsRes?.ok ? await paymentsRes.json() : [];
-      const cases = casesRes?.ok ? await casesRes.json() : [];
-      const cards = cardsRes?.ok ? await cardsRes.json() : [];
-
-      // Process payments for charts
-      const paymentsByStatus: Record<string, number> = {};
-      const paymentsByType: Record<string, number> = {};
-
-      (Array.isArray(payments) ? payments : []).forEach((p: any) => {
-        paymentsByStatus[p.status] = (paymentsByStatus[p.status] || 0) + 1;
-        paymentsByType[p.type] = (paymentsByType[p.type] || 0) + 1;
-      });
-
-      setSummary({
-        kpis: {
-          pendingKyc: Array.isArray(kyc) ? kyc.length : 0,
-          openCases: Array.isArray(cases) ? cases.length : 0,
-          paymentsToday: Array.isArray(payments) ? payments.length : 0,
-          activeAgents: Array.isArray(agents) ? agents.length : 0,
-          totalCards: Array.isArray(cards) ? cards.length : 0,
-        },
-        paymentsByStatus: Object.entries(paymentsByStatus).map(([status, count]) => ({ status, count })),
-        paymentsByType: Object.entries(paymentsByType).map(([type, count]) => ({ type, count })),
-      });
+      const data = await api.getDashboardSummary();
+      setSummary(data);
     } catch (error) {
       console.error('Failed to load dashboard summary:', error);
     } finally {

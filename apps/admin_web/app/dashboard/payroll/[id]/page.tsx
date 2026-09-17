@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { api } from '@/lib/api';
+import { mockApi as api } from '@/lib/mockApi';
 
 export default function EmployerDetailPage() {
   const params = useParams();

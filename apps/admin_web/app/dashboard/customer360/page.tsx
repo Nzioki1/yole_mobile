@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '@/lib/api';
+import { mockApi as api } from '@/lib/mockApi';
 
 export default function Customer360Page() {
   const [customerId, setCustomerId] = useState('');

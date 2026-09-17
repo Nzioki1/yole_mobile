@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
+import { mockApi as api } from '@/lib/mockApi';
 
 export default function KycQueuePage() {
   const [submissions, setSubmissions] = useState<any[]>([]);

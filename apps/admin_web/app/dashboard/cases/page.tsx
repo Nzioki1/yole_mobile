@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api } from '@/lib/api';
+import { mockApi as api } from '@/lib/mockApi';
 
 export default function CasesPage() {
   const [cases, setCases] = useState<any[]>([]);

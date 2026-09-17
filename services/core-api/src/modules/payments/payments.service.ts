@@ -34,8 +34,8 @@ export class PaymentsService {
     // Calculate fee (simple flat fee for mock)
     const feeMinor = this.calculateFee(input.type, input.amountMinor);
     // Calculate tax (mock 5% on fee, or 0 for inbound)
-    const isInbound = input.type === 'MNO_IN' || input.type === 'BANK_IN';
-    const taxMinor = isInbound ? 0n : BigInt(Math.floor(Number(feeMinor) * 0.05));
+    const isInboundType = input.type === 'MNO_IN' || input.type === 'BANK_IN';
+    const taxMinor = isInboundType ? 0n : BigInt(Math.floor(Number(feeMinor) * 0.05));
     const totalMinor = input.amountMinor + feeMinor + taxMinor;
 
     // For W2W, find source and destination pockets
@@ -112,14 +112,14 @@ export class PaymentsService {
     });
 
     // Calculate tax for response (5% of fee for outbound, 0 for inbound)
-    const isInbound = payment.type === 'MNO_IN' || payment.type === 'BANK_IN';
-    const taxMinor = isInbound ? 0n : BigInt(Math.floor(Number(payment.feeMinor) * 0.05));
+    const isInboundPayment = payment.type === 'MNO_IN' || payment.type === 'BANK_IN';
+    const responseTaxMinor = isInboundPayment ? 0n : BigInt(Math.floor(Number(payment.feeMinor) * 0.05));
 
     return {
       paymentId: payment.id,
       amountMinor: payment.amountMinor.toString(),
       feeMinor: payment.feeMinor.toString(),
-      taxMinor: taxMinor.toString(),
+      taxMinor: responseTaxMinor.toString(),
       totalMinor: payment.totalMinor.toString(),
       currency: payment.currency,
       status: payment.status,

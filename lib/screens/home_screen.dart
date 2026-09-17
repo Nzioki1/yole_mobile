@@ -492,6 +492,12 @@ class _QuickActionsGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).pushNamed('/credit'),
         ),
         _QuickActionButton(
+          icon: Icons.flight_takeoff_rounded,
+          label: 'Remittance',
+          color: const Color(0xFF7B1FA2),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.remittance),
+        ),
+        _QuickActionButton(
           icon: Icons.currency_exchange_rounded,
           label: 'FX',
           color: const Color(0xFF912D2D),

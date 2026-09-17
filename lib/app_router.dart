@@ -28,6 +28,7 @@ import 'screens/card_detail_screen.dart';
 import 'screens/credit_screen.dart';
 import 'screens/credit_apply_screen.dart';
 import 'screens/credit_loan_detail_screen.dart';
+import 'screens/remittance_screen.dart';
 import 'screens/fx_screen.dart';
 import 'screens/payment_rail_picker_screen.dart';
 import 'screens/payment_form_screen.dart';
@@ -286,6 +287,9 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => CardDetailScreen(cardId: cardId),
         );
+
+      case RouteNames.remittance:
+        return MaterialPageRoute(builder: (_) => const RemittanceScreen());
 
       // Fallback
       default:

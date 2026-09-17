@@ -550,7 +550,57 @@ class CoreApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Quote remittance failed: ${response.body}');
+      throw Exception('Quote inbound remittance failed: ${response.body}');
+    }
+  }
+
+  /// Remittance: Confirm inbound
+  Future<Map<String, dynamic>> confirmInboundRemittance(String quoteId) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/remittance/inbound/$quoteId/confirm'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Confirm inbound remittance failed: ${response.body}');
+    }
+  }
+
+  /// Remittance: Quote outbound
+  Future<Map<String, dynamic>> quoteOutboundRemittance({
+    required String amountMinor,
+    required String currency,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/remittance/outbound/quote'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+        'currency': currency,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Quote outbound remittance failed: ${response.body}');
+    }
+  }
+
+  /// Remittance: List
+  Future<List<dynamic>> listRemittances() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/remittance'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data : (data['remittances'] as List? ?? []);
+    } else {
+      throw Exception('List remittances failed: ${response.body}');
     }
   }
 

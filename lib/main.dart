@@ -7,7 +7,6 @@ import 'providers/global_locale_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
 import 'package:flutter/widgets.dart';
-import 'widgets/offline_demo_banner.dart';
 
 // Global navigator key for forcing navigation stack rebuild
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -103,9 +102,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
           child: child!,
         );
         // Wrap with lifecycle watcher to apply time-based theme at start/resume
-        return OfflineDemoBanner(
-          child: ThemeLifecycleWatcher(child: wrapped),
-        );
+        return ThemeLifecycleWatcher(child: wrapped);
       },
     );
   }
@@ -114,10 +111,10 @@ class _YoleAppState extends ConsumerState<YoleApp> {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: const Color(0xFFF7F8FC),
-      primaryColor: const Color(0xFF4DA3FF),
+      primaryColor: const Color(0xFF00ACAC),
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFF4DA3FF),
-        secondary: Color(0xFF7B4DFF),
+        primary: Color(0xFF00ACAC),
+        secondary: Color(0xFF008A8A),
         surface: Colors.white,
         background: Color(0xFFF7F8FC),
         onSurface: Colors.black,
@@ -170,10 +167,10 @@ class _YoleAppState extends ConsumerState<YoleApp> {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF0E1230),
-      primaryColor: const Color(0xFF4DA3FF),
+      primaryColor: const Color(0xFF00ACAC),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF4DA3FF),
-        secondary: Color(0xFF7B4DFF),
+        primary: Color(0xFF00ACAC),
+        secondary: Color(0xFF008A8A),
         surface: Color(0xFF11163A),
         background: Color(0xFF0E1230),
         onSurface: Colors.white,

@@ -136,7 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         const SizedBox(height: 32),
 
-                        // Offline demo credentials hint
+                        // Demo credentials hint
                         if (CoreApiService.offlineDemo)
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -150,7 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       theme.colorScheme.primary.withOpacity(0.3)),
                             ),
                             child: Text(
-                              'Offline demo — kasee.demo@postefinance.com / Password1!',
+                              'Demo login: kasee.demo@postefinance.com / Password1!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,

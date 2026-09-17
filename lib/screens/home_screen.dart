@@ -302,12 +302,12 @@ class _WalletCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: currency == 'CDF'
             ? const LinearGradient(
-                colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)],
+                colors: [Color(0xFF00ACAC), Color(0xFF008A8A)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : const LinearGradient(
-                colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
+                colors: [Color(0xFF008A8A), Color(0xFF00ACAC)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -464,13 +464,13 @@ class _QuickActionsGrid extends StatelessWidget {
         _QuickActionButton(
           icon: Icons.send_rounded,
           label: 'Pay / Send',
-          color: const Color(0xFF4DA3FF),
+          color: const Color(0xFF00ACAC),
           onTap: () => Navigator.of(context).pushNamed('/payment/picker'),
         ),
         _QuickActionButton(
           icon: Icons.receipt_outlined,
           label: 'Bills',
-          color: const Color(0xFF7B4DFF),
+          color: const Color(0xFF008A8A),
           onTap: () => Navigator.of(context).pushNamed('/payment/bill'),
         ),
         _QuickActionButton(
@@ -741,7 +741,7 @@ class _Avatar extends StatelessWidget {
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
+        gradient: LinearGradient(colors: [Color(0xFF00ACAC), Color(0xFF008A8A)]),
       ),
       child: Text(
         initials,

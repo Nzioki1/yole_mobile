@@ -413,7 +413,7 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
-                        colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
+                        colors: [Color(0xFF008A8A), Color(0xFF00ACAC)],
                       ),
                     ),
                     child: Text(
@@ -782,7 +782,7 @@ class _FavTile extends StatelessWidget {
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)],
+                      colors: [Color(0xFF008A8A), Color(0xFF00ACAC)],
                     ),
                   ),
                   child: Text(

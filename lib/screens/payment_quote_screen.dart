@@ -57,7 +57,7 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)],
+                          colors: [Color(0xFF00ACAC), Color(0xFF008A8A)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),

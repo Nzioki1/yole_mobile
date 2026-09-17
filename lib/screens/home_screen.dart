@@ -153,14 +153,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 16),
 
-                // Add money button
-                OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).pushNamed('/fund'),
-                  icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Add Money'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                  ),
+                // Add money and Withdraw buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pushNamed('/fund'),
+                        icon: const Icon(Icons.add_circle_outline, size: 20),
+                        label: const Text('Add Money'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pushNamed('/withdraw'),
+                        icon: const Icon(Icons.remove_circle_outline, size: 20),
+                        label: const Text('Withdraw'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 24),

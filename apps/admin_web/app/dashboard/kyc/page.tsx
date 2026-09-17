@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
 
 export default function KycQueuePage() {
   const [submissions, setSubmissions] = useState<any[]>([]);
@@ -15,7 +16,7 @@ export default function KycQueuePage() {
     setLoading(true);
     try {
       const data = await api.listKycSubmissions('PENDING_REVIEW');
-      setSubmissions(data);
+      setSubmissions(Array.isArray(data) ? data : data?.submissions || []);
     } catch (error) {
       console.error(error);
     } finally {
@@ -34,41 +35,72 @@ export default function KycQueuePage() {
 
   return (
     <div>
-      {loading ? (
-        <p>Loading...</p>
-      ) : submissions.length === 0 ? (
-        <p className="text-gray-600">No pending KYC submissions</p>
-      ) : (
-        <div className="space-y-4">
-          {submissions.map((sub) => (
-            <div key={sub.id} className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold">Submission ID: {sub.id}</p>
-                  <p className="text-sm text-gray-600">Customer: {sub.customerId}</p>
-                  <p className="text-sm text-gray-600">ID Number: {sub.idNumber}</p>
-                  <p className="text-sm text-gray-600">Phone: {sub.phoneE164}</p>
-                  <p className="text-sm text-gray-600">Status: {sub.status}</p>
-                </div>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleDecision(sub.id, 'APPROVE')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => handleDecision(sub.id, 'REJECT')}
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
+      <div className="row mb-3">
+        <div className="col-md-4">
+          <div className="widget widget-stats bg-orange">
+            <div className="stats-icon">
+              <i className="fa fa-id-card"></i>
             </div>
-          ))}
+            <div className="stats-info">
+              <h4>PENDING REVIEW</h4>
+              <p>{submissions.length}</p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+
+      <Panel>
+        <PanelHeader>Pending KYC Reviews</PanelHeader>
+        <PanelBody className="p-0">
+          {loading ? (
+            <div className="p-4 text-center fw-semibold">Loading...</div>
+          ) : submissions.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">No pending KYC submissions</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped table-hover mb-0 align-middle">
+                <thead>
+                  <tr>
+                    <th>Submission ID</th>
+                    <th>Customer</th>
+                    <th>ID Number</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {submissions.map((sub) => (
+                    <tr key={sub.id}>
+                      <td className="fw-bold font-monospace">{sub.id}</td>
+                      <td className="fw-semibold">{sub.customerId}</td>
+                      <td>{sub.idNumber}</td>
+                      <td>{sub.phoneE164}</td>
+                      <td>
+                        <span className="badge bg-warning">{sub.status}</span>
+                      </td>
+                      <td className="text-end">
+                        <button
+                          className="btn btn-success btn-sm me-2"
+                          onClick={() => handleDecision(sub.id, 'APPROVE')}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDecision(sub.id, 'REJECT')}
+                        >
+                          Reject
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

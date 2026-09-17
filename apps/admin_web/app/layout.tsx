@@ -1,6 +1,12 @@
-export const metadata = {
+import type { Metadata } from 'next';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'react-perfect-scrollbar/dist/css/styles.css';
+import './globals.css';
+
+export const metadata: Metadata = {
   title: 'YOLE Admin',
-  description: 'YOLE Admin Portal',
+  description: 'YOLE Admin Portal — Color Admin default + teal',
 };
 
 export default function RootLayout({
@@ -10,6 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Official Color Admin v5.5.2 default theme (teal is the pack default $theme) */}
+        <link rel="stylesheet" href="/assets/css/default/app.min.css" />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -27,67 +27,35 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const pageTitle = pageTitles[pathname] || 'YOLE Admin';
+  const pageTitle =
+    pageTitles[pathname] ||
+    (pathname.startsWith('/dashboard/payroll/') ? 'Employer Detail' : 'YOLE Admin');
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
-    
     if (!currentUser) {
       router.push('/login');
       return;
     }
-
     if (!canAccessRoute(currentUser.role, pathname)) {
       router.push('/dashboard');
-      return;
     }
   }, [pathname, router]);
 
   return (
-    <div className="app">
-      <style jsx global>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-          background: #f5f5f5;
-          color: #2d353c;
-        }
-        .app {
-          display: flex;
-          min-height: 100vh;
-        }
-        .app-content {
-          flex: 1;
-          margin-left: 250px;
-          margin-top: 60px;
-          padding: 2rem;
-          min-height: calc(100vh - 60px);
-        }
-        .panel {
-          background: white;
-          border-radius: 0.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          margin-bottom: 1.5rem;
-        }
-        .panel-heading {
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid #e5e5e5;
-          font-weight: 600;
-          color: #2d353c;
-        }
-        .panel-body {
-          padding: 1.5rem;
-        }
-      `}</style>
-
-      <Sidebar />
+    <div className="app app-header-fixed app-sidebar-fixed">
       <Header pageTitle={pageTitle} />
-
+      <Sidebar />
       <div className="app-content">
+        <ol className="breadcrumb float-xl-end">
+          <li className="breadcrumb-item">
+            <a href="/dashboard">Home</a>
+          </li>
+          <li className="breadcrumb-item active">{pageTitle}</li>
+        </ol>
+        <h1 className="page-header">
+          {pageTitle} <small>YOLE operations</small>
+        </h1>
         {children}
       </div>
     </div>

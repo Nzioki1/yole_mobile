@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { api } from '@/lib/api';
+import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
 
 export default function AgentsPage() {
   const [agents, setAgents] = useState<any[]>([]);
@@ -20,13 +21,13 @@ export default function AgentsPage() {
   const loadAgents = async () => {
     try {
       const data = await api.listAgents();
-      setAgents(data);
+      setAgents(Array.isArray(data) ? data : data?.agents || []);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       await api.enrollAgent(formData);
@@ -40,68 +41,74 @@ export default function AgentsPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
+      <div className="mb-3">
+        <button className="btn btn-theme" onClick={() => setShowForm(!showForm)}>
           {showForm ? 'Cancel' : '+ Enroll Agent'}
         </button>
       </div>
 
       {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h2 className="text-xl font-bold mb-4">Enroll New Agent</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Phone (+243...)"
-              value={formData.phoneE164}
-              onChange={(e) => setFormData({ ...formData, phoneE164: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-            />
-            <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-              Enroll Agent
-            </button>
-          </form>
-        </div>
+        <Panel>
+          <PanelHeader>Enroll New Agent</PanelHeader>
+          <PanelBody>
+            <form onSubmit={handleSubmit} className="row g-3">
+              <div className="col-md-6">
+                <input className="form-control" placeholder="First Name" value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
+              </div>
+              <div className="col-md-6">
+                <input className="form-control" placeholder="Last Name" value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
+              </div>
+              <div className="col-md-6">
+                <input className="form-control" placeholder="Phone (+243...)" value={formData.phoneE164}
+                  onChange={(e) => setFormData({ ...formData, phoneE164: e.target.value })} required />
+              </div>
+              <div className="col-md-6">
+                <input className="form-control" type="email" placeholder="Email" value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+              </div>
+              <div className="col-12">
+                <button type="submit" className="btn btn-success">Enroll Agent</button>
+              </div>
+            </form>
+          </PanelBody>
+        </Panel>
       )}
 
-      <div className="grid gap-4">
-        {agents.map((agent) => (
-          <div key={agent.id} className="bg-white p-6 rounded-lg shadow">
-            <p className="font-semibold">{agent.firstName} {agent.lastName}</p>
-            <p className="text-sm text-gray-600">ID: {agent.id}</p>
-            <p className="text-sm text-gray-600">Phone: {agent.phoneE164}</p>
-            <p className="text-sm text-gray-600">Float Wallet: {agent.floatWalletId}</p>
-            <p className="text-sm text-gray-600">Status: {agent.status}</p>
+      <Panel>
+        <PanelHeader>{agents.length} Agents</PanelHeader>
+        <PanelBody className="p-0">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>ID</th>
+                  <th>Phone</th>
+                  <th>Float Wallet</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {agents.map((agent) => (
+                  <tr key={agent.id}>
+                    <td className="fw-semibold">{agent.firstName} {agent.lastName}</td>
+                    <td className="font-monospace small">{agent.id}</td>
+                    <td>{agent.phoneE164}</td>
+                    <td className="font-monospace small">{agent.floatWalletId}</td>
+                    <td>
+                      <span className={`badge ${agent.status === 'ACTIVE' ? 'bg-teal' : 'bg-warning'}`}>
+                        {agent.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </PanelBody>
+      </Panel>
     </div>
   );
 }

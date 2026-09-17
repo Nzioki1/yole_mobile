@@ -97,15 +97,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 32),
 
                         // Prominent Poste Finance Logo - Much larger and dominant
-                        Text(
-                          'Poste Finance',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 3.0,
-                            color: theme.textTheme.titleLarge?.color,
-                          ),
+                        Image.asset(
+                          'assets/brand/poste-finance-logo.png',
+                          height: 80,
+                          fit: BoxFit.contain,
                         ),
 
                         const SizedBox(height: 24),
@@ -150,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       theme.colorScheme.primary.withOpacity(0.3)),
                             ),
                             child: Text(
-                              'Demo login: kasee.demo@postefinance.com / Password1!',
+                              'Demo login: jp.kabila@gmail.com / Password1!',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,

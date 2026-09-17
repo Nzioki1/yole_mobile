@@ -125,15 +125,10 @@ class WelcomeScreen extends ConsumerWidget {
                         const SizedBox(height: 32),
 
                         // --- Poste Finance Logo ---
-                        Text(
-                          'Poste Finance',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 3.0,
-                            color: theme.textTheme.titleLarge?.color,
-                          ),
+                        Image.asset(
+                          'assets/brand/poste-finance-logo.png',
+                          height: 70,
+                          fit: BoxFit.contain,
                         ),
 
                         const SizedBox(height: 24),

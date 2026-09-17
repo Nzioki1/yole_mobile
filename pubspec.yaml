@@ -66,6 +66,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  
+  assets:
+    - assets/brand/
 
 flutter_native_splash:
   color: "#FFFFFF"

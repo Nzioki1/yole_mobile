@@ -102,11 +102,11 @@ const String kUniverseJson = r'''{
   "customers": [
     {
       "id": "cust_kasee",
-      "email": "kasee.demo@postefinance.com",
+      "email": "jp.kabila@gmail.com",
       "password": "Password1!",
-      "phoneE164": "+243990000001",
-      "firstName": "Kasee",
-      "lastName": "Demo",
+      "phoneE164": "+243990123456",
+      "firstName": "Jean-Paul",
+      "lastName": "Kabila",
       "segment": "OPEN",
       "status": "ACTIVE",
       "kycStatus": "APPROVED",
@@ -904,5 +904,4 @@ const String kUniverseJson = r'''{
       "createdAt": "2026-09-16T08:01:00Z"
     }
   ]
-}
-''';
+}''';

@@ -105,17 +105,12 @@ class SplashScreenFlutter extends ConsumerWidget {
                     durationMs: 800,
                     beginOffset: const Offset(0, 30),
                     child: Center(
-                      child: Text(
-                        'Poste Finance',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 4.0,
-                          color: isDark 
-                              ? Colors.white.withOpacity(0.95)
-                              : const Color(0xFF1a1a1a),
-                        ),
+                      child: Image.asset(
+                        isDark
+                            ? 'assets/brand/poste-finance-logo-light.png'
+                            : 'assets/brand/poste-finance-logo.png',
+                        height: 80,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ),

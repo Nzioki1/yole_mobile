@@ -210,7 +210,7 @@ flutter run -d <android-device-id> --dart-define=OFFLINE_DEMO=true
 
 Demo login (seeded customer `cust_kasee`):
 
-- Email: `kasee.demo@postefinance.com`
+- Email: `jp.kabila@gmail.com`
 - Password: `Password1!`
 
 Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory session state; restart resets to seed.
@@ -220,7 +220,7 @@ Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory s
 With `--dart-define=OFFLINE_DEMO=true` and core-api **stopped**:
 
 1. [ ] App title / splash / login show Poste Finance
-2. [ ] Login as `kasee.demo@postefinance.com` / `Password1!`
+2. [ ] Login as `jp.kabila@gmail.com` / `Password1!`
 3. [ ] Home shows CDF + USD balances (not empty)
 4. [ ] Home recent / History shows seeded payments
 5. [ ] Pay/Send completes and updates balance + history this session

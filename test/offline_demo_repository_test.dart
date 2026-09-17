@@ -12,7 +12,7 @@ void main() {
     
     // Login with seeded kasee credentials from universe.json
     final loginResult = repo.login(
-      email: 'kasee.demo@postefinance.com',
+      email: 'jp.kabila@gmail.com',
       password: 'Password1!',
     );
     
@@ -42,7 +42,7 @@ void main() {
     
     // Login as kasee
     repo.login(
-      email: 'kasee.demo@postefinance.com',
+      email: 'jp.kabila@gmail.com',
       password: 'Password1!',
     );
     
@@ -96,7 +96,7 @@ void main() {
     
     // Login and make a payment
     repo1.login(
-      email: 'kasee.demo@postefinance.com',
+      email: 'jp.kabila@gmail.com',
       password: 'Password1!',
     );
     
@@ -121,7 +121,7 @@ void main() {
     
     // Login again with fresh repo
     repo2.login(
-      email: 'kasee.demo@postefinance.com',
+      email: 'jp.kabila@gmail.com',
       password: 'Password1!',
     );
     
@@ -143,7 +143,7 @@ void main() {
     final repo = OfflineDemoRepository.createFresh();
 
     final login = repo.login(
-      email: 'kasee.demo@postefinance.com',
+      email: 'jp.kabila@gmail.com',
       password: 'Password1!',
     );
     expect(login['accessToken'], isNotEmpty);

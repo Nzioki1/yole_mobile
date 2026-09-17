@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
+import '../widgets/pin_confirm_sheet.dart';
 
 /// Payment quote review and confirmation screen
 class PaymentQuoteScreen extends StatefulWidget {
@@ -190,9 +191,49 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
   }
 
   Future<void> _handleConfirm(String paymentId) async {
+    // Check if PIN is set
+    final hasPin = await _api.hasPin();
+
+    if (!hasPin) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please set a transaction PIN first. Go to Profile → Settings.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Show PIN confirmation sheet
+    if (!mounted) return;
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Payment',
+      message: 'Enter your PIN to confirm this payment',
+    );
+
+    if (pin == null || !mounted) return;
+
     setState(() => _confirming = true);
 
     try {
+      // Verify PIN
+      final pinValid = await _api.verifyPin(pin: pin);
+      if (!pinValid) {
+        setState(() => _confirming = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid PIN'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       final result = await _api.confirmPayment(paymentId: paymentId);
 
       if (mounted) {

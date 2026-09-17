@@ -139,6 +139,49 @@ class CoreApiService {
     }
   }
 
+  /// PIN: Check if user has PIN set
+  Future<bool> hasPin() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/auth/pin/has'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['hasPin'] == true;
+    } else {
+      return false;
+    }
+  }
+
+  /// PIN: Set transaction PIN
+  Future<void> setPin({required String pin}) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/auth/pin/set'),
+      headers: _getHeaders(),
+      body: jsonEncode({'pin': pin}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Set PIN failed: ${response.body}');
+    }
+  }
+
+  /// PIN: Verify transaction PIN
+  Future<bool> verifyPin({required String pin}) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/auth/pin/verify'),
+      headers: _getHeaders(),
+      body: jsonEncode({'pin': pin}),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     final response = await _client.get(

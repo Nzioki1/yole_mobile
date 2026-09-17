@@ -24,6 +24,8 @@ export interface AuthResult {
 
 @Injectable()
 export class IdentityService {
+  private pinStore = new Map<string, string>(); // customerId -> hashed PIN
+
   constructor(
     private customersService: CustomersService,
     private jwtService: JwtService,
@@ -106,5 +108,30 @@ export class IdentityService {
 
   async validateCustomer(customerId: string) {
     return await this.customersService.findById(customerId);
+  }
+
+  async setPin(customerId: string, pin: string) {
+    if (!/^\d{4,6}$/.test(pin)) {
+      throw new Error('PIN must be 4-6 digits');
+    }
+    const hashedPin = await bcrypt.hash(pin, 10);
+    this.pinStore.set(customerId, hashedPin);
+    return { success: true };
+  }
+
+  async verifyPin(customerId: string, pin: string) {
+    const hashedPin = this.pinStore.get(customerId);
+    if (!hashedPin) {
+      throw new Error('No PIN set for this customer');
+    }
+    const isValid = await bcrypt.compare(pin, hashedPin);
+    if (!isValid) {
+      throw new Error('Invalid PIN');
+    }
+    return { success: true };
+  }
+
+  async hasPin(customerId: string) {
+    return { hasPin: this.pinStore.has(customerId) };
   }
 }

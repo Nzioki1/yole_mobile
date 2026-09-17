@@ -1,6 +1,7 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards, Req } from '@nestjs/common';
 import { IdentityService, RegisterInput, LoginInput } from './identity.service';
 import { OtpService } from './otp.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -35,5 +36,28 @@ export class AuthController {
       return { verified: false };
     }
     return { verified: true };
+  }
+
+  @Post('pin/set')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async setPin(@Req() req: any, @Body() body: { pin: string }) {
+    const customerId = req.user.sub;
+    return this.identityService.setPin(customerId, body.pin);
+  }
+
+  @Post('pin/verify')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async verifyPin(@Req() req: any, @Body() body: { pin: string }) {
+    const customerId = req.user.sub;
+    return this.identityService.verifyPin(customerId, body.pin);
+  }
+
+  @Get('pin/has')
+  @UseGuards(JwtAuthGuard)
+  async hasPin(@Req() req: any) {
+    const customerId = req.user.sub;
+    return this.identityService.hasPin(customerId);
   }
 }

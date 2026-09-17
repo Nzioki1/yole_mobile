@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/api_providers.dart';
 import '../services/core_api_service.dart';
+import '../widgets/pin_confirm_sheet.dart';
 
 /// Fund Wallet Screen - Add money via MNO or Bank
 class FundWalletScreen extends ConsumerStatefulWidget {
@@ -79,10 +80,37 @@ class _FundWalletScreenState extends ConsumerState<FundWalletScreen> {
   Future<void> _confirmPayment() async {
     if (_quote == null) return;
 
+    // Check if PIN is required (for inbound funding, PIN is optional but we'll require it for consistency)
+    final api = ref.read(coreApiServiceProvider);
+    final hasPin = await api.hasPin();
+
+    if (!hasPin) {
+      // First time - prompt to set PIN
+      _showSetPinDialog();
+      return;
+    }
+
+    // Show PIN confirmation sheet
+    if (!mounted) return;
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Funding',
+      message: 'Enter your PIN to fund your wallet',
+    );
+
+    if (pin == null || !mounted) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final api = ref.read(coreApiServiceProvider);
+      // Verify PIN
+      final pinValid = await api.verifyPin(pin: pin);
+      if (!pinValid) {
+        setState(() => _isLoading = false);
+        _showError('Invalid PIN');
+        return;
+      }
+
       final idempotencyKey = const Uuid().v4();
 
       final result = await api.confirmPayment(
@@ -106,6 +134,85 @@ class _FundWalletScreenState extends ConsumerState<FundWalletScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       _showError('Failed to confirm payment: $e');
+    }
+  }
+
+  Future<void> _showSetPinDialog() async {
+    final pinController = TextEditingController();
+    final confirmPinController = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Set Transaction PIN'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please set a 4-6 digit PIN for secure transactions'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'PIN',
+                hintText: '4-6 digits',
+              ),
+            ),
+            TextField(
+              controller: confirmPinController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirm PIN',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (pinController.text != confirmPinController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('PINs do not match')),
+                );
+                return;
+              }
+              if (pinController.text.length < 4) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('PIN must be at least 4 digits')),
+                );
+                return;
+              }
+              try {
+                final api = ref.read(coreApiServiceProvider);
+                await api.setPin(pin: pinController.text);
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to set PIN: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Set PIN'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      // PIN set successfully, retry confirm
+      _confirmPayment();
     }
   }
 

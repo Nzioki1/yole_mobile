@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../providers/api_providers.dart';
 import '../services/core_api_service.dart';
+import '../widgets/pin_confirm_sheet.dart';
 
 /// Withdraw Screen - Send money out to MNO or Bank
 class WithdrawScreen extends ConsumerStatefulWidget {
@@ -129,10 +130,36 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
   Future<void> _confirmPayment() async {
     if (_quote == null) return;
 
+    // Check if PIN is set
+    final api = ref.read(coreApiServiceProvider);
+    final hasPin = await api.hasPin();
+
+    if (!hasPin) {
+      _showError('Please set a transaction PIN first. Go to Profile → Settings.');
+      return;
+    }
+
+    // Show PIN confirmation sheet
+    if (!mounted) return;
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Withdrawal',
+      message: 'Enter your PIN to withdraw funds',
+    );
+
+    if (pin == null || !mounted) return;
+
     setState(() => _isLoading = true);
 
     try {
-      final api = ref.read(coreApiServiceProvider);
+      // Verify PIN
+      final pinValid = await api.verifyPin(pin: pin);
+      if (!pinValid) {
+        setState(() => _isLoading = false);
+        _showError('Invalid PIN');
+        return;
+      }
+
       final idempotencyKey = const Uuid().v4();
 
       final result = await api.confirmPayment(

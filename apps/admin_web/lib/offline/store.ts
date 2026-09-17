@@ -374,6 +374,89 @@ export class OfflineDemoStore {
     return feeForAdmin(row);
   }
 
+  proposeFeeRule(data: {
+    paymentType: string;
+    feePercent: number;
+    minFeeMinor: number;
+    maxFeeMinor: number;
+    currency?: string;
+    effectiveFrom?: string;
+    summary?: string;
+    makerStaffId?: string;
+    supersedesId?: string;
+  }) {
+    const id = `fee_demo_${Date.now()}`;
+    const effectiveFrom = data.effectiveFrom || new Date().toISOString().slice(0, 10);
+    const paymentType = String(data.paymentType || 'W2W');
+    const row: FeeLimit = {
+      id,
+      kind: 'FEE',
+      paymentType,
+      feePercent: Number(data.feePercent ?? 0),
+      minFeeMinor: Number(data.minFeeMinor ?? 0),
+      maxFeeMinor: Number(data.maxFeeMinor ?? 0),
+      currency: String(data.currency || 'USD'),
+      effectiveFrom,
+      status: 'PENDING_APPROVAL',
+    };
+    this.u.feeLimits.push(row);
+    const approval: PendingApproval = {
+      id: `apr_fee_${Date.now()}`,
+      type: 'FEE_CHANGE',
+      targetId: id,
+      summary:
+        data.summary ||
+        `Propose ${paymentType} fee ${row.feePercent}% effective ${effectiveFrom}` +
+          (data.supersedesId ? ` (supersedes ${data.supersedesId})` : ''),
+      makerStaffId: data.makerStaffId || 'staff_admin',
+      status: 'PENDING',
+      createdAt: nowIso(),
+    };
+    this.u.pendingApprovals.push(approval);
+    return { fee: feeForAdmin(row), approval };
+  }
+
+  proposeLimitRule(data: {
+    limitType: string;
+    currency: string;
+    dailyLimitMinor: number;
+    monthlyLimitMinor: number;
+    effectiveFrom?: string;
+    summary?: string;
+    makerStaffId?: string;
+    supersedesId?: string;
+  }) {
+    const id = `lim_demo_${Date.now()}`;
+    const effectiveFrom = data.effectiveFrom || new Date().toISOString().slice(0, 10);
+    const limitType = String(data.limitType || 'CUSTOMER_DAILY');
+    const currency = String(data.currency || 'USD');
+    const row: FeeLimit = {
+      id,
+      kind: 'LIMIT',
+      limitType,
+      currency,
+      dailyLimitMinor: Number(data.dailyLimitMinor ?? 0),
+      monthlyLimitMinor: Number(data.monthlyLimitMinor ?? 0),
+      effectiveFrom,
+      status: 'PENDING_APPROVAL',
+    };
+    this.u.feeLimits.push(row);
+    const approval: PendingApproval = {
+      id: `apr_lim_${Date.now()}`,
+      type: 'LIMIT_CHANGE',
+      targetId: id,
+      summary:
+        data.summary ||
+        `Propose ${limitType} ${currency} limits effective ${effectiveFrom}` +
+          (data.supersedesId ? ` (supersedes ${data.supersedesId})` : ''),
+      makerStaffId: data.makerStaffId || 'staff_admin',
+      status: 'PENDING',
+      createdAt: nowIso(),
+    };
+    this.u.pendingApprovals.push(approval);
+    return { limit: limitForAdmin(row), approval };
+  }
+
   listLimitConfigs() {
     return this.u.feeLimits.filter((f) => f.kind === 'LIMIT').map(limitForAdmin);
   }
@@ -609,6 +692,28 @@ export class OfflineDemoStore {
           pendingFee.status = 'ACTIVE';
         } else {
           pendingFee.status = 'REJECTED';
+        }
+      }
+    }
+
+    if (apr.type === 'LIMIT_CHANGE') {
+      const pendingLimit = this.u.feeLimits.find((f) => f.id === apr.targetId);
+      if (pendingLimit) {
+        if (approved) {
+          for (const f of this.u.feeLimits) {
+            if (
+              f.kind === 'LIMIT' &&
+              f.limitType === pendingLimit.limitType &&
+              f.currency === pendingLimit.currency &&
+              f.id !== pendingLimit.id &&
+              f.status === 'ACTIVE'
+            ) {
+              f.status = 'SUPERSEDED';
+            }
+          }
+          pendingLimit.status = 'ACTIVE';
+        } else {
+          pendingLimit.status = 'REJECTED';
         }
       }
     }

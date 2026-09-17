@@ -6,9 +6,13 @@ class PaymentFormScreen extends StatefulWidget {
   const PaymentFormScreen({
     super.key,
     required this.railType,
+    this.prefillDestination,
+    this.prefillNote,
   });
 
   final String railType; // W2W, MNO_OUT, BANK_OUT, BILL, AIRTIME
+  final String? prefillDestination; // Phone number or wallet ID
+  final String? prefillNote; // Optional note/recipient name
 
   @override
   State<PaymentFormScreen> createState() => _PaymentFormScreenState();
@@ -29,6 +33,11 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
   void initState() {
     super.initState();
     _api.init();
+    
+    // Prefill from widget arguments if provided
+    if (widget.prefillDestination != null) {
+      _destinationController.text = widget.prefillDestination!;
+    }
   }
 
   @override

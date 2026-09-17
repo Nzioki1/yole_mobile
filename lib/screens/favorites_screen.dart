@@ -97,13 +97,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                                   'recipientCountry': c.countryCode,
                                 });
                               } else {
-                                // Favorites is a tab, navigate to send money screen
+                                // Favorites is a tab, navigate to payment picker
                                 Navigator.of(context).pushNamed(
-                                  '/send-money-enter-details',
+                                  '/payment/picker',
                                   arguments: {
-                                    'recipient': c.label,
-                                    'recipientPhone': selectedPhone,
-                                    'recipientCountry': c.countryCode,
+                                    'destination': selectedPhone,
+                                    'note': c.label,
                                   },
                                 );
                               }
@@ -118,13 +117,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                                 'recipientCountry': c.countryCode,
                               });
                             } else {
-                              // Favorites is a tab, navigate to send money screen
+                              // Favorites is a tab, navigate to payment picker
                               Navigator.of(context).pushNamed(
-                                '/send-money-enter-details',
+                                '/payment/picker',
                                 arguments: {
-                                  'recipient': c.label,
-                                  'recipientPhone': c.phones.first,
-                                  'recipientCountry': c.countryCode,
+                                  'destination': c.phones.first,
+                                  'note': c.label,
                                 },
                               );
                             }
@@ -151,13 +149,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                                   'recipientCountry': c.countryCode,
                                 });
                               } else {
-                                // Favorites is a tab, navigate to send money screen
+                                // Favorites is a tab, navigate to payment picker
                                 Navigator.of(context).pushNamed(
-                                  '/send-money-enter-details',
+                                  '/payment/picker',
                                   arguments: {
-                                    'recipient': c.label,
-                                    'recipientPhone': selectedPhone,
-                                    'recipientCountry': c.countryCode,
+                                    'destination': selectedPhone,
+                                    'note': c.label,
                                   },
                                 );
                               }
@@ -172,13 +169,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> {
                                 'recipientCountry': c.countryCode,
                               });
                             } else {
-                              // Favorites is a tab, navigate to send money screen
+                              // Favorites is a tab, navigate to payment picker
                               Navigator.of(context).pushNamed(
-                                '/send-money-enter-details',
+                                '/payment/picker',
                                 arguments: {
-                                  'recipient': c.label,
-                                  'recipientPhone': c.phones.first,
-                                  'recipientCountry': c.countryCode,
+                                  'destination': c.phones.first,
+                                  'note': c.label,
                                 },
                               );
                             }
@@ -688,13 +684,12 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                                 'recipientCountry': widget.contact.countryCode,
                               });
                             } else {
-                              // Favorites is a tab, navigate to send money screen
+                              // Favorites is a tab, navigate to payment picker
                               Navigator.of(screenCtx).pushNamed(
-                                '/send-money-enter-details',
+                                '/payment/picker',
                                 arguments: {
-                                  'recipient': widget.contact.label,
-                                  'recipientPhone': selectedPhone,
-                                  'recipientCountry': widget.contact.countryCode,
+                                  'destination': selectedPhone,
+                                  'note': widget.contact.label,
                                 },
                               );
                             }
@@ -708,13 +703,12 @@ class _ContactDetailsDialogState extends State<_ContactDetailsDialog> {
                               'recipientCountry': widget.contact.countryCode,
                             });
                           } else {
-                            // Favorites is a tab, navigate to send money screen
+                            // Favorites is a tab, navigate to payment picker
                             Navigator.of(screenCtx).pushNamed(
-                              '/send-money-enter-details',
+                              '/payment/picker',
                               arguments: {
-                                'recipient': widget.contact.label,
-                                'recipientPhone': widget.contact.phones.first,
-                                'recipientCountry': widget.contact.countryCode,
+                                'destination': widget.contact.phones.first,
+                                'note': widget.contact.label,
                               },
                             );
                           }

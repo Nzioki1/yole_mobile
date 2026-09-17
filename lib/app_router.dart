@@ -151,28 +151,53 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const PaymentRailPickerScreen());
 
       case '/payment/w2w':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const PaymentFormScreen(railType: 'W2W'),
+          builder: (_) => PaymentFormScreen(
+            railType: 'W2W',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
         );
 
       case '/payment/mno':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const PaymentFormScreen(railType: 'MNO_OUT'),
+          builder: (_) => PaymentFormScreen(
+            railType: 'MNO_OUT',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
         );
 
       case '/payment/bank':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const PaymentFormScreen(railType: 'BANK_OUT'),
+          builder: (_) => PaymentFormScreen(
+            railType: 'BANK_OUT',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
         );
 
       case '/payment/bill':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const PaymentFormScreen(railType: 'BILL'),
+          builder: (_) => PaymentFormScreen(
+            railType: 'BILL',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
         );
 
       case '/payment/airtime':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => const PaymentFormScreen(railType: 'AIRTIME'),
+          builder: (_) => PaymentFormScreen(
+            railType: 'AIRTIME',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
         );
 
       case '/payment/quote':

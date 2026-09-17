@@ -182,6 +182,20 @@ class CoreApiService {
     }
   }
 
+  /// Limits: Get customer limits
+  Future<Map<String, dynamic>> getMyLimits() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/me/limits'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Get limits failed: ${response.body}');
+    }
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     final response = await _client.get(

@@ -96,6 +96,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // Limits Section
+                const _LimitsCard(),
+                const SizedBox(height: 24),
+
                 // Settings Section
                 _SectionHeader(title: 'Settings', theme: theme),
                 _ProfileTile(
@@ -1402,6 +1406,266 @@ class _SectionHeader extends StatelessWidget {
           letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+}
+
+// Limits Card Widget
+class _LimitsCard extends ConsumerStatefulWidget {
+  const _LimitsCard();
+
+  @override
+  ConsumerState<_LimitsCard> createState() => _LimitsCardState();
+}
+
+class _LimitsCardState extends ConsumerState<_LimitsCard> {
+  Map<String, dynamic>? _limits;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLimits();
+  }
+
+  Future<void> _loadLimits() async {
+    try {
+      final api = ref.read(coreApiServiceProvider);
+      final limits = await api.getMyLimits();
+      if (mounted) {
+        setState(() {
+          _limits = limits;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (_loading) {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('Loading limits...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_error != null || _limits == null) {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.orange),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Could not load limits',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final kycTier = _limits!['kycTier'] as String?;
+    final limitsList = _limits!['limits'] as List<dynamic>?;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.account_balance_wallet, color: theme.primaryColor, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Transaction Limits',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            if (kycTier != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  kycTier.replaceAll('_', ' '),
+                  style: TextStyle(
+                    color: theme.primaryColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            if (limitsList != null)
+              ...limitsList.map((limit) {
+                final currency = limit['currency'] as String?;
+                final dailyLimitMinor = int.tryParse(limit['dailyLimitMinor']?.toString() ?? '0') ?? 0;
+                final dailyUsedMinor = int.tryParse(limit['dailyUsedMinor']?.toString() ?? '0') ?? 0;
+                final dailyRemainingMinor = int.tryParse(limit['dailyRemainingMinor']?.toString() ?? '0') ?? 0;
+                final monthlyLimitMinor = int.tryParse(limit['monthlyLimitMinor']?.toString() ?? '0') ?? 0;
+                final monthlyUsedMinor = int.tryParse(limit['monthlyUsedMinor']?.toString() ?? '0') ?? 0;
+                final monthlyRemainingMinor = int.tryParse(limit['monthlyRemainingMinor']?.toString() ?? '0') ?? 0;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: _LimitItem(
+                    currency: currency ?? 'USD',
+                    dailyLimit: dailyLimitMinor / 100,
+                    dailyUsed: dailyUsedMinor / 100,
+                    dailyRemaining: dailyRemainingMinor / 100,
+                    monthlyLimit: monthlyLimitMinor / 100,
+                    monthlyUsed: monthlyUsedMinor / 100,
+                    monthlyRemaining: monthlyRemainingMinor / 100,
+                  ),
+                );
+              }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LimitItem extends StatelessWidget {
+  final String currency;
+  final double dailyLimit;
+  final double dailyUsed;
+  final double dailyRemaining;
+  final double monthlyLimit;
+  final double monthlyUsed;
+  final double monthlyRemaining;
+
+  const _LimitItem({
+    required this.currency,
+    required this.dailyLimit,
+    required this.dailyUsed,
+    required this.dailyRemaining,
+    required this.monthlyLimit,
+    required this.monthlyUsed,
+    required this.monthlyRemaining,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$currency Limits',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _LimitRow(
+          label: 'Daily',
+          remaining: dailyRemaining,
+          limit: dailyLimit,
+          currencySymbol: currencySymbol,
+        ),
+        const SizedBox(height: 8),
+        _LimitRow(
+          label: 'Monthly',
+          remaining: monthlyRemaining,
+          limit: monthlyLimit,
+          currencySymbol: currencySymbol,
+        ),
+      ],
+    );
+  }
+}
+
+class _LimitRow extends StatelessWidget {
+  final String label;
+  final double remaining;
+  final double limit;
+  final String currencySymbol;
+
+  const _LimitRow({
+    required this.label,
+    required this.remaining,
+    required this.limit,
+    required this.currencySymbol,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final percentage = limit > 0 ? (remaining / limit) * 100 : 0.0;
+    final color = percentage > 50 ? Colors.green : percentage > 20 ? Colors.orange : Colors.red;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            Text(
+              '$currencySymbol${remaining.toStringAsFixed(2)} / $currencySymbol${limit.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: limit > 0 ? remaining / limit : 0,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 6,
+          ),
+        ),
+      ],
     );
   }
 }

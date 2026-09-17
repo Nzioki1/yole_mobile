@@ -13,3 +13,16 @@ export class WalletsController {
     return this.walletsService.getCustomerWallets(customerId);
   }
 }
+
+// Add limits endpoint to v1 root
+@Controller('v1/me')
+@UseGuards(JwtAuthGuard)
+export class MeController {
+  constructor(private walletsService: WalletsService) {}
+
+  @Get('limits')
+  async getMyLimits(@Req() req: any) {
+    const customerId = req.user.sub;
+    return this.walletsService.getCustomerLimits(customerId);
+  }
+}

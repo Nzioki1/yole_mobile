@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CustomersService } from '../customers/customers.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface RegisterInput {
   email: string;
@@ -29,6 +30,7 @@ export class IdentityService {
   constructor(
     private customersService: CustomersService,
     private jwtService: JwtService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async register(input: RegisterInput): Promise<AuthResult> {
@@ -49,6 +51,9 @@ export class IdentityService {
       lastName: input.lastName,
       passwordHash,
     });
+
+    // Send welcome notification
+    await this.notificationsService.seedWelcomeNotification(customer.id);
 
     // Generate JWT
     const accessToken = this.jwtService.sign({

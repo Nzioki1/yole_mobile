@@ -110,7 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header with greeting and profile
+                // Header with greeting, bell, and profile
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -123,6 +123,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Notifications bell
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pushNamed(RouteNames.notifications),
+                      icon: Icon(
+                        Icons.notifications_outlined,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(

@@ -7,10 +7,12 @@ import { JwtStrategy } from './jwt.strategy';
 import { OtpService } from './otp.service';
 import { ConsoleOtpSender } from './otp.port';
 import { CustomersModule } from '../customers/customers.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     CustomersModule,
+    NotificationsModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',

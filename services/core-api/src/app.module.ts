@@ -14,6 +14,7 @@ import { CardsModule } from './modules/cards/cards.module';
 import { RemittanceModule } from './modules/remittance/remittance.module';
 import { FxModule } from './modules/fx/fx.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { WalletsModule } from './modules/wallets/wallets.module';
     RemittanceModule,
     FxModule,
     WalletsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [],

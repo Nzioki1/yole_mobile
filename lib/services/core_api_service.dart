@@ -196,6 +196,53 @@ class CoreApiService {
     }
   }
 
+  /// Notifications: Get all notifications
+  Future<Map<String, dynamic>> getNotifications() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/notifications'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to get notifications: ${response.body}');
+    }
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  /// Notifications: Get unread count
+  Future<int> getUnreadNotificationsCount() async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/notifications/unread-count'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to get unread count: ${response.body}');
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['count'] as int? ?? 0;
+  }
+
+  /// Notifications: Mark notification as read
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/notifications/$notificationId/read'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark notification as read: ${response.body}');
+    }
+  }
+
+  /// Notifications: Mark all notifications as read
+  Future<void> markAllNotificationsAsRead() async {
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/notifications/mark-all-read'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark all as read: ${response.body}');
+    }
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     final response = await _client.get(

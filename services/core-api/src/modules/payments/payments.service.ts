@@ -4,6 +4,7 @@ import { InMemoryWalletStore } from '../../common/stores/wallet.store';
 import { CurrencyCode } from '../../common/stores/types';
 import { LedgerService } from '../ledger/ledger.service';
 import { MockMnoAdapter, MockBankAdapter, MockBillsAdapter } from './payment-adapter.port';
+import { NotificationsService } from '../notifications/notifications.service';
 
 interface QuoteInput {
   customerId: string;
@@ -28,6 +29,7 @@ export class PaymentsService {
     private paymentStore: InMemoryPaymentStore,
     private walletStore: InMemoryWalletStore,
     private ledgerService: LedgerService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async quote(input: QuoteInput) {
@@ -378,6 +380,20 @@ export class PaymentsService {
       }
 
       const updated = await this.paymentStore.findById(payment.id);
+      
+      // Emit notification on successful payment
+      if (updated && updated.status === 'POSTED') {
+        const typeLabel = this.getPaymentTypeLabel(updated.type);
+        const amountFormatted = this.formatAmount(updated.amountMinor, updated.currency);
+        await this.notificationsService.addNotification(
+          updated.customerId,
+          'payment',
+          `${typeLabel} completed`,
+          `Your ${typeLabel.toLowerCase()} of ${amountFormatted} was successful.`,
+          { paymentId: updated.id },
+        );
+      }
+      
       return {
         paymentId: updated!.id,
         status: updated!.status,
@@ -419,5 +435,26 @@ export class PaymentsService {
     const percentFee = amountMinor / 100n;
     const minFee = 100n;
     return percentFee > minFee ? percentFee : minFee;
+  }
+
+  private getPaymentTypeLabel(type: PaymentType): string {
+    const labels: Record<PaymentType, string> = {
+      W2W: 'Transfer',
+      MNO_IN: 'Mobile Money Deposit',
+      MNO_OUT: 'Mobile Money Withdrawal',
+      BANK_IN: 'Bank Deposit',
+      BANK_OUT: 'Bank Withdrawal',
+      BILL_PAY: 'Bill Payment',
+      AIRTIME: 'Airtime Purchase',
+    };
+    return labels[type] || 'Payment';
+  }
+
+  private formatAmount(amountMinor: bigint, currency: CurrencyCode): string {
+    const amount = Number(amountMinor) / 100;
+    if (currency === 'CDF') {
+      return `FC ${amount.toFixed(2)}`;
+    }
+    return `$${amount.toFixed(2)}`;
   }
 }

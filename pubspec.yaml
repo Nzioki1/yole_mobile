@@ -47,6 +47,9 @@ dependencies:
   # UUID for idempotency keys
   uuid: ^4.5.1
   
+  # Time formatting for notifications
+  timeago: ^3.7.0
+  
   # SVG rendering for pixel-perfect logos
   flutter_svg: ^2.0.9
   

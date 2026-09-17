@@ -16,14 +16,14 @@ export default function ExportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'yole-demo-export.json';
+      a.download = 'poste-finance-demo-export.json';
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
       setMeta({
         exportedAt: pack.exportedAt,
-        filename: pack.filename || 'yole-demo-export.json',
+        filename: pack.filename || 'poste-finance-demo-export.json',
         customers: pack.customers?.length,
         wallets: pack.wallets?.length,
         loans: pack.loans?.length,
@@ -47,7 +47,7 @@ export default function ExportPage() {
             loans, payments, journals, cases, remittances, cards).
           </p>
           <button className="btn btn-theme" disabled={busy} onClick={download}>
-            {busy ? 'Building...' : 'Download yole-demo-export.json'}
+            {busy ? 'Building...' : 'Download poste-finance-demo-export.json'}
           </button>
           {meta && (
             <div className="mt-3">

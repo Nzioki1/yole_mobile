@@ -62,11 +62,11 @@ lsof -iTCP:3000 -sTCP:LISTEN || echo "OK: nothing on :3000"
 
 # 2) Admin
 cd apps/admin_web && pnpm install && pnpm dev
-# http://localhost:3001 — login admin@yole.com / Password1!
+# http://localhost:3001 — login admin@postefinance.com / Password1!
 
 # 3) Customer (repo root)
 flutter run -d chrome --dart-define=OFFLINE_DEMO=true
-# kasee.demo@yole.com or amina.payroll@yole.com / Password1!
+# kasee.demo@postefinance.com or amina.payroll@postefinance.com / Password1!
 
 # 4) Agent
 cd apps/agent_mobile
@@ -136,8 +136,8 @@ flutter run -d chrome --dart-define=OFFLINE_DEMO=true
 
 | App | Credential |
 | --- | --- |
-| Admin | `admin@yole.com` / `Password1!` (also ops/support/finance @yole.com) |
-| Customer | `kasee.demo@yole.com` / `Password1!` (`cust_kasee`); `amina.payroll@yole.com` / `Password1!` (`cust_amina`) |
+| Admin | `admin@postefinance.com` / `Password1!` (also ops/support/finance @postefinance.com) |
+| Customer | `kasee.demo@postefinance.com` / `Password1!` (`cust_kasee`); `amina.payroll@postefinance.com` / `Password1!` (`cust_amina`) |
 | Agent | Agent ID **`agent-001`** (not `agent_1`) |
 | OTP | Always `123456` when offline |
 

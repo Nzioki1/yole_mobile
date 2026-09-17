@@ -63,25 +63,47 @@ class _CardsScreenState extends State<CardsScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadCards,
-              child: _cards.isEmpty
-                  ? _buildEmptyState(theme)
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _cards.length,
-                      itemBuilder: (context, index) {
-                        final card = _cards[index];
-                        return _CardTile(
-                          card: card,
-                          onTap: () => _navigateToCardDetail(card['id']),
-                          theme: theme,
-                        );
-                      },
-                    ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Material(
+            color: Colors.amber.shade700,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Text(
+                'MOCK — not Visa/Mastercard certified',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _loadCards,
+                    child: _cards.isEmpty
+                        ? _buildEmptyState(theme)
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _cards.length,
+                            itemBuilder: (context, index) {
+                              final card = _cards[index];
+                              return _CardTile(
+                                card: card,
+                                onTap: () => _navigateToCardDetail(card['id']),
+                                theme: theme,
+                              );
+                            },
+                          ),
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToIssueCard,
         icon: const Icon(Icons.add_card),

@@ -1,6 +1,7 @@
 import '../models/api/auth_response.dart';
 import '../providers/auth_provider.dart';
 import 'core_api_service.dart';
+import 'offline_demo_repository.dart';
 import 'storage_service.dart';
 
 /// Authentication service using CoreApiService (mock NestJS backend)
@@ -14,11 +15,20 @@ class CoreAuthService implements AuthServiceInterface {
   })  : _api = api,
         _storage = storage;
 
+  static const bool _offlineDemo =
+      bool.fromEnvironment('OFFLINE_DEMO', defaultValue: false);
+
   /// Login user
   @override
   Future<AuthResponse> login(String email, String password) async {
     try {
-      final response = await _api.login(email: email, password: password);
+      // Offline demo: authenticate against shared universe seed — no HTTP.
+      final response = _offlineDemo
+          ? OfflineDemoRepository.instance.login(email: email, password: password)
+          : await _api.login(email: email, password: password);
+      if (_offlineDemo) {
+        await _api.setAccessToken(response['accessToken'] as String);
+      }
       
       // CoreApiService already sets the token internally
       // Extract user data from response
@@ -67,13 +77,25 @@ class CoreAuthService implements AuthServiceInterface {
     required String country,
   }) async {
     try {
-      final response = await _api.register(
-        email: email,
-        password: password,
-        firstName: name,
-        lastName: surname,
-        phoneE164: null, // Optional for mock backend
-      );
+      final Map<String, dynamic> response;
+      if (_offlineDemo) {
+        response = OfflineDemoRepository.instance.register(
+          email: email,
+          password: password,
+          firstName: name,
+          lastName: surname,
+          phoneE164: null,
+        );
+        await _api.setAccessToken(response['accessToken'] as String);
+      } else {
+        response = await _api.register(
+          email: email,
+          password: password,
+          firstName: name,
+          lastName: surname,
+          phoneE164: null, // Optional for mock backend
+        );
+      }
       
       // CoreApiService already sets the token internally
       // Extract user data from response
@@ -114,6 +136,9 @@ class CoreAuthService implements AuthServiceInterface {
   /// Logout user
   @override
   Future<void> logout() async {
+    if (_offlineDemo) {
+      OfflineDemoRepository.instance.clearSession();
+    }
     await _api.clearAccessToken();
     await _storage.clearTokens();
     await _storage.deleteUserProfile();

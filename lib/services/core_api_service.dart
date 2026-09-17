@@ -2,9 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
+import 'offline_demo_repository.dart';
 
 /// Core API Service for YOLE NestJS backend
 class CoreApiService {
+  /// Offline demo gate — set via `--dart-define=OFFLINE_DEMO=true`.
+  static const bool offlineDemo =
+      bool.fromEnvironment('OFFLINE_DEMO', defaultValue: false);
+
+  OfflineDemoRepository get _offline => OfflineDemoRepository.instance;
+
   // Configurable via --dart-define
   static const String defaultBaseUrl = 'http://10.0.2.2:3000'; // Android emulator
   // For iOS simulator: http://localhost:3000
@@ -35,6 +42,9 @@ class CoreApiService {
 
   /// Clear access token
   Future<void> clearAccessToken() async {
+    if (offlineDemo) {
+      _offline.clearSession();
+    }
     _accessToken = null;
     await _storage.delete(key: 'access_token');
   }
@@ -61,6 +71,17 @@ class CoreApiService {
     required String lastName,
     String? phoneE164,
   }) async {
+    if (offlineDemo) {
+      final data = _offline.register(
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+        phoneE164: phoneE164,
+      );
+      await setAccessToken(data['accessToken'] as String);
+      return data;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/register'),
       headers: _getHeaders(includeAuth: false),
@@ -87,6 +108,11 @@ class CoreApiService {
     required String email,
     required String password,
   }) async {
+    if (offlineDemo) {
+      final data = _offline.login(email: email, password: password);
+      await setAccessToken(data['accessToken'] as String);
+      return data;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/login'),
       headers: _getHeaders(includeAuth: false),
@@ -107,6 +133,10 @@ class CoreApiService {
 
   /// OTP: Request
   Future<void> requestOtp({required String phoneE164}) async {
+    if (offlineDemo) {
+      _offline.requestOtp(phoneE164: phoneE164);
+      return;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/otp/request'),
       headers: _getHeaders(includeAuth: false),
@@ -123,6 +153,9 @@ class CoreApiService {
     required String phoneE164,
     required String code,
   }) async {
+    if (offlineDemo) {
+      return _offline.verifyOtp(phoneE164: phoneE164, code: code);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/otp/verify'),
       headers: _getHeaders(includeAuth: false),
@@ -141,6 +174,9 @@ class CoreApiService {
 
   /// PIN: Check if user has PIN set
   Future<bool> hasPin() async {
+    if (offlineDemo) {
+      return _offline.hasPin();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/auth/pin/has'),
       headers: _getHeaders(),
@@ -156,6 +192,10 @@ class CoreApiService {
 
   /// PIN: Set transaction PIN
   Future<void> setPin({required String pin}) async {
+    if (offlineDemo) {
+      _offline.setPin(pin: pin);
+      return;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/pin/set'),
       headers: _getHeaders(),
@@ -169,6 +209,9 @@ class CoreApiService {
 
   /// PIN: Verify transaction PIN
   Future<bool> verifyPin({required String pin}) async {
+    if (offlineDemo) {
+      return _offline.verifyPin(pin: pin);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/auth/pin/verify'),
       headers: _getHeaders(),
@@ -184,6 +227,9 @@ class CoreApiService {
 
   /// Limits: Get customer limits
   Future<Map<String, dynamic>> getMyLimits() async {
+    if (offlineDemo) {
+      return _offline.getMyLimits();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/me/limits'),
       headers: _getHeaders(),
@@ -198,6 +244,9 @@ class CoreApiService {
 
   /// Notifications: Get all notifications
   Future<Map<String, dynamic>> getNotifications() async {
+    if (offlineDemo) {
+      return _offline.getNotifications();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/notifications'),
       headers: _getHeaders(),
@@ -210,6 +259,9 @@ class CoreApiService {
 
   /// Notifications: Get unread count
   Future<int> getUnreadNotificationsCount() async {
+    if (offlineDemo) {
+      return _offline.getUnreadNotificationsCount();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/notifications/unread-count'),
       headers: _getHeaders(),
@@ -223,6 +275,10 @@ class CoreApiService {
 
   /// Notifications: Mark notification as read
   Future<void> markNotificationAsRead(String notificationId) async {
+    if (offlineDemo) {
+      _offline.markNotificationAsRead(notificationId);
+      return;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/notifications/$notificationId/read'),
       headers: _getHeaders(),
@@ -234,6 +290,10 @@ class CoreApiService {
 
   /// Notifications: Mark all notifications as read
   Future<void> markAllNotificationsAsRead() async {
+    if (offlineDemo) {
+      _offline.markAllNotificationsAsRead();
+      return;
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/notifications/mark-all-read'),
       headers: _getHeaders(),
@@ -245,6 +305,9 @@ class CoreApiService {
 
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
+    if (offlineDemo) {
+      return _offline.getMyWallets();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/wallets/me'),
       headers: _getHeaders(),
@@ -264,6 +327,14 @@ class CoreApiService {
     required String amountMinor,
     Map<String, dynamic>? metadata,
   }) async {
+    if (offlineDemo) {
+      return _offline.quotePayment(
+        type: type,
+        currency: currency,
+        amountMinor: amountMinor,
+        metadata: metadata,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/payments/quote'),
       headers: _getHeaders(),
@@ -286,6 +357,9 @@ class CoreApiService {
   Future<Map<String, dynamic>> confirmPayment({
     required String paymentId,
   }) async {
+    if (offlineDemo) {
+      return _offline.confirmPayment(paymentId: paymentId);
+    }
     final idempotencyKey = const Uuid().v4();
     final headers = _getHeaders();
     headers['Idempotency-Key'] = idempotencyKey;
@@ -305,6 +379,9 @@ class CoreApiService {
 
   /// Payments: List
   Future<List<dynamic>> listPayments() async {
+    if (offlineDemo) {
+      return _offline.listPayments();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/payments'),
       headers: _getHeaders(),
@@ -319,6 +396,9 @@ class CoreApiService {
 
   /// Payments: Get single payment by ID
   Future<Map<String, dynamic>> getPayment(String paymentId) async {
+    if (offlineDemo) {
+      return _offline.getPayment(paymentId);
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/payments/$paymentId'),
       headers: _getHeaders(),
@@ -335,6 +415,9 @@ class CoreApiService {
   Future<Map<String, dynamic>> checkCreditEligibility({
     required String type,
   }) async {
+    if (offlineDemo) {
+      return _offline.checkCreditEligibility(type: type);
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/credit/eligibility/$type'),
       headers: _getHeaders(),
@@ -354,6 +437,14 @@ class CoreApiService {
     required String currency,
     required int termMonths,
   }) async {
+    if (offlineDemo) {
+      return _offline.requestLoan(
+        type: type,
+        principalMinor: principalMinor,
+        currency: currency,
+        termMonths: termMonths,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/credit/loans'),
       headers: _getHeaders(),
@@ -374,6 +465,9 @@ class CoreApiService {
 
   /// Credit: List loans
   Future<List<dynamic>> listLoans() async {
+    if (offlineDemo) {
+      return _offline.listLoans();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/credit/loans'),
       headers: _getHeaders(),
@@ -389,6 +483,9 @@ class CoreApiService {
 
   /// Credit: Get loan detail
   Future<Map<String, dynamic>> getLoan(String loanId) async {
+    if (offlineDemo) {
+      return _offline.getLoan(loanId);
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/credit/loans/$loanId'),
       headers: _getHeaders(),
@@ -408,6 +505,14 @@ class CoreApiService {
     required String dailyLimitMinor,
     required String monthlyLimitMinor,
   }) async {
+    if (offlineDemo) {
+      return _offline.issueCard(
+        walletPocketId: walletPocketId,
+        currency: currency,
+        dailyLimitMinor: dailyLimitMinor,
+        monthlyLimitMinor: monthlyLimitMinor,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/cards'),
       headers: _getHeaders(),
@@ -428,6 +533,9 @@ class CoreApiService {
 
   /// Cards: List
   Future<List<dynamic>> listCards() async {
+    if (offlineDemo) {
+      return _offline.listCards();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/cards'),
       headers: _getHeaders(),
@@ -442,6 +550,9 @@ class CoreApiService {
 
   /// Cards: Get detail
   Future<Map<String, dynamic>> getCard(String cardId) async {
+    if (offlineDemo) {
+      return _offline.getCard(cardId);
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/cards/$cardId'),
       headers: _getHeaders(),
@@ -456,6 +567,9 @@ class CoreApiService {
 
   /// Cards: Freeze
   Future<Map<String, dynamic>> freezeCard(String cardId) async {
+    if (offlineDemo) {
+      return _offline.freezeCard(cardId);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/cards/$cardId/freeze'),
       headers: _getHeaders(),
@@ -470,6 +584,9 @@ class CoreApiService {
 
   /// Cards: Activate
   Future<Map<String, dynamic>> activateCard(String cardId) async {
+    if (offlineDemo) {
+      return _offline.activateCard(cardId);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/cards/$cardId/activate'),
       headers: _getHeaders(),
@@ -484,6 +601,9 @@ class CoreApiService {
 
   /// Cards: Block
   Future<Map<String, dynamic>> blockCard(String cardId) async {
+    if (offlineDemo) {
+      return _offline.blockCard(cardId);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/cards/$cardId/block'),
       headers: _getHeaders(),
@@ -502,6 +622,13 @@ class CoreApiService {
     required String dailyLimitMinor,
     required String monthlyLimitMinor,
   }) async {
+    if (offlineDemo) {
+      return _offline.updateCardLimits(
+        cardId: cardId,
+        dailyLimitMinor: dailyLimitMinor,
+        monthlyLimitMinor: monthlyLimitMinor,
+      );
+    }
     final response = await _client.patch(
       Uri.parse('$baseUrl/v1/cards/$cardId/limits'),
       headers: _getHeaders(),
@@ -520,6 +647,9 @@ class CoreApiService {
 
   /// Cards: List transactions
   Future<List<dynamic>> getCardTransactions(String cardId) async {
+    if (offlineDemo) {
+      return _offline.getCardTransactions(cardId);
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/cards/$cardId/transactions'),
       headers: _getHeaders(),
@@ -538,6 +668,12 @@ class CoreApiService {
     required String amountMinor,
     required String currency,
   }) async {
+    if (offlineDemo) {
+      return _offline.quoteInboundRemittance(
+        amountMinor: amountMinor,
+        currency: currency,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/remittance/inbound/quote'),
       headers: _getHeaders(),
@@ -556,6 +692,9 @@ class CoreApiService {
 
   /// Remittance: Confirm inbound
   Future<Map<String, dynamic>> confirmInboundRemittance(String quoteId) async {
+    if (offlineDemo) {
+      return _offline.confirmInboundRemittance(quoteId);
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/remittance/inbound/$quoteId/confirm'),
       headers: _getHeaders(),
@@ -573,6 +712,12 @@ class CoreApiService {
     required String amountMinor,
     required String currency,
   }) async {
+    if (offlineDemo) {
+      return _offline.quoteOutboundRemittance(
+        amountMinor: amountMinor,
+        currency: currency,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/remittance/outbound/quote'),
       headers: _getHeaders(),
@@ -591,6 +736,9 @@ class CoreApiService {
 
   /// Remittance: List
   Future<List<dynamic>> listRemittances() async {
+    if (offlineDemo) {
+      return _offline.listRemittances();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/remittance'),
       headers: _getHeaders(),
@@ -606,6 +754,9 @@ class CoreApiService {
 
   /// FX: Get rates
   Future<List<dynamic>> getFxRates() async {
+    if (offlineDemo) {
+      return _offline.getFxRates();
+    }
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/fx/rates'),
       headers: _getHeaders(),
@@ -624,6 +775,13 @@ class CoreApiService {
     required String toCurrency,
     required String fromAmountMinor,
   }) async {
+    if (offlineDemo) {
+      return _offline.convertCurrency(
+        fromCurrency: fromCurrency,
+        toCurrency: toCurrency,
+        fromAmountMinor: fromAmountMinor,
+      );
+    }
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/fx/convert'),
       headers: _getHeaders(),

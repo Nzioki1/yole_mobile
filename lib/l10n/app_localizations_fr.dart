@@ -750,7 +750,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get britishPound => 'Livre sterling';
 
   @override
-  String get signInToYoleAccount => 'Connectez-vous à votre compte Poste Finance';
+  String get signInToYoleAccount =>
+      'Connectez-vous à votre compte Poste Finance';
 
   @override
   String get passwordHint => 'Entrez votre mot de passe';

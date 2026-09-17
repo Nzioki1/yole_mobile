@@ -139,8 +139,15 @@ export class OfflineDemoStore {
     this.u = loadUniverse();
   }
 
-  listStaff(): Staff[] {
-    return this.u.staff.slice();
+  private static readonly STAFF_ROLES = ['ADMIN', 'OPS', 'SUPPORT', 'FINANCE'] as const;
+
+  private stripStaffPassword(s: Staff): Omit<Staff, 'password'> {
+    const { password: _p, ...rest } = s;
+    return rest;
+  }
+
+  listStaff(): Omit<Staff, 'password'>[] {
+    return this.u.staff.map((s) => this.stripStaffPassword(s));
   }
 
   authenticateStaff(email: string, password: string): Staff | null {
@@ -149,6 +156,53 @@ export class OfflineDemoStore {
       (s) => s.email.toLowerCase() === normalized && s.password === password,
     );
     return staff ?? null;
+  }
+
+  createStaff(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: string;
+  }): Omit<Staff, 'password'> {
+    const email = data.email.trim().toLowerCase();
+    const role = data.role.trim().toUpperCase();
+    if (!OfflineDemoStore.STAFF_ROLES.includes(role as (typeof OfflineDemoStore.STAFF_ROLES)[number])) {
+      throw new Error(`Invalid role: ${data.role}`);
+    }
+    if (!data.password || !data.firstName.trim() || !data.lastName.trim()) {
+      throw new Error('firstName, lastName, and password are required');
+    }
+    if (this.u.staff.some((s) => s.email.toLowerCase() === email)) {
+      throw new Error('Staff email already registered');
+    }
+    const staff: Staff = {
+      id: `staff_demo_${Date.now()}`,
+      email,
+      password: data.password,
+      role,
+      firstName: data.firstName.trim(),
+      lastName: data.lastName.trim(),
+    };
+    this.u.staff.push(staff);
+    return this.stripStaffPassword(staff);
+  }
+
+  updateStaffRole(staffId: string, role: string): Omit<Staff, 'password'> {
+    const next = role.trim().toUpperCase();
+    if (!OfflineDemoStore.STAFF_ROLES.includes(next as (typeof OfflineDemoStore.STAFF_ROLES)[number])) {
+      throw new Error(`Invalid role: ${role}`);
+    }
+    const staff = this.u.staff.find((s) => s.id === staffId);
+    if (!staff) throw new Error(`Staff not found: ${staffId}`);
+    if (staff.role === 'ADMIN' && next !== 'ADMIN') {
+      const adminCount = this.u.staff.filter((s) => s.role === 'ADMIN').length;
+      if (adminCount <= 1) {
+        throw new Error('Cannot demote the last ADMIN');
+      }
+    }
+    staff.role = next;
+    return this.stripStaffPassword(staff);
   }
 
   getDashboardCounts() {

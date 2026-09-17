@@ -10,21 +10,37 @@ export type ModuleRoute =
   | '/dashboard/payroll'
   | '/dashboard/config'
   | '/dashboard/recon'
-  | '/dashboard/cases';
+  | '/dashboard/cases'
+  | '/dashboard/products'
+  | '/dashboard/approvals'
+  | '/dashboard/credit-exceptions'
+  | '/dashboard/idempotency'
+  | '/dashboard/remittance'
+  | '/dashboard/resilience'
+  | '/dashboard/export';
+
+const ALL_ADMIN: ModuleRoute[] = [
+  '/dashboard',
+  '/dashboard/customer360',
+  '/dashboard/kyc',
+  '/dashboard/agents',
+  '/dashboard/payments',
+  '/dashboard/cards',
+  '/dashboard/payroll',
+  '/dashboard/config',
+  '/dashboard/recon',
+  '/dashboard/cases',
+  '/dashboard/products',
+  '/dashboard/approvals',
+  '/dashboard/credit-exceptions',
+  '/dashboard/idempotency',
+  '/dashboard/remittance',
+  '/dashboard/resilience',
+  '/dashboard/export',
+];
 
 export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
-  [StaffRole.ADMIN]: [
-    '/dashboard',
-    '/dashboard/customer360',
-    '/dashboard/kyc',
-    '/dashboard/agents',
-    '/dashboard/payments',
-    '/dashboard/cards',
-    '/dashboard/payroll',
-    '/dashboard/config',
-    '/dashboard/recon',
-    '/dashboard/cases',
-  ],
+  [StaffRole.ADMIN]: ALL_ADMIN,
   [StaffRole.OPS]: [
     '/dashboard',
     '/dashboard/kyc',
@@ -32,6 +48,11 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
     '/dashboard/payments',
     '/dashboard/recon',
     '/dashboard/cases',
+    '/dashboard/approvals',
+    '/dashboard/credit-exceptions',
+    '/dashboard/idempotency',
+    '/dashboard/remittance',
+    '/dashboard/products',
   ],
   [StaffRole.SUPPORT]: [
     '/dashboard',
@@ -45,12 +66,19 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
     '/dashboard/payroll',
     '/dashboard/config',
     '/dashboard/recon',
+    '/dashboard/products',
+    '/dashboard/approvals',
+    '/dashboard/credit-exceptions',
+    '/dashboard/remittance',
+    '/dashboard/export',
+    '/dashboard/resilience',
+    '/dashboard/idempotency',
   ],
 };
 
 export function canAccessRoute(role: StaffRole, route: string): boolean {
   const allowedRoutes = ROLE_PERMISSIONS[role];
-  return allowedRoutes.some(r => route === r || route.startsWith(r + '/'));
+  return allowedRoutes.some((r) => route === r || route.startsWith(r + '/'));
 }
 
 export function getAuthorizedRoutes(role: StaffRole): ModuleRoute[] {

@@ -2,16 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { mockApi as api } from '@/lib/mockApi';
+import {
+  PieChart,
+  Pie,
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import { api } from '@/lib/api';
+import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
 
 const COLORS = {
   teal: '#00acac',
   blue: '#348fe2',
-  green: '#00acac',
+  green: '#32a932',
   yellow: '#f59c1a',
   red: '#ff5b57',
   purple: '#727cb6',
+  orange: '#f59c1a',
+  info: '#49b6d6',
 };
 
 interface DashboardSummary {
@@ -40,33 +55,18 @@ export default function DashboardPage() {
     try {
       const data = await api.getDashboardSummary();
       setSummary(data);
-    } catch (error) {
-      console.error('Failed to load dashboard summary:', error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKpiClick = (route: string, query?: string) => {
-    const url = query ? `${route}?${query}` : route;
-    router.push(url);
-  };
-
-  const handleChartClick = (data: any, field: string) => {
-    if (field === 'status') {
-      router.push(`/dashboard/payments?status=${data.status}`);
-    } else if (field === 'type') {
-      router.push(`/dashboard/payments?type=${data.type}`);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="panel">
-        <div className="panel-body" style={{ textAlign: 'center', padding: '3rem' }}>
-          <div>Loading dashboard...</div>
-        </div>
-      </div>
+      <Panel>
+        <PanelBody className="text-center py-5">Loading dashboard...</PanelBody>
+      </Panel>
     );
   }
 
@@ -79,166 +79,150 @@ export default function DashboardPage() {
   };
 
   const statusColors: Record<string, string> = {
+    POSTED: COLORS.green,
     COMPLETED: COLORS.green,
     PENDING: COLORS.yellow,
+    CONFIRMED: COLORS.blue,
+    QUOTED: COLORS.purple,
     FAILED: COLORS.red,
   };
 
+  const kpiCards = [
+    {
+      label: 'PENDING KYC',
+      value: kpis.pendingKyc,
+      bg: 'bg-orange',
+      icon: 'fa fa-id-card',
+      href: '/dashboard/kyc',
+    },
+    {
+      label: 'OPEN CASES',
+      value: kpis.openCases,
+      bg: 'bg-red',
+      icon: 'fa fa-ticket',
+      href: '/dashboard/cases',
+    },
+    {
+      label: 'PAYMENTS TODAY',
+      value: kpis.paymentsToday,
+      bg: 'bg-teal',
+      icon: 'fa fa-money-bill',
+      href: '/dashboard/payments',
+    },
+    {
+      label: 'ACTIVE AGENTS',
+      value: kpis.activeAgents,
+      bg: 'bg-blue',
+      icon: 'fa fa-users',
+      href: '/dashboard/agents',
+    },
+    {
+      label: 'VIRTUAL CARDS',
+      value: kpis.totalCards,
+      bg: 'bg-indigo',
+      icon: 'fa fa-credit-card',
+      href: '/dashboard/cards',
+    },
+  ];
+
   return (
     <div>
-      <style jsx>{`
-        .kpi-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-        .kpi-card {
-          background: white;
-          border-radius: 0.5rem;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          cursor: pointer;
-          transition: all 0.15s;
-          border-left: 4px solid;
-        }
-        .kpi-card:hover {
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          transform: translateY(-2px);
-        }
-        .kpi-card.teal {
-          border-color: #00acac;
-        }
-        .kpi-card.yellow {
-          border-color: #f59c1a;
-        }
-        .kpi-card.red {
-          border-color: #ff5b57;
-        }
-        .kpi-card.blue {
-          border-color: #348fe2;
-        }
-        .kpi-card.purple {
-          border-color: #727cb6;
-        }
-        .kpi-label {
-          font-size: 0.875rem;
-          color: #6c757d;
-          margin-bottom: 0.5rem;
-          font-weight: 500;
-        }
-        .kpi-value {
-          font-size: 2rem;
-          font-weight: 700;
-          color: #2d353c;
-        }
-        .chart-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-          gap: 1.5rem;
-        }
-      `}</style>
-
-      <div className="kpi-grid">
-        <div
-          className="kpi-card yellow"
-          onClick={() => handleKpiClick('/dashboard/kyc', 'status=PENDING_REVIEW')}
-        >
-          <div className="kpi-label">Pending KYC</div>
-          <div className="kpi-value">{kpis.pendingKyc}</div>
-        </div>
-
-        <div
-          className="kpi-card red"
-          onClick={() => handleKpiClick('/dashboard/cases', 'status=OPEN')}
-        >
-          <div className="kpi-label">Open Cases</div>
-          <div className="kpi-value">{kpis.openCases}</div>
-        </div>
-
-        <div
-          className="kpi-card teal"
-          onClick={() => handleKpiClick('/dashboard/payments')}
-        >
-          <div className="kpi-label">Payments Today</div>
-          <div className="kpi-value">{kpis.paymentsToday}</div>
-        </div>
-
-        <div
-          className="kpi-card blue"
-          onClick={() => handleKpiClick('/dashboard/agents')}
-        >
-          <div className="kpi-label">Active Agents</div>
-          <div className="kpi-value">{kpis.activeAgents}</div>
-        </div>
-
-        <div
-          className="kpi-card purple"
-          onClick={() => handleKpiClick('/dashboard/cards')}
-        >
-          <div className="kpi-label">Virtual Cards</div>
-          <div className="kpi-value">{kpis.totalCards}</div>
-        </div>
+      <div className="row">
+        {kpiCards.map((kpi) => (
+          <div key={kpi.label} className="col-xl col-md-4 col-sm-6 mb-3">
+            <div
+              className={`widget widget-stats ${kpi.bg}`}
+              style={{ cursor: 'pointer' }}
+              onClick={() => router.push(kpi.href)}
+            >
+              <div className="stats-icon">
+                <i className={kpi.icon}></i>
+              </div>
+              <div className="stats-info">
+                <h4>{kpi.label}</h4>
+                <p>{kpi.value}</p>
+              </div>
+              <div className="stats-link">
+                <a
+                  href={kpi.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push(kpi.href);
+                  }}
+                >
+                  View Detail <i className="fa fa-arrow-alt-circle-right"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="chart-grid">
-        <div className="panel">
-          <div className="panel-heading">Payment Status Distribution</div>
-          <div className="panel-body">
-            {summary && summary.paymentsByStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={summary.paymentsByStatus}
-                    dataKey="count"
-                    nameKey="status"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                    onClick={(data) => handleChartClick(data, 'status')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    {summary.paymentsByStatus.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={statusColors[entry.status] || COLORS.blue} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#6c757d' }}>
-                No payment data available
-              </div>
-            )}
-          </div>
+      <div className="row">
+        <div className="col-xl-6">
+          <Panel>
+            <PanelHeader>Payment Status Distribution</PanelHeader>
+            <PanelBody>
+              {summary && summary.paymentsByStatus.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={summary.paymentsByStatus}
+                      dataKey="count"
+                      nameKey="status"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                      onClick={(data: any) =>
+                        router.push(`/dashboard/payments?status=${data.status}`)
+                      }
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {summary.paymentsByStatus.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={statusColors[entry.status] || COLORS.blue}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-gray-500 py-5">No payment data available</div>
+              )}
+            </PanelBody>
+          </Panel>
         </div>
 
-        <div className="panel">
-          <div className="panel-heading">Payments by Type (Last 7 Days)</div>
-          <div className="panel-body">
-            {summary && summary.paymentsByType.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={summary.paymentsByType}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar
-                    dataKey="count"
-                    fill={COLORS.teal}
-                    onClick={(data) => handleChartClick(data, 'type')}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', color: '#6c757d' }}>
-                No payment type data available
-              </div>
-            )}
-          </div>
+        <div className="col-xl-6">
+          <Panel>
+            <PanelHeader>Payments by Type (Last 7 Days)</PanelHeader>
+            <PanelBody>
+              {summary && summary.paymentsByType.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={summary.paymentsByType}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="type" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Bar
+                      dataKey="count"
+                      fill={COLORS.teal}
+                      onClick={(data: any) =>
+                        router.push(`/dashboard/payments?type=${data.type}`)
+                      }
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-center text-gray-500 py-5">No payment type data available</div>
+              )}
+            </PanelBody>
+          </Panel>
         </div>
       </div>
     </div>

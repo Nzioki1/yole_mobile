@@ -150,7 +150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       theme.colorScheme.primary.withOpacity(0.3)),
                             ),
                             child: Text(
-                              'Demo login: jp.kabila@gmail.com / Password1!',
+                              'Demo login: jp.kabila@gmail.com / Password1! · PIN 123456',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,

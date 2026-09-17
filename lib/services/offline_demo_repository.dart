@@ -39,6 +39,9 @@ class OfflineDemoRepository {
   /// DEM-01 OTP — always accepted offline.
   static const String demoOtp = '123456';
 
+  /// DEM transaction PIN — pre-seeded on offline login.
+  static const String demoPin = '123456';
+
   /// DEM-07 honesty string (also shown on CardsScreen).
   static const String cardsMockBanner =
       'MOCK — not Visa/Mastercard certified';
@@ -144,6 +147,7 @@ class OfflineDemoRepository {
       throw Exception('Login failed: invalid credentials');
     }
     _currentCustomerId = customer['id'] as String;
+    _pins.putIfAbsent(_currentCustomerId!, () => demoPin);
     return {
       'accessToken': 'offline-demo-token-${customer['id']}',
       'customer': {
@@ -205,6 +209,7 @@ class OfflineDemoRepository {
     _writeList('wallets', wallets);
 
     _currentCustomerId = id;
+    _pins.putIfAbsent(id, () => demoPin);
     return {
       'accessToken': 'offline-demo-token-$id',
       'customer': {

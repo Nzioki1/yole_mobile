@@ -182,4 +182,11 @@ void main() {
       ),
     );
   });
+
+  test('hasPin after login is true and demo PIN verifies', () {
+    final repo = OfflineDemoRepository.createFresh();
+    repo.login(email: 'jp.kabila@gmail.com', password: 'Password1!');
+    expect(repo.hasPin(), isTrue);
+    expect(repo.verifyPin(pin: OfflineDemoRepository.demoPin), isTrue);
+  });
 }

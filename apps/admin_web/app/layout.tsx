@@ -16,11 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        {/* Official Color Admin v5.5.2 default theme (teal is the pack default $theme) */}
+      <body>
+        {/* Color Admin v5.5.2 default theme (teal) */}
         <link rel="stylesheet" href="/assets/css/default/app.min.css" />
-      </head>
-      <body>{children}</body>
+        {children}
+      </body>
     </html>
   );
 }

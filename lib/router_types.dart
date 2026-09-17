@@ -16,6 +16,7 @@ class RouteNames {
   static const String profile = '/profile';
   static const String kyc = '/kyc';
   static const String transactions = '/transactions';
+  static const String transactionDetail = '/transaction-detail';
   static const String favorites = '/favorites';
   static const String emailVerification = '/email-verification';
   static const String forgotPassword = '/forgot-password';

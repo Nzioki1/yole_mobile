@@ -317,6 +317,20 @@ class CoreApiService {
     }
   }
 
+  /// Payments: Get single payment by ID
+  Future<Map<String, dynamic>> getPayment(String paymentId) async {
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/payments/$paymentId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Get payment failed: ${response.body}');
+    }
+  }
+
   /// Credit: Check eligibility
   Future<Map<String, dynamic>> checkCreditEligibility({
     required String type,

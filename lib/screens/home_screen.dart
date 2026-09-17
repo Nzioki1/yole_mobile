@@ -578,6 +578,7 @@ class _PaymentItem extends StatelessWidget {
     final currency = payment['currency'] as String? ?? 'USD';
     final status = payment['status'] as String? ?? 'PENDING';
     final type = payment['type'] as String? ?? 'UNKNOWN';
+    final paymentId = payment['id'] as String?;
 
     final statusColor = status == 'POSTED'
         ? const Color(0xFF0C7A53)
@@ -585,7 +586,15 @@ class _PaymentItem extends StatelessWidget {
             ? const Color(0xFF912D2D)
             : const Color(0xFF165BAA);
 
-    return Container(
+    return InkWell(
+      onTap: paymentId != null
+          ? () => Navigator.of(context).pushNamed(
+                RouteNames.transactionDetail,
+                arguments: {'paymentId': paymentId},
+              )
+          : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.cardTheme.color,
@@ -643,6 +652,7 @@ class _PaymentItem extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 

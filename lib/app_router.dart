@@ -33,6 +33,7 @@ import 'screens/fund_wallet_screen.dart';
 import 'screens/withdraw_screen.dart';
 import 'screens/language_screen.dart';
 import 'screens/notifications_screen.dart';
+import 'screens/transaction_detail_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -218,6 +219,21 @@ class AppRouter {
 
       case RouteNames.notifications:
         return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+
+      case RouteNames.transactionDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final paymentId = args?['paymentId'] as String?;
+        if (paymentId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Payment ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => TransactionDetailScreen(paymentId: paymentId),
+        );
 
       // Fallback
       default:

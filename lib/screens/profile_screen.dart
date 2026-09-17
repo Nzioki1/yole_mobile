@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../providers/api_providers.dart';
 import '../widgets/gradient_button.dart';
 import '../models/api/auth_response.dart';
+import '../router_types.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -102,6 +103,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                 // Settings Section
                 _SectionHeader(title: 'Settings', theme: theme),
+                _ProfileTile(
+                  icon: Icons.language_outlined,
+                  title: l10n.language,
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                  onTap: () => Navigator.of(context).pushNamed(RouteNames.language),
+                  theme: theme,
+                ),
                 _ProfileTile(
                   icon: Icons.shield_outlined,
                   title: l10n.darkMode,

@@ -31,6 +31,7 @@ import 'screens/payment_quote_screen.dart';
 import 'screens/payment_result_screen.dart';
 import 'screens/fund_wallet_screen.dart';
 import 'screens/withdraw_screen.dart';
+import 'screens/language_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -187,13 +188,7 @@ class AppRouter {
 
       // Optional futures
       case RouteNames.language:
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar:
-                AppBar(title: Text(AppLocalizations.of(context)!.comingSoon)),
-            body: Center(child: Text('${settings.name} not implemented yet')),
-          ),
-        );
+        return MaterialPageRoute(builder: (_) => const LanguageScreen());
 
       // Fallback
       default:

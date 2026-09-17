@@ -195,3 +195,20 @@
   letter-spacing: 0.04em;
   margin-bottom: 0.2rem;
 }
+
+/* ---------- Sidebar: native scroll (Color Admin scrollbar JS not loaded) ---------- */
+.app-sidebar-fixed .app-sidebar {
+  overflow: hidden;
+}
+
+.app-sidebar-fixed .app-sidebar .app-sidebar-content {
+  position: absolute;
+  top: 50px; /* matches Color Admin header offset (padding-top on .app-sidebar) */
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+

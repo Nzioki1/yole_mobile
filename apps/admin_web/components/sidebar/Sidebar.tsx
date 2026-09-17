@@ -65,7 +65,7 @@ export default function Sidebar() {
   return (
     <>
       <div id="sidebar" className="app-sidebar" data-bs-theme="dark">
-        <div className="app-sidebar-content" data-scrollbar="true" data-height="100%">
+        <div className="app-sidebar-content">
           <div className="menu">
             <div className="menu-profile">
               <div className="menu-profile-link">

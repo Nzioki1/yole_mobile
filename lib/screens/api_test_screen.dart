@@ -8,7 +8,7 @@ class ApiTestScreen extends StatefulWidget {
 
 class _ApiTestScreenState extends State<ApiTestScreen> {
   final TextEditingController _emailController =
-      TextEditingController(text: 'test@yole.com');
+      TextEditingController(text: 'test@postefinance.com');
   final TextEditingController _passwordController =
       TextEditingController(text: 'Test');
   String _log = '';

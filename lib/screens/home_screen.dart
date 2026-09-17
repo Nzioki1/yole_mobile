@@ -763,7 +763,7 @@ class _ProfileQuickMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final authState = ref.watch(authProvider);
-    final userEmail = authState.user?.email ?? 'guest@yole.com';
+    final userEmail = authState.user?.email ?? 'guest@postefinance.com';
     final userName = '${authState.user?.name ?? 'Guest'} ${authState.user?.surname ?? ''}';
 
     return Padding(

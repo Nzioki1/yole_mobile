@@ -101,7 +101,7 @@ class MockAuthService implements AuthServiceInterface {
     await Future.delayed(const Duration(milliseconds: 500));
     return UserProfile(
       id: '1',
-      email: 'test@yole.com',
+      email: 'test@postefinance.com',
       name: 'Test',
       surname: 'User',
       country: 'CD',
@@ -122,7 +122,7 @@ class MockAuthService implements AuthServiceInterface {
   Future<UserProfile?> getCurrentUser() async {
     return UserProfile(
       id: '1',
-      email: 'test@yole.com',
+      email: 'test@postefinance.com',
       name: 'Test',
       surname: 'User',
       country: 'CD',

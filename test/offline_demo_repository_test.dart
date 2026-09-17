@@ -136,4 +136,50 @@ void main() {
     // Should be back to seed value of 15000
     expect(freshBalance, equals(15000));
   });
+
+  /// DEM-01 KYC/OTP offline path (KycService delegates here when OFFLINE_DEMO).
+  test('KYC OTP flow: login → requestOtp → verifyOtp → submitKyc PENDING_REVIEW',
+      () {
+    final repo = OfflineDemoRepository.createFresh();
+
+    final login = repo.login(
+      email: 'kasee.demo@postefinance.com',
+      password: 'Password1!',
+    );
+    expect(login['accessToken'], isNotEmpty);
+    expect(repo.currentCustomerId, 'cust_kasee');
+
+    const phoneE164 = '+243990000001';
+    repo.requestOtp(phoneE164: phoneE164);
+
+    final verified = repo.verifyOtp(
+      phoneE164: phoneE164,
+      code: OfflineDemoRepository.demoOtp, // 123456
+    );
+    expect(verified['verified'], isTrue);
+
+    final result = repo.submitKyc(
+      phoneE164: phoneE164,
+      idNumber: 'ID-DEMO-001',
+    );
+    expect(result['success'], isTrue);
+    expect(result['kyc'], isA<Map>());
+    expect(result['kyc']['status'], 'PENDING_REVIEW');
+  });
+
+  test('submitKyc without session throws clear auth error', () {
+    final repo = OfflineDemoRepository.createFresh();
+    // Fresh repo has no current customer
+    expect(repo.currentCustomerId, isNull);
+    expect(
+      () => repo.submitKyc(phoneE164: '+243990000001', idNumber: 'X'),
+      throwsA(
+        predicate(
+          (e) =>
+              e is Exception &&
+              e.toString().contains('Not authenticated'),
+        ),
+      ),
+    );
+  });
 }

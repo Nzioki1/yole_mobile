@@ -1,3 +1,9 @@
 {
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/agents/page": "app/dashboard/agents/page.js",
+  "/dashboard/cards/page": "app/dashboard/cards/page.js",
+  "/dashboard/payroll/page": "app/dashboard/payroll/page.js",
+  "/dashboard/payroll/[id]/page": "app/dashboard/payroll/[id]/page.js",
+  "/dashboard/remittance/page": "app/dashboard/remittance/page.js",
+  "/dashboard/idempotency/page": "app/dashboard/idempotency/page.js",
+  "/dashboard/products/page": "app/dashboard/products/page.js"
 }

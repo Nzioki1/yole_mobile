@@ -1,47 +1,25 @@
 import 'dart:convert';
-import 'dart:io';
 
-/// Loads the shared offline demo universe JSON (same file as the TS package).
+import 'universe_json.dart';
+
+/// Loads the shared offline demo universe JSON (same graph as the TS package).
 ///
-/// Prefer [DemoUniverse.loadFromFile] pointing at
-/// `packages/demo_universe/data/universe.json` (single source of truth).
-/// A synced copy also lives at `dart/assets/universe.json` for asset bundling.
+/// Default [load] uses the embedded [kUniverseJson] so Flutter web/Chrome works
+/// without `dart:io`. The filesystem copy under `data/universe.json` remains
+/// the authoring source of truth (regenerate `universe_json.dart` after edits).
 class DemoUniverse {
   DemoUniverse._(this.data);
 
   final Map<String, dynamic> data;
 
-  /// Deep-cloned universe from a filesystem path.
-  static DemoUniverse loadFromFile(String path) {
-    final raw = File(path).readAsStringSync();
-    return fromJsonString(raw);
-  }
-
-  /// Default relative load from package layout (data/ sibling of dart/).
-  static DemoUniverse load({String? path}) {
-    final resolved = path ?? _defaultDataPath();
-    return loadFromFile(resolved);
+  /// Deep-cloned universe from the embedded seed (web-safe).
+  static DemoUniverse load({String? json}) {
+    return fromJsonString(json ?? kUniverseJson);
   }
 
   static DemoUniverse fromJsonString(String raw) {
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
     return DemoUniverse._(_deepCloneMap(decoded));
-  }
-
-  static String _defaultDataPath() {
-    // When running from packages/demo_universe/dart, sibling is ../data/universe.json
-    final candidates = <String>[
-      '../data/universe.json',
-      'data/universe.json',
-      'assets/universe.json',
-      'packages/demo_universe/data/universe.json',
-    ];
-    for (final c in candidates) {
-      if (File(c).existsSync()) return c;
-    }
-    throw StateError(
-      'universe.json not found. Pass an absolute path to DemoUniverse.load(path: ...).',
-    );
   }
 
   List<dynamic> get customers => data['customers'] as List<dynamic>? ?? const [];

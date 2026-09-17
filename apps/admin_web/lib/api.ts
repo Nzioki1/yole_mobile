@@ -215,6 +215,35 @@ export class AdminApiClient {
     });
   }
 
+  async proposeFeeRule(data: {
+    paymentType: string;
+    feePercent: number;
+    minFeeMinor: number;
+    maxFeeMinor: number;
+    currency?: string;
+    effectiveFrom?: string;
+    summary?: string;
+    makerStaffId?: string;
+    supersedesId?: string;
+  }) {
+    if (OFFLINE_DEMO) return this.store().proposeFeeRule(data);
+    throw new Error('proposeFeeRule is only available in offline demo');
+  }
+
+  async proposeLimitRule(data: {
+    limitType: string;
+    currency: string;
+    dailyLimitMinor: number;
+    monthlyLimitMinor: number;
+    effectiveFrom?: string;
+    summary?: string;
+    makerStaffId?: string;
+    supersedesId?: string;
+  }) {
+    if (OFFLINE_DEMO) return this.store().proposeLimitRule(data);
+    throw new Error('proposeLimitRule is only available in offline demo');
+  }
+
   async listLimitConfigs() {
     if (OFFLINE_DEMO) return this.store().listLimitConfigs();
     if (this.preferSeed()) return DEMO_LIMITS;

@@ -6,6 +6,7 @@ import type {
   Wallet,
   Payment,
   Loan,
+  LoanSchedule,
   Card,
   Case,
   KycSubmission,
@@ -14,6 +15,12 @@ import type {
   Employee,
   FeeLimit,
   ReconDay,
+  Journal,
+  Notification,
+  Product,
+  PendingApproval,
+  Remittance,
+  CardAuth,
 } from 'demo_universe';
 
 function strMinor(n: number | string | undefined | null): string {
@@ -46,7 +53,6 @@ function walletForAdmin(w: Wallet) {
     ledgerMinor: strMinor(w.ledgerMinor),
     blockedMinor: strMinor(w.blockedMinor),
     pendingMinor: strMinor(w.pendingMinor),
-    // Compat for pocket-based Color Admin / legacy 360 UI
     pockets: [
       {
         id: `${w.id}_pocket`,
@@ -99,11 +105,16 @@ function limitForAdmin(f: FeeLimit) {
   };
 }
 
+function nowIso() {
+  return new Date().toISOString();
+}
+
 export type Customer360 = {
   customer: Customer;
   wallets: ReturnType<typeof walletForAdmin>[];
   recentPayments: ReturnType<typeof paymentForAdmin>[];
   loans: Loan[];
+  loanSchedules: LoanSchedule[];
   cards: ReturnType<typeof cardForAdmin>[];
   cases: Case[];
 };
@@ -210,10 +221,13 @@ export class OfflineDemoStore {
       .map(paymentForAdmin);
 
     const loans = this.u.loans.filter((l) => l.customerId === customerId);
+    const loanSchedules = this.u.loanSchedules.filter((s) =>
+      loans.some((l) => l.id === s.loanId || l.scheduleId === s.id),
+    );
     const cards = this.u.cards.filter((c) => c.customerId === customerId).map(cardForAdmin);
     const cases = this.u.cases.filter((c) => c.customerId === customerId);
 
-    return { customer, wallets, recentPayments, loans, cards, cases };
+    return { customer, wallets, recentPayments, loans, loanSchedules, cards, cases };
   }
 
   listKycSubmissions(status?: string): KycSubmission[] {
@@ -317,6 +331,11 @@ export class OfflineDemoStore {
     return list.map(cardForAdmin);
   }
 
+  listCardAuths(cardId?: string) {
+    if (!cardId) return this.u.cardAuths.slice();
+    return this.u.cardAuths.filter((a) => a.cardId === cardId);
+  }
+
   listEmployers() {
     return this.u.employers.map((e) => {
       const employees = this.u.employees
@@ -404,6 +423,7 @@ export class OfflineDemoStore {
       this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];
     const payments = this.u.payments;
     const totalVolume = payments.reduce((s, p) => s + Number(p.amountMinor), 0);
+    const eod = day?.eodSnapshot || {};
     return {
       date: day?.businessDate || date,
       totalTransactions: payments.length,
@@ -413,7 +433,10 @@ export class OfflineDemoStore {
       exceptionCount: day?.exceptionCount,
       details: {
         exceptions: day?.exceptions || [],
-        eodSnapshot: day?.eodSnapshot || {},
+        unmatched: day?.exceptions || [],
+        eodSnapshot: eod,
+        suspenseMinor: strMinor((eod as { suspenseMinor?: number }).suspenseMinor ?? 0),
+        glBalanced: Boolean((eod as { glBalanced?: boolean }).glBalanced),
         rails: {},
         ledgerDeltaMinor: '0',
       },
@@ -447,6 +470,472 @@ export class OfflineDemoStore {
       }
     }
     return { id: caseId, status };
+  }
+
+  // ─── DEM list helpers ─────────────────────────────────────────────
+
+  listProducts(): Product[] {
+    return this.u.products.slice();
+  }
+
+  listPendingApprovals(status?: string): PendingApproval[] {
+    if (!status) return this.u.pendingApprovals.slice();
+    return this.u.pendingApprovals.filter((a) => a.status === status);
+  }
+
+  listCreditExceptions() {
+    return this.u.loans.filter((l) =>
+      ['PENDING_EXCEPTION', 'EXCEPTION', 'REJECTED_EXCEPTION'].includes(l.status) ||
+      l.status === 'PENDING_EXCEPTION',
+    );
+  }
+
+  listLoans(customerId?: string) {
+    if (!customerId) return this.u.loans.slice();
+    return this.u.loans.filter((l) => l.customerId === customerId);
+  }
+
+  getLoanSchedule(scheduleId: string): LoanSchedule | null {
+    return this.u.loanSchedules.find((s) => s.id === scheduleId) || null;
+  }
+
+  listRemittances(status?: string): Remittance[] {
+    if (!status) return this.u.remittances.slice();
+    return this.u.remittances.filter((r) => r.status === status);
+  }
+
+  listJournals(filters?: { customerId?: string; refId?: string; walletId?: string }): Journal[] {
+    return this.u.journals.filter((j) => {
+      if (filters?.customerId && j.customerId !== filters.customerId) return false;
+      if (filters?.refId && j.refId !== filters.refId) return false;
+      if (filters?.walletId && j.walletId !== filters.walletId) return false;
+      return true;
+    });
+  }
+
+  listNotifications(filters?: { customerId?: string }): Notification[] {
+    if (!filters?.customerId) return this.u.notifications.slice();
+    return this.u.notifications.filter((n) => n.customerId === filters.customerId);
+  }
+
+  getHonesty() {
+    return this.u.meta.honesty || {
+      globalBadge: 'Offline demo — no live API',
+      cardsBadge: 'MOCK — not Visa/Mastercard certified',
+      resilienceBadge: 'DEMO STORYBOARD — not a live HA failover',
+    };
+  }
+
+  // ─── DEM mutations ────────────────────────────────────────────────
+
+  /**
+   * DEM-02: approve/reject pendingApprovals. FEE_CHANGE activates pending fee.
+   */
+  approvePending(approvalId: string, decision: string, _approverStaffId?: string) {
+    const apr = this.u.pendingApprovals.find((a) => a.id === approvalId);
+    if (!apr) throw new Error(`Approval not found: ${approvalId}`);
+    const approved = decision === 'APPROVE' || decision === 'APPROVED';
+    apr.status = approved ? 'APPROVED' : 'REJECTED';
+
+    if (apr.type === 'FEE_CHANGE') {
+      const pendingFee = this.u.feeLimits.find((f) => f.id === apr.targetId);
+      if (pendingFee) {
+        if (approved) {
+          // Supersede other ACTIVE fees of same paymentType
+          for (const f of this.u.feeLimits) {
+            if (
+              f.kind === 'FEE' &&
+              f.paymentType === pendingFee.paymentType &&
+              f.id !== pendingFee.id &&
+              f.status === 'ACTIVE'
+            ) {
+              f.status = 'SUPERSEDED';
+            }
+          }
+          pendingFee.status = 'ACTIVE';
+        } else {
+          pendingFee.status = 'REJECTED';
+        }
+      }
+    }
+
+    if (apr.type === 'CREDIT_EXCEPTION' && approved) {
+      this.decideCreditException(apr.targetId, 'APPROVE');
+    }
+
+    if (apr.type === 'AML_CASE' && approved) {
+      this.advanceAmlCase(apr.targetId, 'APPROVE', { approverRole: 'ADMIN' });
+    }
+
+    return { id: approvalId, status: apr.status, type: apr.type, targetId: apr.targetId };
+  }
+
+  /**
+   * DEM-04: approve PENDING_EXCEPTION → ACTIVE + schedule + wallet credit + journal.
+   */
+  decideCreditException(loanId: string, decision: string) {
+    const loan = this.u.loans.find((l) => l.id === loanId);
+    if (!loan) throw new Error(`Loan not found: ${loanId}`);
+
+    const approved = decision === 'APPROVE' || decision === 'APPROVED';
+    if (!approved) {
+      loan.status = 'REJECTED_EXCEPTION';
+      const apr = this.u.pendingApprovals.find(
+        (a) => a.type === 'CREDIT_EXCEPTION' && a.targetId === loanId && a.status === 'PENDING',
+      );
+      if (apr) apr.status = 'REJECTED';
+      return { id: loanId, status: loan.status, scheduleId: loan.scheduleId ?? null };
+    }
+
+    const scheduleId = `sched_${loanId}`;
+    const half = Math.floor(loan.principalMinor / 2);
+    const interest = Math.floor(loan.principalMinor * 0.05);
+    const schedule: LoanSchedule = {
+      id: scheduleId,
+      loanId: loan.id,
+      installments: [
+        {
+          id: `${scheduleId}_inst_1`,
+          dueDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+          principalMinor: half,
+          interestMinor: interest,
+          status: 'DUE',
+          paidAt: null,
+        },
+        {
+          id: `${scheduleId}_inst_2`,
+          dueDate: new Date(Date.now() + 44 * 86400000).toISOString().slice(0, 10),
+          principalMinor: loan.principalMinor - half,
+          interestMinor: interest,
+          status: 'DUE',
+          paidAt: null,
+        },
+      ],
+    };
+    // replace if exists
+    const existingIdx = this.u.loanSchedules.findIndex((s) => s.loanId === loan.id);
+    if (existingIdx >= 0) this.u.loanSchedules[existingIdx] = schedule;
+    else this.u.loanSchedules.push(schedule);
+
+    loan.status = 'ACTIVE';
+    loan.scheduleId = scheduleId;
+    loan.receivableMinor = loan.principalMinor + interest * 2;
+    loan.disbursedAt = nowIso();
+
+    const wallet =
+      this.u.wallets.find((w) => w.customerId === loan.customerId && w.currency === loan.currency) ||
+      this.u.wallets.find((w) => w.customerId === loan.customerId);
+    if (wallet) {
+      wallet.availableMinor += loan.principalMinor;
+      wallet.ledgerMinor += loan.principalMinor;
+      const jnl: Journal = {
+        id: `jnl_disburse_${loan.id}`,
+        customerId: loan.customerId,
+        walletId: wallet.id,
+        type: 'LOAN_DISBURSEMENT',
+        direction: 'CREDIT',
+        currency: loan.currency,
+        amountMinor: loan.principalMinor,
+        balanceAfterMinor: wallet.availableMinor,
+        refType: 'LOAN',
+        refId: loan.id,
+        narration: `Credit exception approved — ${loan.productId}`,
+        postedAt: nowIso(),
+      };
+      this.u.journals.push(jnl);
+    }
+
+    const apr = this.u.pendingApprovals.find(
+      (a) => a.type === 'CREDIT_EXCEPTION' && a.targetId === loanId && a.status === 'PENDING',
+    );
+    if (apr) apr.status = 'APPROVED';
+
+    this.u.notifications.push({
+      id: `ntf_loan_${loan.id}_${Date.now()}`,
+      customerId: loan.customerId,
+      channel: 'PUSH',
+      title: 'Loan disbursed',
+      body: `Credit exception approved — ${loan.currency} ${loan.principalMinor / 100} credited`,
+      read: false,
+      createdAt: nowIso(),
+    });
+
+    return { id: loanId, status: loan.status, scheduleId };
+  }
+
+  /**
+   * DEM-05: Compensate posts reversing journal + notification; marks payment COMPENSATED.
+   */
+  compensatePayment(paymentId: string) {
+    const pay = this.u.payments.find((p) => p.id === paymentId);
+    if (!pay) throw new Error(`Payment not found: ${paymentId}`);
+    if (pay.status === 'COMPENSATED') {
+      return { id: paymentId, status: 'COMPENSATED', alreadyCompensated: true };
+    }
+
+    pay.status = 'COMPENSATED';
+    const walletId =
+      (pay.sourceRef && this.u.wallets.some((w) => w.id === pay.sourceRef)
+        ? pay.sourceRef
+        : null) ||
+      this.u.wallets.find((w) => w.customerId === pay.customerId && w.currency === pay.currency)
+        ?.id ||
+      this.u.wallets.find((w) => w.customerId === pay.customerId)?.id;
+
+    if (walletId) {
+      const wallet = this.u.wallets.find((w) => w.id === walletId)!;
+      // Reverse original debit → credit customer back
+      wallet.availableMinor += pay.totalMinor || pay.amountMinor;
+      wallet.ledgerMinor += pay.totalMinor || pay.amountMinor;
+      const jnl: Journal = {
+        id: `jnl_comp_${paymentId}`,
+        customerId: pay.customerId,
+        walletId,
+        type: 'COMPENSATION',
+        direction: 'CREDIT',
+        currency: pay.currency,
+        amountMinor: pay.totalMinor || pay.amountMinor,
+        balanceAfterMinor: wallet.availableMinor,
+        refType: 'PAYMENT',
+        refId: paymentId,
+        narration: `Compensation for ${paymentId}`,
+        postedAt: nowIso(),
+      };
+      this.u.journals.push(jnl);
+      pay.journalId = jnl.id;
+    }
+
+    this.u.notifications.push({
+      id: `ntf_comp_${paymentId}_${Date.now()}`,
+      customerId: pay.customerId,
+      channel: 'PUSH',
+      title: 'Payment compensated',
+      body: `Payment ${paymentId} was compensated — funds restored`,
+      read: false,
+      createdAt: nowIso(),
+    });
+
+    return { id: paymentId, status: 'COMPENSATED', journalId: pay.journalId };
+  }
+
+  /**
+   * DEM-05: Replay same idempotency key returns the same payment (no duplicate).
+   */
+  replayIdempotentConfirm(idempotencyKey: string, _payload?: Record<string, unknown>) {
+    const existing = this.u.payments.find((p) => p.idempotencyKey === idempotencyKey);
+    if (existing) {
+      return {
+        payment: paymentForAdmin(existing),
+        replayed: true,
+        message: 'Idempotent replay — same payment returned, no duplicate posted',
+      };
+    }
+    // If key unknown, create a demo payment once then subsequent calls return it
+    const id = `pay_idem_${Date.now()}`;
+    const pay: Payment = {
+      id,
+      customerId: 'cust_kasee',
+      type: 'W2W',
+      status: 'POSTED',
+      currency: 'USD',
+      amountMinor: 1000,
+      feeMinor: 10,
+      totalMinor: 1010,
+      sourceRef: 'wal_kasee_usd',
+      destRef: 'cust_amina',
+      journalId: null,
+      idempotencyKey,
+      createdAt: nowIso(),
+      notes: 'Idempotency lab first confirm',
+    };
+    this.u.payments.push(pay);
+    return {
+      payment: paymentForAdmin(pay),
+      replayed: false,
+      message: 'First confirm — payment posted',
+    };
+  }
+
+  /**
+   * DEM-08 remittance actions: CLEAR / RELEASE / REFUND / HOLD + partner recon stub.
+   */
+  remittanceAction(remittanceId: string, action: string) {
+    const rmt = this.u.remittances.find((r) => r.id === remittanceId);
+    if (!rmt) throw new Error(`Remittance not found: ${remittanceId}`);
+    const act = action.toUpperCase();
+
+    if (act === 'CLEAR' || act === 'RELEASE' || act === 'APPROVE') {
+      rmt.status = 'CLEARED';
+      const wallet =
+        (rmt.walletId && this.u.wallets.find((w) => w.id === rmt.walletId)) ||
+        this.u.wallets.find(
+          (w) => w.customerId === rmt.customerId && w.currency === rmt.receiveCurrency,
+        );
+      if (wallet) {
+        rmt.walletId = wallet.id;
+        wallet.availableMinor += rmt.receiveAmountMinor;
+        wallet.ledgerMinor += rmt.receiveAmountMinor;
+        this.u.journals.push({
+          id: `jnl_rmt_${rmt.id}`,
+          customerId: rmt.customerId,
+          walletId: wallet.id,
+          type: 'REMITTANCE',
+          direction: 'CREDIT',
+          currency: rmt.receiveCurrency,
+          amountMinor: rmt.receiveAmountMinor,
+          balanceAfterMinor: wallet.availableMinor,
+          refType: 'REMITTANCE',
+          refId: rmt.id,
+          narration: `Remittance cleared from ${rmt.partner}`,
+          postedAt: nowIso(),
+        });
+      }
+    } else if (act === 'REFUND') {
+      rmt.status = 'REFUNDED';
+    } else if (act === 'HOLD' || act === 'SCREEN') {
+      rmt.status = 'SCREENING_HIT';
+    } else if (act === 'PARTNER_RECON') {
+      return {
+        id: remittanceId,
+        status: rmt.status,
+        partnerRecon: {
+          partner: rmt.partner,
+          matched: rmt.status === 'CLEAR' || rmt.status === 'CLEARED',
+          stub: true,
+          message: 'Partner recon stub — offline demo only',
+        },
+      };
+    }
+
+    return { id: remittanceId, status: rmt.status, action: act };
+  }
+
+  /**
+   * DEM-09: AML confidential workflow — Investigate → Recommend → maker-checker.
+   */
+  advanceAmlCase(
+    caseId: string,
+    action: string,
+    opts?: { approverRole?: string; recommendation?: string },
+  ) {
+    const row = this.u.cases.find((c) => c.id === caseId);
+    if (!row) throw new Error(`Case not found: ${caseId}`);
+    const act = action.toUpperCase();
+    const steps = row.steps || ['ALERT', 'INVESTIGATION', 'RECOMMEND', 'MAKER_CHECKER'];
+    if (!row.steps) row.steps = steps;
+
+    if (act === 'INVESTIGATE') {
+      row.currentStep = 'INVESTIGATION';
+      row.status = 'INVESTIGATION';
+    } else if (act === 'RECOMMEND') {
+      row.currentStep = 'RECOMMEND';
+      row.status = 'PENDING_APPROVAL';
+      (row as Case & { recommendation?: string }).recommendation =
+        opts?.recommendation || 'ESCALATE';
+      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
+    } else if (act === 'APPROVE' || act === 'APPROVED') {
+      row.currentStep = 'MAKER_CHECKER';
+      row.status = 'APPROVED';
+      row.decidedAt = nowIso();
+      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
+      const apr = this.u.pendingApprovals.find(
+        (a) => a.type === 'AML_CASE' && a.targetId === caseId && a.status === 'PENDING',
+      );
+      if (apr) apr.status = 'APPROVED';
+    } else if (act === 'REJECT' || act === 'DENIED') {
+      row.currentStep = 'MAKER_CHECKER';
+      row.status = 'REJECTED';
+      row.decidedAt = nowIso();
+      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
+      const apr = this.u.pendingApprovals.find(
+        (a) => a.type === 'AML_CASE' && a.targetId === caseId && a.status === 'PENDING',
+      );
+      if (apr) apr.status = 'REJECTED';
+    }
+
+    return {
+      id: caseId,
+      status: row.status,
+      currentStep: row.currentStep,
+      confidential: row.confidential,
+      approverRole: (row as Case & { approverRole?: string }).approverRole,
+    };
+  }
+
+  /**
+   * DEM-11: Run EOD writes snapshot on recon day (GL balanced, clears suspense demo).
+   */
+  runEod(businessDate?: string) {
+    const date = businessDate || this.u.reconDays[0]?.businessDate || new Date().toISOString().slice(0, 10);
+    let day = this.u.reconDays.find((r) => r.businessDate === date);
+    if (!day) {
+      day = {
+        id: `recon_${date}`,
+        businessDate: date,
+        status: 'OPEN',
+        matchedCount: 0,
+        exceptionCount: 0,
+        exceptions: [],
+        eodSnapshot: {},
+      };
+      this.u.reconDays.push(day);
+    }
+
+    const debit = this.u.journals
+      .filter((j) => j.direction === 'DEBIT')
+      .reduce((s, j) => s + j.amountMinor, 0);
+    const credit = this.u.journals
+      .filter((j) => j.direction === 'CREDIT')
+      .reduce((s, j) => s + j.amountMinor, 0);
+
+    day.eodSnapshot = {
+      runAt: nowIso(),
+      glBalanced: true,
+      suspenseMinor: 0,
+      currency: 'CDF',
+      notes: 'DEM-11 EOD run — offline demo snapshot',
+      journalDebitMinor: debit,
+      journalCreditMinor: credit,
+      bodReady: true,
+    };
+    day.status = day.exceptionCount > 0 ? 'EOD_COMPLETE_WITH_EXCEPTIONS' : 'EOD_COMPLETE';
+    day.matchedCount = Math.max(day.matchedCount, this.u.payments.length);
+
+    return {
+      businessDate: day.businessDate,
+      status: day.status,
+      eodSnapshot: day.eodSnapshot,
+    };
+  }
+
+  /**
+   * DEM-12: Build open-format export pack JSON.
+   */
+  buildExportPack() {
+    const pack = {
+      exportedAt: nowIso(),
+      format: 'yole-demo-export/v1',
+      filename: 'yole-demo-export.json',
+      honesty: this.getHonesty(),
+      customers: this.u.customers.map(({ password: _p, ...rest }) => rest),
+      wallets: this.u.wallets,
+      loans: this.u.loans,
+      loanSchedules: this.u.loanSchedules,
+      payments: this.u.payments,
+      journals: this.u.journals,
+      cases: this.u.cases,
+      remittances: this.u.remittances,
+      cards: this.u.cards,
+      cardAuths: this.u.cardAuths,
+      products: this.u.products,
+      feeLimits: this.u.feeLimits,
+      reconDays: this.u.reconDays,
+      notifications: this.u.notifications,
+      agents: this.u.agents.map(({ password: _p, ...rest }) => rest),
+      employers: this.u.employers,
+      employees: this.u.employees,
+    };
+    return pack;
   }
 }
 

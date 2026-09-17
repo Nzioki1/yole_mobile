@@ -321,6 +321,101 @@ export class AdminApiClient {
       body: JSON.stringify({ status }),
     });
   }
+
+  async listProducts() {
+    if (OFFLINE_DEMO) return this.store().listProducts();
+    return [];
+  }
+
+  async listPendingApprovals(status?: string) {
+    if (OFFLINE_DEMO) return this.store().listPendingApprovals(status);
+    return [];
+  }
+
+  async approvePending(approvalId: string, decision: string, approverStaffId?: string) {
+    if (OFFLINE_DEMO) return this.store().approvePending(approvalId, decision, approverStaffId);
+    throw new Error('approvePending requires OFFLINE_DEMO');
+  }
+
+  async listCreditExceptions() {
+    if (OFFLINE_DEMO) return this.store().listCreditExceptions();
+    return [];
+  }
+
+  async decideCreditException(loanId: string, decision: string) {
+    if (OFFLINE_DEMO) return this.store().decideCreditException(loanId, decision);
+    throw new Error('decideCreditException requires OFFLINE_DEMO');
+  }
+
+  async getLoanSchedule(scheduleId: string) {
+    if (OFFLINE_DEMO) return this.store().getLoanSchedule(scheduleId);
+    return null;
+  }
+
+  async listLoans(customerId?: string) {
+    if (OFFLINE_DEMO) return this.store().listLoans(customerId);
+    return [];
+  }
+
+  async compensatePayment(paymentId: string) {
+    if (OFFLINE_DEMO) return this.store().compensatePayment(paymentId);
+    throw new Error('compensatePayment requires OFFLINE_DEMO');
+  }
+
+  async replayIdempotentConfirm(idempotencyKey: string, payload?: Record<string, unknown>) {
+    if (OFFLINE_DEMO) return this.store().replayIdempotentConfirm(idempotencyKey, payload);
+    throw new Error('replayIdempotentConfirm requires OFFLINE_DEMO');
+  }
+
+  async listRemittances(status?: string) {
+    if (OFFLINE_DEMO) return this.store().listRemittances(status);
+    return [];
+  }
+
+  async remittanceAction(remittanceId: string, action: string) {
+    if (OFFLINE_DEMO) return this.store().remittanceAction(remittanceId, action);
+    throw new Error('remittanceAction requires OFFLINE_DEMO');
+  }
+
+  async advanceAmlCase(caseId: string, action: string, opts?: { approverRole?: string; recommendation?: string }) {
+    if (OFFLINE_DEMO) return this.store().advanceAmlCase(caseId, action, opts);
+    throw new Error('advanceAmlCase requires OFFLINE_DEMO');
+  }
+
+  async listJournals(filters?: { customerId?: string; refId?: string; walletId?: string }) {
+    if (OFFLINE_DEMO) return this.store().listJournals(filters);
+    return [];
+  }
+
+  async listNotifications(filters?: { customerId?: string }) {
+    if (OFFLINE_DEMO) return this.store().listNotifications(filters);
+    return [];
+  }
+
+  async listCardAuths(cardId?: string) {
+    if (OFFLINE_DEMO) return this.store().listCardAuths(cardId);
+    return [];
+  }
+
+  async runEod(businessDate?: string) {
+    if (OFFLINE_DEMO) return this.store().runEod(businessDate);
+    throw new Error('runEod requires OFFLINE_DEMO');
+  }
+
+  async buildExportPack() {
+    if (OFFLINE_DEMO) return this.store().buildExportPack();
+    throw new Error('buildExportPack requires OFFLINE_DEMO');
+  }
+
+  async getHonesty() {
+    if (OFFLINE_DEMO) return this.store().getHonesty();
+    return {
+      globalBadge: 'Offline demo — no live API',
+      cardsBadge: 'MOCK — not Visa/Mastercard certified',
+      resilienceBadge: 'DEMO STORYBOARD — not a live HA failover',
+    };
+  }
+
 }
 
 export const api = new AdminApiClient();

@@ -23,17 +23,17 @@ class OfflineDemoRepository {
       _instance ??= createFresh();
 
   /// Load a fresh deep-cloned universe (also replaces [instance]).
-  static OfflineDemoRepository createFresh({String? universePath}) {
+  static OfflineDemoRepository createFresh({) {
     final repo = OfflineDemoRepository._(
-      DemoUniverse.load(path: universePath),
+      DemoUniverse.load(),
     );
     _instance = repo;
     return repo;
   }
 
   /// Discard session mutations and reload seed into [instance].
-  static void reset({String? universePath}) {
-    createFresh(universePath: universePath);
+  static void reset({) {
+    createFresh();
   }
 
   /// DEM-01 OTP — always accepted offline.

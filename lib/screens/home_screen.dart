@@ -39,15 +39,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final walletId = wallet['id'] as String?;
         final pockets = wallet['pockets'] as List<dynamic>? ?? [];
         
-        for (final pocket in pockets) {
-          displayWallets.add({
-            'walletId': walletId,
-            'pocketId': pocket['id'],
-            'currency': pocket['currency'],
-            'availableMinor': pocket['availableMinor'],
-            'ledgerMinor': pocket['ledgerMinor'],
-          });
-        }
+      for (final pocket in pockets) {
+        displayWallets.add({
+          'walletId': walletId,
+          'pocketId': pocket['id'],
+          'currency': pocket['currency'],
+          'availableMinor': pocket['availableMinor'],
+          'ledgerMinor': pocket['ledgerMinor'],
+          'blockedMinor': pocket['blockedMinor'],
+          'pendingOutMinor': pocket['pendingOutMinor'],
+          'pendingInMinor': pocket['pendingInMinor'],
+        });
+      }
       }
       
       setState(() => _wallets = displayWallets);
@@ -272,11 +275,18 @@ class _WalletCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final currency = wallet['currency'] as String? ?? 'USD';
-    final balanceMinor = wallet['availableMinor'] as String? ?? '0';
-    final balance = (int.tryParse(balanceMinor) ?? 0) / 100;
+    final availableMinor = int.tryParse(wallet['availableMinor']?.toString() ?? '0') ?? 0;
+    final blockedMinor = int.tryParse(wallet['blockedMinor']?.toString() ?? '0') ?? 0;
+    final pendingOutMinor = int.tryParse(wallet['pendingOutMinor']?.toString() ?? '0') ?? 0;
+    final pendingInMinor = int.tryParse(wallet['pendingInMinor']?.toString() ?? '0') ?? 0;
+    
+    final available = availableMinor / 100;
+    final blocked = blockedMinor / 100;
+    final pendingOut = pendingOutMinor / 100;
+    final pendingIn = pendingInMinor / 100;
+    final totalPending = pendingIn - pendingOut;
 
     return Container(
-      height: 180,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: currency == 'CDF'
@@ -301,6 +311,7 @@ class _WalletCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -320,16 +331,16 @@ class _WalletCard extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 16),
           Text(
-            currency == 'CDF' ? 'FC ${balance.toStringAsFixed(2)}' : '\$${balance.toStringAsFixed(2)}',
+            currency == 'CDF' ? 'FC ${available.toStringAsFixed(2)}' : '\$${available.toStringAsFixed(2)}',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             'Available Balance',
             style: const TextStyle(
@@ -337,6 +348,48 @@ class _WalletCard extends StatelessWidget {
               fontSize: 13,
             ),
           ),
+          const SizedBox(height: 12),
+          // Pending balance row
+          if (totalPending != 0)
+            Row(
+              children: [
+                Icon(
+                  totalPending > 0 ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: Colors.white60,
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Pending: ${currency == 'CDF' ? 'FC' : '\$'}${totalPending.abs().toStringAsFixed(2)} ${totalPending > 0 ? 'in' : 'out'}',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          // Blocked balance row
+          if (blocked > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white60,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Blocked: ${currency == 'CDF' ? 'FC' : '\$'}${blocked.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

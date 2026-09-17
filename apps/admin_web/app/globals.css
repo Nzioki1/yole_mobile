@@ -1,0 +1,197 @@
+@tailwind components;
+@tailwind utilities;
+
+/* Bridge: map leftover blue utility classes to Color Admin teal theme */
+@layer utilities {
+  .bg-blue-600 {
+    background-color: var(--bs-app-theme, #00acac) !important;
+  }
+  .bg-blue-700 {
+    background-color: var(--bs-app-theme, #008a8a) !important;
+  }
+  .hover\:bg-blue-700:hover {
+    filter: brightness(0.92);
+  }
+  .text-blue-600 {
+    color: var(--bs-app-theme, #00acac) !important;
+  }
+}
+
+/* ---------- Readability: keep all module details high-contrast ---------- */
+.app-content {
+  color: #2d353c;
+}
+
+.app-content .page-header,
+.app-content .page-header small,
+.app-content .breadcrumb,
+.app-content .breadcrumb a {
+  color: #2d353c !important;
+}
+
+.app-content .page-header small {
+  color: #5f6b76 !important;
+  opacity: 1 !important;
+}
+
+.app-content .panel {
+  background: #fff;
+  border: 1px solid #d7dee5;
+  box-shadow: 0 1px 4px rgba(45, 53, 60, 0.08);
+}
+
+.app-content .panel-heading {
+  background: #f3f6f8 !important;
+  border-bottom: 1px solid #d7dee5 !important;
+}
+
+.app-content .panel-title {
+  color: #1f2933 !important;
+  font-weight: 700 !important;
+}
+
+.app-content .panel-body {
+  color: #2d353c !important;
+}
+
+/* Faint muted labels → readable secondary text */
+.app-content .text-gray-500,
+.app-content .text-gray-600,
+.app-content .text-muted,
+.app-content .small.text-gray-500,
+.app-content .text-body-secondary {
+  color: #52606d !important;
+  opacity: 1 !important;
+}
+
+.app-content .fw-semibold,
+.app-content .fw-bold,
+.app-content h1,
+.app-content h2,
+.app-content h3,
+.app-content h4,
+.app-content h5 {
+  color: #1f2933;
+}
+
+/* Cards used inside panels */
+.app-content .card {
+  background: #fff !important;
+  border: 1px solid #d0d7de !important;
+  box-shadow: 0 1px 3px rgba(45, 53, 60, 0.1) !important;
+  color: #2d353c !important;
+}
+
+.app-content .card.bg-light {
+  background: #f7f9fb !important;
+  border-color: #d0d7de !important;
+}
+
+.app-content .card-title,
+.app-content .card-body {
+  color: #2d353c !important;
+}
+
+/* Tables */
+.app-content .table {
+  color: #2d353c !important;
+  --bs-table-color: #2d353c;
+  --bs-table-striped-color: #2d353c;
+  --bs-table-hover-color: #1f2933;
+}
+
+.app-content .table > :not(caption) > * > * {
+  color: inherit;
+  padding: 0.85rem 1rem;
+  vertical-align: middle;
+  border-bottom-color: #e2e8ee;
+}
+
+.app-content .table thead th {
+  color: #1f2933 !important;
+  font-weight: 700 !important;
+  background: #eef2f5 !important;
+  border-bottom: 2px solid #cfd8e0 !important;
+  white-space: nowrap;
+}
+
+.app-content .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: #f8fafc;
+  color: #2d353c;
+}
+
+.app-content .table-hover > tbody > tr:hover > * {
+  background-color: #eef8f8;
+  color: #1f2933;
+}
+
+.app-content .font-monospace,
+.app-content .font-monospace.small {
+  color: #334155 !important;
+  font-size: 0.85rem;
+}
+
+/* Badges / buttons */
+.app-content .badge {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.4em 0.65em;
+}
+
+.app-content .badge.bg-warning,
+.app-content .badge.bg-orange {
+  color: #1f2933 !important;
+}
+
+.app-content .badge.bg-secondary {
+  background: #6b7785 !important;
+  color: #fff !important;
+}
+
+.app-content .btn-theme,
+.app-content .btn-success,
+.app-content .btn-danger,
+.app-content .btn-primary {
+  font-weight: 600;
+}
+
+.app-content .form-label {
+  color: #1f2933 !important;
+  font-weight: 600;
+}
+
+.app-content .form-control,
+.app-content .form-select {
+  color: #2d353c !important;
+  border-color: #c5ced6 !important;
+  background-color: #fff !important;
+}
+
+.app-content .form-control::placeholder {
+  color: #7b8794 !important;
+  opacity: 1;
+}
+
+.app-content .list-group-item {
+  color: #2d353c !important;
+  background: #fff;
+  border-color: #e2e8ee;
+}
+
+.app-content a {
+  color: #008a8a;
+  font-weight: 600;
+}
+
+.app-content a:hover {
+  color: #006f6f;
+}
+
+.app-content .detail-label {
+  color: #425466 !important;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}

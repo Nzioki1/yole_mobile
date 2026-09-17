@@ -38,6 +38,8 @@ dependencies:
   # PesaPal API integration
   webview_flutter: ^4.4.4  # For PesaPal iframe
   http: ^1.1.2              # For API calls
+  demo_universe:
+    path: packages/demo_universe/dart
   crypto: ^3.0.3            # For authentication
   url_launcher: ^6.2.2      # For opening PesaPal in browser
   

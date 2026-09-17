@@ -152,6 +152,27 @@ export class AdminApiClient {
     });
   }
 
+  async listStaff() {
+    if (OFFLINE_DEMO) return this.store().listStaff();
+    throw new Error('listStaff is only available in offline demo');
+  }
+
+  async createStaff(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: string;
+  }) {
+    if (OFFLINE_DEMO) return this.store().createStaff(data);
+    throw new Error('createStaff is only available in offline demo');
+  }
+
+  async updateStaffRole(staffId: string, role: string) {
+    if (OFFLINE_DEMO) return this.store().updateStaffRole(staffId, role);
+    throw new Error('updateStaffRole is only available in offline demo');
+  }
+
   async searchPayments(filters?: { customerId?: string; status?: string; type?: string }) {
     if (OFFLINE_DEMO) return this.store().searchPayments(filters);
     if (this.preferSeed()) return filterDemoPayments(filters);

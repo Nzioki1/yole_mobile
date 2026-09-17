@@ -17,7 +17,8 @@ export type ModuleRoute =
   | '/dashboard/idempotency'
   | '/dashboard/remittance'
   | '/dashboard/resilience'
-  | '/dashboard/export';
+  | '/dashboard/export'
+  | '/dashboard/users';
 
 const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard',
@@ -37,6 +38,7 @@ const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard/remittance',
   '/dashboard/resilience',
   '/dashboard/export',
+  '/dashboard/users',
 ];
 
 export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {

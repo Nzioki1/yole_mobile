@@ -50,7 +50,10 @@ const NAV: NavGroup[] = [
   },
   {
     title: 'Configuration',
-    items: [{ name: 'Fees & Limits', href: '/dashboard/config', icon: 'fa fa-cog' }],
+    items: [
+      { name: 'Users', href: '/dashboard/users', icon: 'fa fa-user-shield' },
+      { name: 'Fees & Limits', href: '/dashboard/config', icon: 'fa fa-cog' },
+    ],
   },
 ];
 

@@ -4,6 +4,7 @@ This document provides a comprehensive guide for demoing all features of the YOL
 
 ## Table of Contents
 - [Architecture Overview](#architecture-overview)
+- [Offline Poste DEM (API stopped)](#offline-poste-dem-api-stopped)
 - [Quick Start](#quick-start)
 - [Demo Credentials](#demo-credentials)
 - [Complete Demo Runbook](#complete-demo-runbook)
@@ -36,9 +37,58 @@ This document provides a comprehensive guide for demoing all features of the YOL
 - **Admin Web:** Next.js + React + TypeScript
 - **Database:** In-memory (no persistence across restarts)
 
+
+---
+
+## Offline Poste DEM (API stopped)
+
+For Poste Finance scenarios **DEM-01…DEM-12**, run all clients against the shared `packages/demo_universe` seed with **core-api stopped**. Full click paths and acceptance checklist: **[`docs/demo/DEM-SCRIPT.md`](docs/demo/DEM-SCRIPT.md)**.
+
+### Offline flags
+
+| App | Flag |
+| --- | --- |
+| Admin Web | `NEXT_PUBLIC_OFFLINE_DEMO=true` (in `apps/admin_web/.env.local`) |
+| Customer Flutter | `--dart-define=OFFLINE_DEMO=true` |
+| Agent Flutter | `--dart-define=OFFLINE_DEMO=true` |
+
+With flags on, clients must **never** `fetch` / `dio` / `http` to `localhost:3000` or any API base URL.
+
+### Start clients (do not start API)
+
+```bash
+# 1) Confirm API :3000 is STOPPED
+lsof -iTCP:3000 -sTCP:LISTEN || echo "OK: nothing on :3000"
+
+# 2) Admin
+cd apps/admin_web && pnpm install && pnpm dev
+# http://localhost:3001 — login admin@yole.com / Password1!
+
+# 3) Customer (repo root)
+flutter run -d chrome --dart-define=OFFLINE_DEMO=true
+# kasee.demo@yole.com or amina.payroll@yole.com / Password1!
+
+# 4) Agent
+cd apps/agent_mobile
+flutter run -d chrome --dart-define=OFFLINE_DEMO=true
+# Agent ID: agent-001
+```
+
+### Acceptance (minimum)
+
+- [ ] core-api / `:3000` process **stopped**
+- [ ] All three apps walk DEM-01…DEM-12 per `docs/demo/DEM-SCRIPT.md`
+- [ ] Browser Network tab shows **no** `:3000` traffic
+- [ ] Honesty banners exact: `Offline demo — no live API`; cards `MOCK — not Visa/Mastercard certified`; resilience `DEMO STORYBOARD — not a live HA failover`
+- [ ] Admin header **Reset demo** restores seed after mutations
+
+Shared IDs: `cust_kasee`, `cust_amina`, `agent-001`, `emp_poste`. Staff passwords: `Password1!`.
+
 ---
 
 ## Quick Start
+
+> **Offline DEM?** Skip starting Core API. Use [Offline Poste DEM (API stopped)](#offline-poste-dem-api-stopped) and `docs/demo/DEM-SCRIPT.md` instead.
 
 ### 1. Start Core API (Backend)
 ```bash
@@ -59,14 +109,21 @@ pnpm dev
 
 ### 3. Run Customer App (Chrome)
 ```bash
-# From repository root
+# From repository root — live API mode
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
+
+# Offline DEM (API stopped)
+flutter run -d chrome --dart-define=OFFLINE_DEMO=true
 ```
 
 ### 4. Run Agent App (Chrome)
 ```bash
 cd apps/agent_mobile
+# Live API mode
 flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
+
+# Offline DEM (API stopped) — login agent-001
+flutter run -d chrome --dart-define=OFFLINE_DEMO=true
 ```
 
 **Note:** For Android emulator, omit `--dart-define` (defaults to `10.0.2.2:3000`).
@@ -74,6 +131,17 @@ flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:3000
 ---
 
 ## Demo Credentials
+
+### Offline DEM personas (preferred for DEM-01…12)
+
+| App | Credential |
+| --- | --- |
+| Admin | `admin@yole.com` / `Password1!` (also ops/support/finance @yole.com) |
+| Customer | `kasee.demo@yole.com` / `Password1!` (`cust_kasee`); `amina.payroll@yole.com` / `Password1!` (`cust_amina`) |
+| Agent | Agent ID **`agent-001`** (not `agent_1`) |
+| OTP | Always `123456` when offline |
+
+See `docs/demo/DEM-SCRIPT.md` for full DEM click paths.
 
 ### Admin Web
 - **API Key:** `dev-admin-key`

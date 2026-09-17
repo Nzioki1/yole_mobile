@@ -88,6 +88,7 @@ Base: `http://localhost:3001`
 | DEM-08 | `/dashboard/remittance` | Remittance |
 | DEM-10 | `/dashboard/resilience` | Resilience (demo) |
 | DEM-12 | `/dashboard/export` | Export pack |
+| — | `/dashboard/users` | Users (ADMIN) |
 
 Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/dashboard/recon`, `/dashboard/payroll`, `/login`.
 

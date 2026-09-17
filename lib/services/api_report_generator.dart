@@ -8,7 +8,7 @@ class ApiReportGenerator {
     final buffer = StringBuffer();
 
     // Header
-    buffer.writeln('# YOLE API Validation Report');
+    buffer.writeln('# Poste Finance API Validation Report');
     buffer.writeln('**Generated:** ${DateTime.now().toIso8601String()}\n');
 
     // Summary

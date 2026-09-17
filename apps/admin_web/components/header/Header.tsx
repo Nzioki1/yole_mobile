@@ -44,7 +44,7 @@ export default function Header({ pageTitle }: HeaderProps) {
       <div className="navbar-header">
         <Link href="/dashboard" className="navbar-brand">
           <span className="navbar-logo"></span>
-          <b className="me-1">YOLE</b> Admin
+          <b className="me-1">Poste Finance</b> Admin
         </Link>
         <button type="button" className="navbar-mobile-toggler" data-toggle="app-sidebar-mobile">
           <span className="icon-bar"></span>

@@ -1,6 +1,6 @@
-# YOLE Admin Web
+# Poste Finance Admin Web
 
-Admin dashboard for YOLE platform built with Next.js 14, TypeScript, and Tailwind CSS.
+Admin dashboard for Poste Finance platform built with Next.js 14, TypeScript, and Tailwind CSS.
 
 ## Features
 

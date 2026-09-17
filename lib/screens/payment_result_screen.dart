@@ -144,7 +144,7 @@ class PaymentResultScreen extends StatelessWidget {
     // Build receipt text
     final receiptLines = [
       '━━━━━━━━━━━━━━━━━━━━━━━━',
-      '    YOLE PAYMENT RECEIPT',
+      '    POSTE FINANCE PAYMENT RECEIPT',
       '━━━━━━━━━━━━━━━━━━━━━━━━',
       '',
       'Status: ${success ? '✓ SUCCESS' : '✗ FAILED'}',
@@ -183,7 +183,7 @@ class PaymentResultScreen extends StatelessWidget {
     receiptLines.addAll([
       '',
       '━━━━━━━━━━━━━━━━━━━━━━━━',
-      'Thank you for using Yole!',
+      'Thank you for using Poste Finance!',
       '━━━━━━━━━━━━━━━━━━━━━━━━',
     ]);
 

@@ -59,7 +59,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('YOLE Agent'),
+        title: const Text('Poste Finance Agent'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

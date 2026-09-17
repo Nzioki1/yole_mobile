@@ -119,7 +119,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Yole Pesa API Tester'),
+        title: Text('Poste Finance API Tester'),
         backgroundColor: Colors.blue[800],
       ),
       body: Padding(

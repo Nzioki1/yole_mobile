@@ -1,4 +1,4 @@
-# YOLE Admin Operations Shell Design
+# Poste Finance Admin Operations Shell Design
 
 **Date:** 2026-09-17  
 **Status:** Approved  
@@ -20,7 +20,7 @@ Full back-office shell with classic left sidebar and grouped navigation. This is
 ### Left Sidebar
 - **Width:** ~240px fixed
 - **Colors:** slate/white theme
-- **Brand:** "YOLE Admin" mark at top
+- **Brand:** "Poste Finance Admin" mark at top
 - **Navigation groups:**
   - **Overview** → `/dashboard`
   - **Customers**

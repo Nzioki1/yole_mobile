@@ -115,7 +115,7 @@ export default function LoginPage() {
             <div className="brand">
               <div className="d-flex align-items-center">
                 <span className="logo"></span>
-                <b className="me-1">YOLE</b> Admin
+                <b className="me-1">Poste Finance</b> Admin
               </div>
               <small>Poste Finance neo-bank operations console</small>
             </div>

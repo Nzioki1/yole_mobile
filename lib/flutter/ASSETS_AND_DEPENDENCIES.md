@@ -1,4 +1,4 @@
-# YOLE Flutter Create Account Screen - Assets & Dependencies
+# Poste Finance Flutter Create Account Screen - Assets & Dependencies
 
 ## Required Dependencies
 
@@ -42,7 +42,7 @@ flutter:
           weight: 700
 ```
 
-### 2. YOLE Logo Assets
+### 2. Poste Finance Logo Assets
 Replace the placeholder logo implementation with actual assets:
 
 ```yaml
@@ -202,7 +202,7 @@ testWidgets('Create account screen displays correctly', (WidgetTester tester) as
   );
 
   expect(find.text('Create Account'), findsOneWidget);
-  expect(find.text('Join Yole today'), findsOneWidget);
+  expect(find.text('Join Poste Finance today'), findsOneWidget);
   expect(find.byType(TextFormField), findsNWidgets(5));
 });
 ```

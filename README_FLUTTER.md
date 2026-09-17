@@ -1,4 +1,4 @@
-# Yole Flutter + NestJS Core API Integration
+# Poste Finance Flutter + NestJS Core API Integration
 
 > **📚 For complete demo walkthroughs and feature documentation, see [README_APPS.md](./README_APPS.md)**
 

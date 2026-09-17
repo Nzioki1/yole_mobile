@@ -1,7 +1,7 @@
 {
   "name": "core-api",
   "version": "0.1.0",
-  "description": "Yole Platform Core API",
+  "description": "Poste Finance Platform Core API",
   "main": "dist/main.js",
   "scripts": {
     "dev": "nest start --watch",

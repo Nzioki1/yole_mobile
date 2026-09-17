@@ -77,7 +77,7 @@ export default function Sidebar() {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">{user?.email || 'Staff'}</div>
                   </div>
-                  <small>{user?.role || 'YOLE'}</small>
+                  <small>{user?.role || 'Poste Finance'}</small>
                 </div>
               </div>
             </div>

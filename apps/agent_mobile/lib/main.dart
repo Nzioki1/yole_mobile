@@ -12,7 +12,7 @@ class AgentApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'YOLE Agent',
+      title: 'Poste Finance Agent',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,

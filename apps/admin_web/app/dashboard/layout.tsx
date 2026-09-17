@@ -34,9 +34,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const pageTitle =
-    pageTitles[pathname] ||
-    (pathname.startsWith('/dashboard/payroll/') ? 'Employer Detail' : 'YOLE Admin');
+    (pathname.startsWith('/dashboard/payroll/') ? 'Employer Detail' : 'Poste Finance Admin');
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -61,7 +59,7 @@ export default function DashboardLayout({
           <li className="breadcrumb-item active">{pageTitle}</li>
         </ol>
         <h1 className="page-header">
-          {pageTitle} <small>YOLE operations</small>
+          {pageTitle} <small>Poste Finance operations</small>
         </h1>
         {children}
       </div>

@@ -251,7 +251,7 @@ class _SendMoneyResultScreenState extends ConsumerState<SendMoneyResultScreen> {
                 appState),
             _buildDetailRow('Recipient', 'N/A', theme, appState),
             _buildDetailRow(
-                'YOLE Ref', details.orderTrackingId, theme, appState),
+                'Poste Finance Ref', details.orderTrackingId, theme, appState),
             _buildDetailRow(
                 'PSP Txn ID', details.orderTrackingId, theme, appState),
           ] else ...[

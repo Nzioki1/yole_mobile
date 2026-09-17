@@ -1,4 +1,4 @@
-// Mock data store for YOLE Admin demo
+// Mock data store for Poste Finance Admin demo
 // Congo DRC context: Vodacom, Airtel, CDF/USD currencies
 
 export interface Customer {

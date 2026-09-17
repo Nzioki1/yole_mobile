@@ -1,6 +1,6 @@
-# YOLE Mirror Mockup - Complete Demo Guide
+# Poste Finance Mirror Mockup - Complete Demo Guide
 
-This document provides a comprehensive guide for demoing all features of the YOLE neo-bank platform across all four phases (Phase 1-4).
+This document provides a comprehensive guide for demoing all features of the Poste Finance neo-bank platform across all four phases (Phase 1-4).
 
 ## Table of Contents
 - [Architecture Overview](#architecture-overview)

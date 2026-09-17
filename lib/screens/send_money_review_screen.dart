@@ -314,7 +314,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                 isTotal: true),
             const SizedBox(height: 8),
             Text(
-              'Fees provided by Yole Fees API',
+              'Fees provided by Poste Finance Fees API',
               style: TextStyle(
                 color: appState.isDark ? Colors.white54 : Colors.grey[500],
                 fontSize: 12,

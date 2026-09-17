@@ -63,7 +63,7 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
               const Icon(Icons.business_center, size: 80, color: Colors.blue),
               const SizedBox(height: 24),
               const Text(
-                'YOLE Agent',
+                'Poste Finance Agent',
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),

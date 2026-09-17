@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "YOLE",
+  "appTitle": "Poste Finance",
   "@appTitle": {
     "description": "The title of the application"
   },
@@ -188,7 +188,7 @@
   "@createAccount": {
     "description": "Create account button text"
   },
-  "joinYoleToday": "Join Yole today",
+  "joinYoleToday": "Join Poste Finance today",
   "@joinYoleToday": {
     "description": "Create account screen title"
   },
@@ -732,9 +732,9 @@
   "@accessAccountSecurely": {
     "description": "Access account securely feature"
   },
-  "welcomeToYole": "Welcome to Yole! 🎉",
+  "welcomeToYole": "Welcome to Poste Finance! 🎉",
   "@welcomeToYole": {
-    "description": "Welcome to Yole message"
+    "description": "Welcome to Poste Finance message"
   },
   "weSentVerificationLink": "We sent a verification link to your email address. Click the link to activate your account.",
   "@weSentVerificationLink": {
@@ -1062,7 +1062,7 @@
   "@accessYourAccountSecurely": {
     "description": "Access account securely feature item"
   },
-  "welcomeToYole": "Welcome to Yole! 🎉",
+  "welcomeToYole": "Welcome to Poste Finance! 🎉",
   "@welcomeToYole": {
     "description": "Welcome message with celebration emoji"
   },
@@ -1290,9 +1290,9 @@
   "@britishPound": {
     "description": "British Pound currency name"
   },
-  "signInToYoleAccount": "Sign in to your Yole account",
+  "signInToYoleAccount": "Sign in to your Poste Finance account",
   "@signInToYoleAccount": {
-    "description": "Login screen subtitle with Yole branding"
+    "description": "Login screen subtitle with Poste Finance branding"
   },
   "passwordHint": "Enter your password",
   "@passwordHint": {

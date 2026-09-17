@@ -204,7 +204,7 @@ class _SendMoneyCheckoutScreenState
       final sendMoneyState = ref.read(sendMoneyProvider);
       if (sendMoneyState.response == null) {
         print('❌ PRE-STEP FAILED: YOLE transaction creation returned null');
-        throw Exception('Failed to create YOLE transaction');
+        throw Exception('Failed to create Poste Finance transaction');
       }
 
       print('✅ PRE-STEP SUCCESS: YOLE transaction created');

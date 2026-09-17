@@ -5,8 +5,8 @@ import 'react-perfect-scrollbar/dist/css/styles.css';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'YOLE Admin',
-  description: 'YOLE Admin Portal — Color Admin default + teal',
+  title: 'Poste Finance Admin',
+  description: 'Poste Finance Admin Portal — Color Admin default + teal',
 };
 
 export default function RootLayout({

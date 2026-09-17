@@ -75,7 +75,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
       key: ValueKey(currentLocale
           .languageCode), // Force complete rebuild on locale change
       navigatorKey: navigatorKey, // Global navigator key for stack rebuild
-      title: 'Yole',
+      title: 'Poste Finance',
       debugShowCheckedModeBanner: false,
       locale: currentLocale,
       localizationsDelegates: const [

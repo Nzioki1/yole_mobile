@@ -1,4 +1,4 @@
-# YOLE Admin Portal - Access Guide
+# Poste Finance Admin Portal - Access Guide
 
 ## Server Status
 ✅ **Running**: http://localhost:3001  

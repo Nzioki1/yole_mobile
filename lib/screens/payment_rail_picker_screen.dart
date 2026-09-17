@@ -27,7 +27,7 @@ class PaymentRailPickerScreen extends StatelessWidget {
             _RailOption(
               icon: Icons.swap_horiz_rounded,
               title: 'Wallet to Wallet',
-              subtitle: 'Send to another Yole wallet instantly',
+              subtitle: 'Send to another Poste Finance wallet instantly',
               color: const Color(0xFF4DA3FF),
               onTap: () => Navigator.pushNamed(context, '/payment/w2w'),
             ),

@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   // Logo
                   Text(
-                    'YOLE',
+                    'Poste Finance',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 48,

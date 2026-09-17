@@ -1,6 +1,6 @@
 # demo_universe
 
-Shared **offline** demo seed graph for YOLE Poste Finance DEM-01…DEM-12.
+Shared **offline** demo seed graph for Poste Finance DEM-01…DEM-12.
 
 ## Single source of truth
 

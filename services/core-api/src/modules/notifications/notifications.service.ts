@@ -103,7 +103,7 @@ export class NotificationsService {
     await this.addNotification(
       customerId,
       'system',
-      'Welcome to Yole! 🎉',
+      'Welcome to Poste Finance! 🎉',
       'Your account is ready. Start sending money, paying bills, and more.',
     );
   }

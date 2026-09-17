@@ -1,4 +1,4 @@
-# YOLE Admin: Color Admin Redesign with Staff Auth & Charts
+# Poste Finance Admin: Color Admin Redesign with Staff Auth & Charts
 
 **Date**: 2026-09-17  
 **Target**: Branch `cursor/task1-monorepo-scaffold-1d8a` (PR #1)  
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Transform YOLE Admin from a basic dev UI into a production-ready staff tool with:
+Transform Poste Finance Admin from a basic dev UI into a production-ready staff tool with:
 - **Color Admin default+teal skin** (professional bank-grade look)
 - **Staff JWT authentication** with role-based access control
 - **Interactive dashboard** with KPI widgets and drill-down charts

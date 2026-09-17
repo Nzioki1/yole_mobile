@@ -1,0 +1,1541 @@
+=== COMMITS ===
+2aa83d5 feat(admin): OfflineDemoStore hard-offline path
+=== STAT ===
+ apps/admin_web/.env.local                |   3 +
+ apps/admin_web/app/login/page.tsx        | 419 ++++++++++++++-------------
+ apps/admin_web/lib/api.ts                | 242 +++++++++++++---
+ apps/admin_web/lib/demo-seed.ts          |  88 ++++++
+ apps/admin_web/lib/offline/flags.ts      |   2 +
+ apps/admin_web/lib/offline/store.test.ts |   8 +
+ apps/admin_web/lib/offline/store.ts      | 466 +++++++++++++++++++++++++++++++
+ apps/admin_web/next.config.js            |   9 +
+ apps/admin_web/package.json              |  20 +-
+ apps/admin_web/vitest.config.ts          |  14 +
+ 10 files changed, 1021 insertions(+), 250 deletions(-)
+=== DIFF ===
+diff --git a/apps/admin_web/.env.local b/apps/admin_web/.env.local
+new file mode 100644
+index 0000000..ab6e821
+--- /dev/null
++++ b/apps/admin_web/.env.local
+@@ -0,0 +1,3 @@
++NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
++NEXT_PUBLIC_DEMO_SEED=true
++NEXT_PUBLIC_OFFLINE_DEMO=true
+diff --git a/apps/admin_web/app/login/page.tsx b/apps/admin_web/app/login/page.tsx
+index da70222..f9931f0 100644
+--- a/apps/admin_web/app/login/page.tsx
++++ b/apps/admin_web/app/login/page.tsx
+@@ -1,271 +1,268 @@
+ 'use client';
+ 
+-import { useState, FormEvent } from 'react';
++import { useEffect, useState, FormEvent } from 'react';
+ import { useRouter } from 'next/navigation';
+ import { authService } from '@/lib/auth';
++import { DEMO_SEED_ENABLED, mintDemoStaffToken } from '@/lib/demo-seed';
++import { OFFLINE_DEMO } from '@/lib/offline/flags';
++import { getOfflineStore } from '@/lib/offline/store';
+ 
+ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+ 
++const LOGIN_BGS = [
++  '/assets/img/login-bg/login-bg-17.jpg',
++  '/assets/img/login-bg/login-bg-16.jpg',
++  '/assets/img/login-bg/login-bg-15.jpg',
++  '/assets/img/login-bg/login-bg-14.jpg',
++  '/assets/img/login-bg/login-bg-13.jpg',
++  '/assets/img/login-bg/login-bg-12.jpg',
++];
++
+ export default function LoginPage() {
+   const router = useRouter();
+   const [email, setEmail] = useState('');
+   const [password, setPassword] = useState('');
+   const [error, setError] = useState('');
+   const [loading, setLoading] = useState(false);
++  const [activeBg, setActiveBg] = useState(LOGIN_BGS[0]);
++
++  useEffect(() => {
++    document.body.classList.add('bg-white');
++    return () => {
++      document.body.classList.remove('bg-white');
++    };
++  }, []);
+ 
+   const handleSubmit = async (e: FormEvent) => {
+     e.preventDefault();
+     setError('');
+     setLoading(true);
+ 
+     try {
++      if (OFFLINE_DEMO) {
++        const staff = getOfflineStore().authenticateStaff(email, password);
++        if (!staff) {
++          throw new Error('Invalid email or password');
++        }
++        authService.setToken(
++          mintDemoStaffToken({ id: staff.id, email: staff.email, role: staff.role }),
++        );
++        router.push('/dashboard');
++        return;
++      }
++
++      if (DEMO_SEED_ENABLED) {
++        const staff = getOfflineStore().authenticateStaff(email, password);
++        if (!staff) {
++          throw new Error('Invalid email or password');
++        }
++        authService.setToken(
++          mintDemoStaffToken({ id: staff.id, email: staff.email, role: staff.role }),
++        );
++        router.push('/dashboard');
++        return;
++      }
++
+       const response = await fetch(`${API_BASE_URL}/v1/admin/auth/login`, {
+         method: 'POST',
+-        headers: {
+-          'Content-Type': 'application/json',
+-        },
++        headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ email, password }),
+       });
+ 
+       if (!response.ok) {
+-        throw new Error('Invalid credentials');
++        const data = await response.json().catch(() => ({}));
++        throw new Error(data.message || 'Invalid email or password');
+       }
+ 
+       const data = await response.json();
+       authService.setToken(data.accessToken);
+       router.push('/dashboard');
+     } catch (err: any) {
+       setError(err.message || 'Login failed. Please try again.');
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+-  const quickLogin = (role: string) => {
+-    const credentials: Record<string, { email: string; password: string }> = {
++  const quickLogin = (role: 'admin' | 'ops' | 'support' | 'finance') => {
++    const credentials = {
+       admin: { email: 'admin@yole.com', password: 'Password1!' },
+       ops: { email: 'ops@yole.com', password: 'Password1!' },
+       support: { email: 'support@yole.com', password: 'Password1!' },
+       finance: { email: 'finance@yole.com', password: 'Password1!' },
+     };
+-    
+     const cred = credentials[role];
+-    if (cred) {
+-      setEmail(cred.email);
+-      setPassword(cred.password);
+-    }
++    setEmail(cred.email);
++    setPassword(cred.password);
++    setError('');
+   };
+ 
+-  return (
+-    <div className="login login-v2 fw-bold" style={{ minHeight: '100vh', display: 'flex' }}>
+-      <style jsx global>{`
+-        body {
+-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+-        }
+-        .login-v2 {
+-          display: flex;
+-          align-items: stretch;
+-          width: 100%;
+-        }
+-        .login-cover {
+-          flex: 1;
+-          position: relative;
+-          background: linear-gradient(135deg, #00acac 0%, #348fe2 100%);
+-          display: flex;
+-          align-items: center;
+-          justify-content: center;
+-        }
+-        .login-cover-content {
+-          text-align: center;
+-          color: white;
+-          padding: 3rem;
+-        }
+-        .login-container {
+-          width: 500px;
+-          display: flex;
+-          flex-direction: column;
+-          justify-content: center;
+-          padding: 3rem;
+-          background: white;
+-        }
+-        .login-header {
+-          text-align: center;
+-          margin-bottom: 2rem;
+-        }
+-        .brand {
+-          font-size: 2rem;
+-          font-weight: bold;
+-          color: #00acac;
+-          margin-bottom: 0.5rem;
+-        }
+-        .brand small {
+-          display: block;
+-          font-size: 0.875rem;
+-          color: #6c757d;
+-          font-weight: normal;
+-          margin-top: 0.5rem;
+-        }
+-        .form-floating {
+-          position: relative;
+-          margin-bottom: 1.25rem;
+-        }
+-        .form-control {
+-          width: 100%;
+-          padding: 1rem 0.75rem;
+-          font-size: 0.875rem;
+-          border: 1px solid #dee2e6;
+-          border-radius: 0.25rem;
+-          transition: border-color 0.15s ease-in-out;
+-        }
+-        .form-control:focus {
+-          outline: none;
+-          border-color: #00acac;
+-          box-shadow: 0 0 0 0.2rem rgba(0, 172, 172, 0.25);
+-        }
+-        .form-floating label {
+-          position: absolute;
+-          top: 0;
+-          left: 0.75rem;
+-          padding: 1rem 0;
+-          pointer-events: none;
+-          color: #6c757d;
+-          font-size: 0.875rem;
+-          transition: all 0.1s ease;
+-        }
+-        .btn-theme {
+-          background: #00acac;
+-          color: white;
+-          border: none;
+-          padding: 0.75rem;
+-          font-size: 1rem;
+-          font-weight: 600;
+-          border-radius: 0.25rem;
+-          cursor: pointer;
+-          transition: background 0.15s ease-in-out;
+-        }
+-        .btn-theme:hover {
+-          background: #009999;
+-        }
+-        .btn-theme:disabled {
+-          opacity: 0.6;
+-          cursor: not-allowed;
+-        }
+-        .alert {
+-          padding: 0.75rem 1rem;
+-          margin-bottom: 1rem;
+-          border-radius: 0.25rem;
+-          background: #f8d7da;
+-          color: #721c24;
+-          border: 1px solid #f5c6cb;
+-        }
+-        .quick-login {
+-          margin-top: 1.5rem;
+-          padding-top: 1.5rem;
+-          border-top: 1px solid #dee2e6;
+-        }
+-        .quick-login-btn {
+-          display: inline-block;
+-          padding: 0.5rem 1rem;
+-          margin: 0.25rem;
+-          font-size: 0.875rem;
+-          border: 1px solid #00acac;
+-          color: #00acac;
+-          border-radius: 0.25rem;
+-          cursor: pointer;
+-          background: white;
+-          transition: all 0.15s;
+-        }
+-        .quick-login-btn:hover {
+-          background: #00acac;
+-          color: white;
+-        }
+-      `}</style>
++  const showQuickLogin = OFFLINE_DEMO || DEMO_SEED_ENABLED;
+ 
+-      <div className="login-cover">
+-        <div className="login-cover-content">
+-          <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>YOLE</h1>
+-          <p style={{ fontSize: '1.25rem', opacity: 0.9 }}>
+-            Staff Admin Portal
+-          </p>
+-          <p style={{ marginTop: '2rem', opacity: 0.8 }}>
+-            Secure access for authorized personnel
+-          </p>
++  return (
++    <>
++      <div className="login login-v2 fw-bold">
++        <div className="login-cover">
++          <div
++            className="login-cover-img"
++            style={{ backgroundImage: `url(${activeBg})` }}
++          ></div>
++          <div className="login-cover-bg"></div>
+         </div>
+-      </div>
+ 
+-      <div className="login-container">
+-        <div className="login-header">
+-          <div className="brand">
+-            YOLE <span style={{ fontWeight: 'normal' }}>Admin</span>
+-            <small>Staff Portal — Color Admin Teal</small>
++        <div className="login-container">
++          <div className="login-header">
++            <div className="brand">
++              <div className="d-flex align-items-center">
++                <span className="logo"></span>
++                <b className="me-1">YOLE</b> Admin
++              </div>
++              <small>Poste Finance neo-bank operations console</small>
++            </div>
++            <div className="icon">
++              <i className="fa fa-lock"></i>
++            </div>
+           </div>
+-        </div>
+ 
+-        <div className="login-content">
+-          {error && (
+-            <div className="alert">
+-              {error}
+-            </div>
+-          )}
++          <div className="login-content">
++            <form onSubmit={handleSubmit}>
++              {error && (
++                <div className="alert alert-danger py-2 mb-3" role="alert">
++                  {error}
++                </div>
++              )}
+ 
+-          <form onSubmit={handleSubmit}>
+-            <div className="form-floating">
+-              <input
+-                type="email"
+-                className="form-control"
+-                placeholder="Email Address"
+-                value={email}
+-                onChange={(e) => setEmail(e.target.value)}
+-                required
+-                disabled={loading}
+-              />
+-              <label>Email Address</label>
+-            </div>
++              {OFFLINE_DEMO && (
++                <div className="alert alert-info py-2 mb-3" role="status">
++                  Offline demo — no live API
++                </div>
++              )}
+ 
+-            <div className="form-floating">
+-              <input
+-                type="password"
+-                className="form-control"
+-                placeholder="Password"
+-                value={password}
+-                onChange={(e) => setPassword(e.target.value)}
+-                required
+-                disabled={loading}
+-              />
+-              <label>Password</label>
+-            </div>
++              <div className="form-floating mb-20px">
++                <input
++                  type="email"
++                  className="form-control fs-13px h-45px"
++                  id="emailAddress"
++                  placeholder="Email Address"
++                  value={email}
++                  onChange={(e) => setEmail(e.target.value)}
++                  autoComplete="username"
++                  required
++                />
++                <label htmlFor="emailAddress" className="d-flex align-items-center fs-13px">
++                  Email Address
++                </label>
++              </div>
+ 
+-            <div style={{ marginBottom: '1.25rem' }}>
+-              <button
+-                type="submit"
+-                className="btn-theme"
+-                style={{ width: '100%', height: '45px' }}
+-                disabled={loading}
+-              >
+-                {loading ? 'Signing in...' : 'Sign me in'}
+-              </button>
+-            </div>
+-          </form>
++              <div className="form-floating mb-20px">
++                <input
++                  type="password"
++                  className="form-control fs-13px h-45px"
++                  id="password"
++                  placeholder="Password"
++                  value={password}
++                  onChange={(e) => setPassword(e.target.value)}
++                  autoComplete="current-password"
++                  required
++                />
++                <label htmlFor="password" className="d-flex align-items-center fs-13px">
++                  Password
++                </label>
++              </div>
++
++              <div className="mb-20px">
++                <button
++                  type="submit"
++                  className="btn btn-theme d-block w-100 h-45px btn-lg"
++                  disabled={loading}
++                >
++                  {loading ? 'Signing in...' : 'Sign me in'}
++                </button>
++              </div>
+ 
+-          <div className="quick-login">
+-            <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem' }}>
+-              Quick login (dev):
+-            </p>
+-            <button onClick={() => quickLogin('admin')} className="quick-login-btn">
+-              Admin
+-            </button>
+-            <button onClick={() => quickLogin('ops')} className="quick-login-btn">
+-              Ops
+-            </button>
+-            <button onClick={() => quickLogin('support')} className="quick-login-btn">
+-              Support
+-            </button>
+-            <button onClick={() => quickLogin('finance')} className="quick-login-btn">
+-              Finance
+-            </button>
++              {showQuickLogin && (
++                <div className="login-quick">
++                  <div className="mb-2 fw-semibold text-white">Quick demo login</div>
++                  <div className="d-flex flex-wrap gap-2">
++                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('admin')}>
++                      Admin
++                    </button>
++                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('ops')}>
++                      Ops
++                    </button>
++                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('support')}>
++                      Support
++                    </button>
++                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('finance')}>
++                      Finance
++                    </button>
++                  </div>
++                  <div className="mt-2 small text-white-50">
++                    Password for all: <strong className="text-white">Password1!</strong>
++                  </div>
++                </div>
++              )}
++            </form>
+           </div>
+         </div>
+       </div>
+-    </div>
++
++      <div className="login-bg-list clearfix">
++        {LOGIN_BGS.map((bg) => (
++          <div
++            key={bg}
++            className={`login-bg-list-item${activeBg === bg ? ' active' : ''}`}
++          >
++            <a
++              href="#/"
++              onClick={(e) => {
++                e.preventDefault();
++                setActiveBg(bg);
++              }}
++              style={{ backgroundImage: `url(${bg})` }}
++              className="login-bg-list-link"
++            ></a>
++          </div>
++        ))}
++      </div>
++
++      <style jsx global>{`
++        /* Ensure Color Admin login-v2 form stays readable */
++        .login.login-v2 .login-content .form-control {
++          background: #fff !important;
++          color: #2d353c !important;
++          border: 1px solid rgba(255, 255, 255, 0.35) !important;
++        }
++        .login.login-v2 .login-content .form-floating > label {
++          color: #5f6b76 !important;
++        }
++        .login.login-v2 .login-content .form-control:focus {
++          border-color: #00acac !important;
++          box-shadow: 0 0 0 0.2rem rgba(0, 172, 172, 0.25) !important;
++        }
++        .login.login-v2 .brand,
++        .login.login-v2 .brand small,
++        .login.login-v2 .login-header .icon {
++          color: #fff !important;
++        }
++        .login.login-v2 .login-quick {
++          margin-top: 1rem;
++          padding-top: 1rem;
++          border-top: 1px solid rgba(255, 255, 255, 0.2);
++        }
++        .login.login-v2 .alert-danger {
++          background: #ffecec;
++          border: 1px solid #ffb3b0;
++          color: #9b1c1c;
++          font-weight: 600;
++        }
++        .login.login-v2 .alert-info {
++          background: rgba(0, 172, 172, 0.15);
++          border: 1px solid rgba(0, 172, 172, 0.45);
++          color: #fff;
++          font-weight: 600;
++        }
++      `}</style>
++    </>
+   );
+ }
+diff --git a/apps/admin_web/lib/api.ts b/apps/admin_web/lib/api.ts
+index 76f5bd9..f12f086 100644
+--- a/apps/admin_web/lib/api.ts
++++ b/apps/admin_web/lib/api.ts
+@@ -1,18 +1,38 @@
+ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+ 
++import { OFFLINE_DEMO } from './offline/flags';
++import { getOfflineStore } from './offline/store';
++import {
++  DEMO_SEED_ENABLED,
++  DEMO_AGENTS,
++  DEMO_EMPLOYERS,
++  DEMO_FEES,
++  DEMO_LIMITS,
++  filterDemoPayments,
++  filterDemoCases,
++  filterDemoCards,
++  filterDemoKyc,
++  getDemoCustomer360,
++  getDemoDashboardSummary,
++  getDemoRecon,
++} from './demo-seed';
++
+ export class AdminApiClient {
+   private apiKey: string;
+ 
+   constructor(apiKey: string = 'dev-admin-key') {
+     this.apiKey = apiKey;
+   }
+ 
+   private async request(endpoint: string, options: RequestInit = {}) {
++    if (OFFLINE_DEMO) {
++      throw new Error('OFFLINE_DEMO: fetch disabled — use OfflineDemoStore path');
++    }
+     const headers = {
+       'Content-Type': 'application/json',
+       'X-Admin-API-Key': this.apiKey,
+       ...options.headers,
+     };
+ 
+     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+       ...options,
+@@ -21,128 +41,286 @@ export class AdminApiClient {
+ 
+     if (!response.ok) {
+       throw new Error(`API error: ${response.statusText}`);
+     }
+ 
+     return response.json();
+   }
+ 
+-  // Dashboard counts
++  private preferSeed() {
++    return !OFFLINE_DEMO && DEMO_SEED_ENABLED;
++  }
++
++  private store() {
++    return getOfflineStore();
++  }
++
+   async getDashboardCounts() {
+-    // TODO: Add lightweight endpoint or aggregate from existing
+-    return {
+-      customers: 0,
+-      payments: 0,
+-      pendingKyc: 0,
+-      agents: 0,
+-    };
++    if (OFFLINE_DEMO) return this.store().getDashboardCounts();
++    if (this.preferSeed()) {
++      const s = getDemoDashboardSummary();
++      return {
++        customers: 4,
++        payments: s.kpis.paymentsToday,
++        pendingKyc: s.kpis.pendingKyc,
++        agents: s.kpis.activeAgents,
++      };
++    }
++    return { customers: 0, payments: 0, pendingKyc: 0, agents: 0 };
++  }
++
++  async getDashboardSummary() {
++    if (OFFLINE_DEMO) return this.store().getDashboardSummary();
++    if (this.preferSeed()) return getDemoDashboardSummary();
++    try {
++      return await this.request('/v1/admin/dashboard/summary');
++    } catch {
++      return getDemoDashboardSummary();
++    }
+   }
+ 
+-  // Customer 360
+   async getCustomer360(customerId: string) {
+-    return this.request(`/v1/admin/customers/${customerId}/360`);
++    if (OFFLINE_DEMO) return this.store().getCustomer360(customerId);
++    if (this.preferSeed()) return getDemoCustomer360(customerId);
++    try {
++      return await this.request(`/v1/admin/customers/${customerId}/360`);
++    } catch {
++      return getDemoCustomer360(customerId);
++    }
+   }
+ 
+-  // KYC
+   async listKycSubmissions(status?: string) {
+-    const query = status ? `?status=${status}` : '';
+-    return this.request(`/v1/admin/kyc/submissions${query}`);
++    if (OFFLINE_DEMO) return this.store().listKycSubmissions(status);
++    if (this.preferSeed()) return filterDemoKyc(status);
++    try {
++      const query = status ? `?status=${status}` : '';
++      const data = await this.request(`/v1/admin/kyc/submissions${query}`);
++      const list = Array.isArray(data) ? data : data.submissions || [];
++      return list.length ? list : filterDemoKyc(status);
++    } catch {
++      return filterDemoKyc(status);
++    }
+   }
+ 
+   async makeKycDecision(submissionId: string, decision: string, reason?: string) {
++    if (OFFLINE_DEMO) return this.store().makeKycDecision(submissionId, decision, reason);
++    if (this.preferSeed()) {
++      return {
++        id: submissionId,
++        decision,
++        reason: reason || 'Demo decision',
++        status: decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
++      };
++    }
+     return this.request(`/v1/admin/kyc/submissions/${submissionId}/decision`, {
+       method: 'POST',
+       body: JSON.stringify({ decision, reason }),
+     });
+   }
+ 
+-  // Agents
+   async listAgents() {
+-    return this.request('/v1/admin/agents');
++    if (OFFLINE_DEMO) return this.store().listAgents();
++    if (this.preferSeed()) return DEMO_AGENTS;
++    try {
++      const data = await this.request('/v1/admin/agents');
++      const list = Array.isArray(data) ? data : data.agents || [];
++      return list.length ? list : DEMO_AGENTS;
++    } catch {
++      return DEMO_AGENTS;
++    }
+   }
+ 
+-  async enrollAgent(data: { firstName: string; lastName: string; phoneE164: string; email?: string }) {
++  async enrollAgent(data: {
++    firstName: string;
++    lastName: string;
++    phoneE164: string;
++    email?: string;
++  }) {
++    if (OFFLINE_DEMO) return this.store().enrollAgent(data);
++    if (this.preferSeed()) {
++      return {
++        id: `agent_demo_${Date.now()}`,
++        ...data,
++        email: data.email || null,
++        status: 'ACTIVE',
++        floatWalletId: `wal_demo_${Date.now()}`,
++        createdAt: new Date().toISOString(),
++      };
++    }
+     return this.request('/v1/admin/agents', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     });
+   }
+ 
+-  // Payments
+   async searchPayments(filters?: { customerId?: string; status?: string; type?: string }) {
+-    const params = new URLSearchParams(filters as Record<string, string>);
+-    return this.request(`/v1/admin/payments/search?${params}`);
++    if (OFFLINE_DEMO) return this.store().searchPayments(filters);
++    if (this.preferSeed()) return filterDemoPayments(filters);
++    try {
++      const params = new URLSearchParams(filters as Record<string, string>);
++      const data = await this.request(`/v1/admin/payments/search?${params}`);
++      const list = Array.isArray(data) ? data : data.payments || [];
++      return list.length ? list : filterDemoPayments(filters);
++    } catch {
++      return filterDemoPayments(filters);
++    }
+   }
+ 
+-  // Fees/Limits
+   async listFeeConfigs() {
+-    return this.request('/v1/admin/config/fees');
++    if (OFFLINE_DEMO) return this.store().listFeeConfigs();
++    if (this.preferSeed()) return DEMO_FEES;
++    try {
++      const data = await this.request('/v1/admin/config/fees');
++      const list = Array.isArray(data) ? data : data.fees || [];
++      return list.length ? list : DEMO_FEES;
++    } catch {
++      return DEMO_FEES;
++    }
+   }
+ 
+   async createFeeConfig(data: any) {
++    if (OFFLINE_DEMO) return this.store().createFeeConfig(data);
++    if (this.preferSeed()) {
++      return {
++        id: `fee_demo_${Date.now()}`,
++        ...data,
++        feeType: 'PERCENT',
++        value: `${data.feePercent || 0}%`,
++        currency: 'USD',
++      };
++    }
+     return this.request('/v1/admin/config/fees', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     });
+   }
+ 
+   async listLimitConfigs() {
+-    return this.request('/v1/admin/config/limits');
++    if (OFFLINE_DEMO) return this.store().listLimitConfigs();
++    if (this.preferSeed()) return DEMO_LIMITS;
++    try {
++      const data = await this.request('/v1/admin/config/limits');
++      const list = Array.isArray(data) ? data : data.limits || [];
++      return list.length ? list : DEMO_LIMITS;
++    } catch {
++      return DEMO_LIMITS;
++    }
+   }
+ 
+-  // Cards
+   async listCards(customerId?: string) {
+-    const query = customerId ? `?customerId=${customerId}` : '';
+-    return this.request(`/v1/admin/cards${query}`);
++    if (OFFLINE_DEMO) return this.store().listCards(customerId);
++    if (this.preferSeed()) return filterDemoCards(customerId);
++    try {
++      const query = customerId ? `?customerId=${customerId}` : '';
++      const data = await this.request(`/v1/admin/cards${query}`);
++      const list = Array.isArray(data) ? data : data.cards || [];
++      return list.length ? list : filterDemoCards(customerId);
++    } catch {
++      return filterDemoCards(customerId);
++    }
+   }
+ 
+-  // Payroll
+   async listEmployers() {
+-    return this.request('/v1/admin/payroll/employers');
++    if (OFFLINE_DEMO) return this.store().listEmployers();
++    if (this.preferSeed()) return DEMO_EMPLOYERS;
++    try {
++      const data = await this.request('/v1/admin/payroll/employers');
++      const list = Array.isArray(data) ? data : data.employers || [];
++      return list.length ? list : DEMO_EMPLOYERS;
++    } catch {
++      return DEMO_EMPLOYERS;
++    }
+   }
+ 
+   async createEmployer(data: { name: string; taxId: string }) {
++    if (OFFLINE_DEMO) return this.store().createEmployer(data);
++    if (this.preferSeed()) {
++      return { id: `emp_demo_${Date.now()}`, ...data, employeeCount: 0, employees: [] };
++    }
+     return this.request('/v1/admin/payroll/employers', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     });
+   }
+ 
+-  async importEmployees(employerId: string, employees: { customerId: string; salaryMinor: string; currency: string }[]) {
++  async importEmployees(
++    employerId: string,
++    employees: { customerId: string; salaryMinor: string; currency: string }[],
++  ) {
++    if (OFFLINE_DEMO) return this.store().importEmployees(employerId, employees);
++    if (this.preferSeed()) {
++      return { employerId, imported: employees.length, employees };
++    }
+     return this.request(`/v1/admin/payroll/employers/${employerId}/employees/import`, {
+       method: 'POST',
+       body: JSON.stringify({ employees }),
+     });
+   }
+ 
+   async creditSalaries(employerId: string) {
++    if (OFFLINE_DEMO) return this.store().creditSalaries(employerId);
++    if (this.preferSeed()) {
++      return {
++        employerId,
++        credited: true,
++        count: 3,
++        totalMinor: '195000',
++        message: 'Demo salary credit posted',
++      };
++    }
+     return this.request(`/v1/admin/payroll/employers/${employerId}/salary/credit`, {
+       method: 'POST',
+     });
+   }
+ 
+-  // Recon & Cases
+   async getDailySummary(date: string) {
+-    return this.request(`/v1/admin/recon/daily?date=${date}`);
++    if (OFFLINE_DEMO) return this.store().getDailySummary(date);
++    if (this.preferSeed()) return getDemoRecon(date);
++    try {
++      return await this.request(`/v1/admin/recon/daily?date=${date}`);
++    } catch {
++      return getDemoRecon(date);
++    }
+   }
+ 
+   async listCases(status?: string) {
+-    const query = status ? `?status=${status}` : '';
+-    return this.request(`/v1/admin/cases${query}`);
++    if (OFFLINE_DEMO) return this.store().listCases(status);
++    if (this.preferSeed()) return filterDemoCases(status);
++    try {
++      const query = status ? `?status=${status}` : '';
++      const data = await this.request(`/v1/admin/cases${query}`);
++      const list = Array.isArray(data) ? data : data.cases || [];
++      return list.length ? list : filterDemoCases(status);
++    } catch {
++      return filterDemoCases(status);
++    }
+   }
+ 
+   async createCase(data: { type: string; description: string; customerId?: string }) {
++    if (OFFLINE_DEMO) return this.store().createCase(data);
++    if (this.preferSeed()) {
++      return {
++        id: `case_demo_${Date.now()}`,
++        ...data,
++        status: 'PENDING',
++        createdAt: new Date().toISOString(),
++      };
++    }
+     return this.request('/v1/admin/cases', {
+       method: 'POST',
+       body: JSON.stringify(data),
+     });
+   }
+ 
+   async updateCase(caseId: string, status: string) {
++    if (OFFLINE_DEMO) return this.store().updateCase(caseId, status);
++    if (this.preferSeed()) {
++      return { id: caseId, status };
++    }
+     return this.request(`/v1/admin/cases/${caseId}/status`, {
+       method: 'PUT',
+       body: JSON.stringify({ status }),
+     });
+   }
+ }
+ 
+ export const api = new AdminApiClient();
+diff --git a/apps/admin_web/lib/demo-seed.ts b/apps/admin_web/lib/demo-seed.ts
+new file mode 100644
+index 0000000..38c4e49
+--- /dev/null
++++ b/apps/admin_web/lib/demo-seed.ts
+@@ -0,0 +1,88 @@
++/**
++ * Compatibility shim — NOT a second source of truth.
++ * Seed data lives in packages/demo_universe (loadUniverse / OfflineDemoStore).
++ * Kept so existing imports (login helpers, charts) keep compiling during migration.
++ */
++import { loadUniverse } from 'demo_universe';
++import { OFFLINE_DEMO } from './offline/flags';
++import { getOfflineStore } from './offline/store';
++
++/** Prefer hard offline flag; retain DEMO_SEED env for transitional Mac Color Admin work. */
++export const DEMO_SEED_ENABLED =
++  OFFLINE_DEMO ||
++  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_DEMO_SEED !== 'false' : true);
++
++const universeSnapshot = () => loadUniverse();
++
++export const DEMO_STAFF = universeSnapshot().staff.map((s) => ({
++  id: s.id,
++  email: s.email,
++  password: s.password,
++  role: s.role,
++  firstName: s.firstName || s.role,
++  lastName: s.lastName || 'User',
++}));
++
++export const DEMO_CUSTOMERS = universeSnapshot().customers;
++export const DEMO_PAYMENTS = getOfflineStore().searchPayments();
++export const DEMO_KYC = getOfflineStore().listKycSubmissions();
++export const DEMO_AGENTS = getOfflineStore().listAgents();
++export const DEMO_CASES = getOfflineStore().listCases();
++export const DEMO_CARDS = getOfflineStore().listCards();
++export const DEMO_EMPLOYERS = getOfflineStore().listEmployers();
++export const DEMO_FEES = getOfflineStore().listFeeConfigs();
++export const DEMO_LIMITS = getOfflineStore().listLimitConfigs();
++
++export function getDemoDashboardSummary() {
++  return getOfflineStore().getDashboardSummary();
++}
++
++export function getDemoCustomer360(customerId: string) {
++  return getOfflineStore().getCustomer360(customerId);
++}
++
++export function getDemoRecon(date: string) {
++  return getOfflineStore().getDailySummary(date);
++}
++
++export function filterDemoPayments(filters?: {
++  customerId?: string;
++  status?: string;
++  type?: string;
++}) {
++  return getOfflineStore().searchPayments(filters);
++}
++
++export function filterDemoCases(status?: string) {
++  return getOfflineStore().listCases(status);
++}
++
++export function filterDemoCards(customerId?: string) {
++  return getOfflineStore().listCards(customerId);
++}
++
++export function filterDemoKyc(status?: string) {
++  return getOfflineStore().listKycSubmissions(status);
++}
++
++/** Build an unsigned JWT the browser can decode (demo only — not verified server-side). */
++export function mintDemoStaffToken(staff: { id: string; email: string; role: string }): string {
++  const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }))
++    .replace(/=+$/, '')
++    .replace(/\+/g, '-')
++    .replace(/\//g, '_');
++  const exp = Math.floor(Date.now() / 1000) + 7 * 24 * 3600;
++  const payload = btoa(
++    JSON.stringify({
++      sub: staff.id,
++      email: staff.email,
++      role: staff.role,
++      iat: Math.floor(Date.now() / 1000),
++      exp,
++    }),
++  )
++    .replace(/=+$/, '')
++    .replace(/\+/g, '-')
++    .replace(/\//g, '_');
++  return `${header}.${payload}.demo`;
++}
+diff --git a/apps/admin_web/lib/offline/flags.ts b/apps/admin_web/lib/offline/flags.ts
+new file mode 100644
+index 0000000..4026d73
+--- /dev/null
++++ b/apps/admin_web/lib/offline/flags.ts
+@@ -0,0 +1,2 @@
++/** Hard offline demo mode — when true, admin never fetch()es the live API. */
++export const OFFLINE_DEMO = process.env.NEXT_PUBLIC_OFFLINE_DEMO === 'true';
+diff --git a/apps/admin_web/lib/offline/store.test.ts b/apps/admin_web/lib/offline/store.test.ts
+new file mode 100644
+index 0000000..72dcbbc
+--- /dev/null
++++ b/apps/admin_web/lib/offline/store.test.ts
+@@ -0,0 +1,8 @@
++import { OfflineDemoStore } from './store';
++
++test('offline store customer360 for cust_kasee has dual wallets', () => {
++  const store = OfflineDemoStore.createFresh();
++  const c360 = store.getCustomer360('cust_kasee');
++  expect(c360.customer.id).toBe('cust_kasee');
++  expect(c360.wallets).toHaveLength(2);
++});
+diff --git a/apps/admin_web/lib/offline/store.ts b/apps/admin_web/lib/offline/store.ts
+new file mode 100644
+index 0000000..06a46a5
+--- /dev/null
++++ b/apps/admin_web/lib/offline/store.ts
+@@ -0,0 +1,466 @@
++import { loadUniverse } from 'demo_universe';
++import type {
++  Universe,
++  Staff,
++  Customer,
++  Wallet,
++  Payment,
++  Loan,
++  Card,
++  Case,
++  KycSubmission,
++  Agent,
++  Employer,
++  Employee,
++  FeeLimit,
++  ReconDay,
++} from 'demo_universe';
++
++function strMinor(n: number | string | undefined | null): string {
++  if (n === undefined || n === null) return '0';
++  return String(n);
++}
++
++function paymentForAdmin(p: Payment) {
++  return {
++    ...p,
++    amountMinor: strMinor(p.amountMinor),
++    feeMinor: strMinor(p.feeMinor),
++    totalMinor: strMinor(p.totalMinor),
++    updatedAt: p.createdAt,
++  };
++}
++
++function cardForAdmin(c: Card) {
++  return {
++    ...c,
++    dailyLimitMinor: strMinor(c.dailyLimitMinor),
++    monthlyLimitMinor: strMinor(c.monthlyLimitMinor),
++  };
++}
++
++function walletForAdmin(w: Wallet) {
++  return {
++    ...w,
++    availableMinor: strMinor(w.availableMinor),
++    ledgerMinor: strMinor(w.ledgerMinor),
++    blockedMinor: strMinor(w.blockedMinor),
++    pendingMinor: strMinor(w.pendingMinor),
++    // Compat for pocket-based Color Admin / legacy 360 UI
++    pockets: [
++      {
++        id: `${w.id}_pocket`,
++        currency: w.currency,
++        availableMinor: strMinor(w.availableMinor),
++        ledgerMinor: strMinor(w.ledgerMinor),
++        blockedMinor: strMinor(w.blockedMinor),
++        pendingOutMinor: strMinor(w.pendingMinor),
++        pendingInMinor: '0',
++      },
++    ],
++  };
++}
++
++function feeForAdmin(f: FeeLimit) {
++  const feePercent = f.feePercent ?? 0;
++  const feeType = feePercent > 0 ? 'PERCENT' : 'FLAT';
++  return {
++    id: f.id,
++    paymentType: f.paymentType,
++    feeType,
++    value: feePercent > 0 ? `${feePercent}%` : strMinor(f.minFeeMinor),
++    currency: f.currency || 'USD',
++    feePercent,
++    minFeeMinor: strMinor(f.minFeeMinor),
++    maxFeeMinor: strMinor(f.maxFeeMinor),
++    status: f.status,
++    effectiveFrom: f.effectiveFrom,
++  };
++}
++
++function limitForAdmin(f: FeeLimit) {
++  const currency = f.currency || 'USD';
++  const daily = f.dailyLimitMinor ?? 0;
++  const monthly = f.monthlyLimitMinor ?? 0;
++  const fmt = (n: number) =>
++    currency === 'CDF' ? `FC ${n.toLocaleString()}` : `$${(n / 100).toFixed(2)}`;
++  return {
++    id: f.id,
++    limitType: f.limitType,
++    kycTier: 'TIER_1',
++    currency,
++    dailyLimitMinor: strMinor(daily),
++    monthlyLimitMinor: strMinor(monthly),
++    dailyLimit: fmt(daily),
++    monthlyLimit: fmt(monthly),
++    value: `${fmt(daily)} / ${fmt(monthly)}`,
++    status: f.status,
++    effectiveFrom: f.effectiveFrom,
++  };
++}
++
++export type Customer360 = {
++  customer: Customer;
++  wallets: ReturnType<typeof walletForAdmin>[];
++  recentPayments: ReturnType<typeof paymentForAdmin>[];
++  loans: Loan[];
++  cards: ReturnType<typeof cardForAdmin>[];
++  cases: Case[];
++};
++
++/**
++ * In-memory admin offline store backed by shared demo_universe seed.
++ * Session mutations stay local; call reset() to reload from universe.
++ */
++export class OfflineDemoStore {
++  private u: Universe;
++
++  private constructor(universe: Universe) {
++    this.u = universe;
++  }
++
++  static createFresh(): OfflineDemoStore {
++    return new OfflineDemoStore(loadUniverse());
++  }
++
++  /** Reload seed graph (discards session mutations). */
++  reset(): void {
++    this.u = loadUniverse();
++  }
++
++  listStaff(): Staff[] {
++    return this.u.staff.slice();
++  }
++
++  authenticateStaff(email: string, password: string): Staff | null {
++    const normalized = email.trim().toLowerCase();
++    const staff = this.u.staff.find(
++      (s) => s.email.toLowerCase() === normalized && s.password === password,
++    );
++    return staff ?? null;
++  }
++
++  getDashboardCounts() {
++    const s = this.getDashboardSummary();
++    return {
++      customers: this.u.customers.length,
++      payments: s.kpis.paymentsToday,
++      pendingKyc: s.kpis.pendingKyc,
++      agents: s.kpis.activeAgents,
++    };
++  }
++
++  getDashboardSummary() {
++    const paymentsByStatus: Record<string, number> = {};
++    const paymentsByType: Record<string, number> = {};
++    for (const p of this.u.payments) {
++      paymentsByStatus[p.status] = (paymentsByStatus[p.status] || 0) + 1;
++      paymentsByType[p.type] = (paymentsByType[p.type] || 0) + 1;
++    }
++    const today = new Date().toISOString().slice(0, 10);
++    return {
++      kpis: {
++        pendingKyc: this.u.kyc.filter((k) =>
++          ['PENDING_REVIEW', 'PENDING', 'SUBMITTED'].includes(k.status),
++        ).length,
++        openCases: this.u.cases.filter((c) =>
++          ['OPEN', 'PENDING', 'IN_PROGRESS', 'INVESTIGATION'].includes(c.status),
++        ).length,
++        paymentsToday: this.u.payments.filter((p) => p.createdAt.slice(0, 10) === today)
++          .length,
++        activeAgents: this.u.agents.filter((a) => a.status === 'ACTIVE').length,
++        totalCards: this.u.cards.length,
++      },
++      paymentsByStatus: Object.entries(paymentsByStatus).map(([status, count]) => ({
++        status,
++        count,
++      })),
++      paymentsByType: Object.entries(paymentsByType).map(([type, count]) => ({
++        type,
++        count,
++      })),
++      honesty: this.u.meta.honesty,
++    };
++  }
++
++  getCustomer360(customerId: string): Customer360 {
++    const customer =
++      this.u.customers.find((c) => c.id === customerId) ||
++      ({
++        id: customerId,
++        firstName: 'Unknown',
++        lastName: 'Customer',
++        email: `${customerId}@demo.yole.com`,
++        password: '',
++        phoneE164: null,
++        segment: 'OPEN',
++        kycStatus: 'PENDING',
++        createdAt: new Date().toISOString(),
++      } as Customer);
++
++    const wallets = this.u.wallets
++      .filter((w) => w.customerId === customerId)
++      .map(walletForAdmin);
++
++    const recentPayments = this.u.payments
++      .filter((p) => p.customerId === customerId)
++      .slice()
++      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
++      .slice(0, 12)
++      .map(paymentForAdmin);
++
++    const loans = this.u.loans.filter((l) => l.customerId === customerId);
++    const cards = this.u.cards.filter((c) => c.customerId === customerId).map(cardForAdmin);
++    const cases = this.u.cases.filter((c) => c.customerId === customerId);
++
++    return { customer, wallets, recentPayments, loans, cards, cases };
++  }
++
++  listKycSubmissions(status?: string): KycSubmission[] {
++    if (!status) return this.u.kyc.slice();
++    return this.u.kyc.filter((k) => k.status === status);
++  }
++
++  makeKycDecision(submissionId: string, decision: string, reason?: string) {
++    const row = this.u.kyc.find((k) => k.id === submissionId);
++    const status = decision === 'APPROVE' || decision === 'APPROVED' ? 'APPROVED' : 'REJECTED';
++    if (row) {
++      row.status = status;
++      row.reviewNotes = reason || row.reviewNotes || 'Offline demo decision';
++      row.updatedAt = new Date().toISOString();
++      const cust = this.u.customers.find((c) => c.id === row.customerId);
++      if (cust) cust.kycStatus = status === 'APPROVED' ? 'APPROVED' : 'REJECTED';
++    }
++    return {
++      id: submissionId,
++      decision,
++      reason: reason || 'Demo decision',
++      status,
++    };
++  }
++
++  listAgents(): Agent[] {
++    return this.u.agents.slice();
++  }
++
++  enrollAgent(data: {
++    firstName: string;
++    lastName: string;
++    phoneE164: string;
++    email?: string;
++  }) {
++    const id = `agent_demo_${Date.now()}`;
++    const agent: Agent = {
++      id,
++      name: `${data.firstName} ${data.lastName}`.trim(),
++      firstName: data.firstName,
++      lastName: data.lastName,
++      phoneE164: data.phoneE164,
++      floatCdfMinor: 0,
++      floatUsdMinor: 0,
++      floatWalletId: `wal_float_${id}`,
++      status: 'ACTIVE',
++      createdAt: new Date().toISOString(),
++    };
++    if (data.email) agent.email = data.email;
++    this.u.agents.push(agent);
++    return agent;
++  }
++
++  searchPayments(filters?: { customerId?: string; status?: string; type?: string }) {
++    return this.u.payments
++      .filter((p) => {
++        if (filters?.customerId && p.customerId !== filters.customerId) return false;
++        if (filters?.status && p.status !== filters.status) return false;
++        if (
++          filters?.type &&
++          p.type !== filters.type &&
++          !(filters.type === 'BILL_PAY' && p.type === 'BILL')
++        ) {
++          return false;
++        }
++        return true;
++      })
++      .map(paymentForAdmin);
++  }
++
++  listFeeConfigs() {
++    return this.u.feeLimits.filter((f) => f.kind === 'FEE').map(feeForAdmin);
++  }
++
++  createFeeConfig(data: Record<string, unknown>) {
++    const id = `fee_demo_${Date.now()}`;
++    const feePercent = Number(data.feePercent ?? 0);
++    const row: FeeLimit = {
++      id,
++      kind: 'FEE',
++      paymentType: String(data.paymentType || 'W2W'),
++      feePercent,
++      minFeeMinor: Number(data.minFeeMinor ?? 0),
++      maxFeeMinor: Number(data.maxFeeMinor ?? 0),
++      currency: String(data.currency || 'USD'),
++      effectiveFrom: new Date().toISOString().slice(0, 10),
++      status: 'ACTIVE',
++    };
++    this.u.feeLimits.push(row);
++    return feeForAdmin(row);
++  }
++
++  listLimitConfigs() {
++    return this.u.feeLimits.filter((f) => f.kind === 'LIMIT').map(limitForAdmin);
++  }
++
++  listCards(customerId?: string) {
++    const list = customerId
++      ? this.u.cards.filter((c) => c.customerId === customerId)
++      : this.u.cards.slice();
++    return list.map(cardForAdmin);
++  }
++
++  listEmployers() {
++    return this.u.employers.map((e) => {
++      const employees = this.u.employees
++        .filter((emp) => emp.employerId === e.id)
++        .map((emp) => ({
++          customerId: emp.customerId,
++          salaryMinor: strMinor(emp.netSalaryCdfMinor),
++          currency: 'CDF',
++          employeeNumber: emp.employeeNumber,
++          jobTitle: emp.jobTitle,
++          status: emp.status,
++        }));
++      return {
++        ...e,
++        employeeCount: e.employeeCount ?? employees.length,
++        employees,
++      };
++    });
++  }
++
++  createEmployer(data: { name: string; taxId: string }) {
++    const id = `emp_demo_${Date.now()}`;
++    const employer: Employer = {
++      id,
++      name: data.name,
++      taxId: data.taxId,
++      employeeCount: 0,
++      createdAt: new Date().toISOString(),
++    };
++    this.u.employers.push(employer);
++    return { ...employer, employees: [] as Employee[] };
++  }
++
++  importEmployees(
++    employerId: string,
++    employees: { customerId: string; salaryMinor: string; currency: string }[],
++  ) {
++    for (const row of employees) {
++      const id = `emp_row_demo_${Date.now()}_${row.customerId}`;
++      this.u.employees.push({
++        id,
++        employerId,
++        customerId: row.customerId,
++        employeeNumber: id,
++        grossSalaryCdfMinor: Number(row.salaryMinor),
++        netSalaryCdfMinor: Number(row.salaryMinor),
++        eligibleAdvanceMaxCdfMinor: Math.floor(Number(row.salaryMinor) / 2),
++        status: 'ACTIVE',
++        hiredAt: new Date().toISOString().slice(0, 10),
++      });
++    }
++    const employer = this.u.employers.find((e) => e.id === employerId);
++    if (employer) {
++      employer.employeeCount = this.u.employees.filter((e) => e.employerId === employerId).length;
++    }
++    return { employerId, imported: employees.length, employees };
++  }
++
++  creditSalaries(employerId: string) {
++    const employees = this.u.employees.filter((e) => e.employerId === employerId);
++    let total = 0;
++    for (const emp of employees) {
++      total += emp.netSalaryCdfMinor;
++      this.u.salaryHistory.push({
++        id: `sal_demo_${Date.now()}_${emp.id}`,
++        employeeId: emp.id,
++        customerId: emp.customerId,
++        period: new Date().toISOString().slice(0, 7),
++        grossCdfMinor: emp.grossSalaryCdfMinor,
++        netCdfMinor: emp.netSalaryCdfMinor,
++        paidAt: new Date().toISOString(),
++      });
++    }
++    return {
++      employerId,
++      credited: true,
++      count: employees.length,
++      totalMinor: strMinor(total),
++      message: 'Offline demo salary credit posted',
++    };
++  }
++
++  getDailySummary(date: string) {
++    const day: ReconDay | undefined =
++      this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];
++    const payments = this.u.payments;
++    const totalVolume = payments.reduce((s, p) => s + Number(p.amountMinor), 0);
++    return {
++      date: day?.businessDate || date,
++      totalTransactions: payments.length,
++      totalVolumeMinor: strMinor(totalVolume),
++      status: day?.status || 'BALANCED',
++      matchedCount: day?.matchedCount,
++      exceptionCount: day?.exceptionCount,
++      details: {
++        exceptions: day?.exceptions || [],
++        eodSnapshot: day?.eodSnapshot || {},
++        rails: {},
++        ledgerDeltaMinor: '0',
++      },
++    };
++  }
++
++  listCases(status?: string) {
++    if (!status) return this.u.cases.slice();
++    return this.u.cases.filter((c) => c.status === status);
++  }
++
++  createCase(data: { type: string; description: string; customerId?: string }) {
++    const row: Case = {
++      id: `case_demo_${Date.now()}`,
++      type: data.type,
++      description: data.description,
++      customerId: data.customerId ?? null,
++      status: 'PENDING',
++      createdAt: new Date().toISOString(),
++    };
++    this.u.cases.push(row);
++    return row;
++  }
++
++  updateCase(caseId: string, status: string) {
++    const row = this.u.cases.find((c) => c.id === caseId);
++    if (row) {
++      row.status = status;
++      if (['RESOLVED', 'CLOSED', 'APPROVED', 'REJECTED'].includes(status)) {
++        row.decidedAt = new Date().toISOString();
++      }
++    }
++    return { id: caseId, status };
++  }
++}
++
++let singleton: OfflineDemoStore | null = null;
++
++export function getOfflineStore(): OfflineDemoStore {
++  if (!singleton) {
++    singleton = OfflineDemoStore.createFresh();
++  }
++  return singleton;
++}
++
++/** Discard singleton and create a fresh store from universe seed. */
++export function resetOfflineStore(): OfflineDemoStore {
++  singleton = OfflineDemoStore.createFresh();
++  return singleton;
++}
+diff --git a/apps/admin_web/next.config.js b/apps/admin_web/next.config.js
+new file mode 100644
+index 0000000..0fc3eb1
+--- /dev/null
++++ b/apps/admin_web/next.config.js
+@@ -0,0 +1,9 @@
++/** @type {import('next').NextConfig} */
++const nextConfig = {
++  // Mac Color Admin next.config was not in the task-2 Mac copy set.
++  // Minimal config required so Next can transpile the workspace TS package.
++  transpilePackages: ['demo_universe'],
++  reactStrictMode: true,
++};
++
++module.exports = nextConfig;
+diff --git a/apps/admin_web/package.json b/apps/admin_web/package.json
+index 833d223..d89f650 100644
+--- a/apps/admin_web/package.json
++++ b/apps/admin_web/package.json
+@@ -1,30 +1,36 @@
+ {
+   "name": "admin_web",
+   "version": "0.1.0",
+   "private": true,
+   "scripts": {
+     "dev": "next dev",
+     "build": "next build",
+     "start": "next start",
+-    "lint": "next lint"
++    "lint": "next lint",
++    "test": "vitest run",
++    "test:offline": "vitest run lib/offline/store.test.ts"
+   },
+   "dependencies": {
++    "@fortawesome/fontawesome-free": "^7.3.1",
++    "bootstrap-icons": "^1.13.1",
++    "demo_universe": "workspace:*",
+     "jwt-decode": "^4.0.0",
+-    "next": "14.0.0",
++    "next": "14.2.35",
+     "react": "^18.2.0",
+     "react-dom": "^18.2.0",
+     "react-perfect-scrollbar": "^1.5.8",
+     "recharts": "^2.15.4"
+   },
+   "devDependencies": {
+     "@types/node": "^20",
+     "@types/react": "^18",
+     "@types/react-dom": "^18",
+-    "autoprefixer": "^10.0.1",
++    "autoprefixer": "^10.6.1",
+     "eslint": "^8",
+-    "eslint-config-next": "14.0.0",
+-    "postcss": "^8",
+-    "tailwindcss": "^3.3.0",
+-    "typescript": "^5"
++    "eslint-config-next": "14.2.35",
++    "postcss": "^8.5.28",
++    "tailwindcss": "^3.4.19",
++    "typescript": "^5",
++    "vitest": "^2.1.0"
+   }
+ }
+diff --git a/apps/admin_web/vitest.config.ts b/apps/admin_web/vitest.config.ts
+new file mode 100644
+index 0000000..bee32d1
+--- /dev/null
++++ b/apps/admin_web/vitest.config.ts
+@@ -0,0 +1,14 @@
++import { defineConfig } from 'vitest/config';
++import path from 'node:path';
++
++export default defineConfig({
++  test: {
++    globals: true,
++  },
++  resolve: {
++    alias: {
++      demo_universe: path.resolve(__dirname, '../../packages/demo_universe/ts/index.ts'),
++      '@': path.resolve(__dirname),
++    },
++  },
++});

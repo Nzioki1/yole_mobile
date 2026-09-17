@@ -1,0 +1,2427 @@
+=== COMMITS ===
+6b1bddf feat(demo-universe): shared offline seed graph and loaders
+=== STAT ===
+ packages/demo_universe/README.md                   |  45 +
+ packages/demo_universe/dart/assets/universe.json   | 905 +++++++++++++++++++++
+ packages/demo_universe/dart/lib/demo_universe.dart |  60 ++
+ packages/demo_universe/dart/pubspec.yaml           |   7 +
+ packages/demo_universe/data/universe.json          | 905 +++++++++++++++++++++
+ packages/demo_universe/package.json                |  19 +
+ packages/demo_universe/ts/clone.test.ts            |   8 +
+ packages/demo_universe/ts/index.ts                 |   2 +
+ packages/demo_universe/ts/load.test.ts             |  15 +
+ packages/demo_universe/ts/load.ts                  |   6 +
+ packages/demo_universe/ts/types.ts                 | 339 ++++++++
+ packages/demo_universe/tsconfig.json               |  13 +
+ packages/demo_universe/vitest.config.ts            |   7 +
+ 13 files changed, 2331 insertions(+)
+=== DIFF ===
+diff --git a/packages/demo_universe/README.md b/packages/demo_universe/README.md
+new file mode 100644
+index 0000000..d1b7360
+--- /dev/null
++++ b/packages/demo_universe/README.md
+@@ -0,0 +1,45 @@
++# demo_universe
++
++Shared **offline** demo seed graph for YOLE Poste Finance DEM-01…DEM-12.
++
++## Single source of truth
++
++`data/universe.json` is the only seed. TypeScript and Dart loaders deep-clone it so session mutations do not corrupt the seed.
++
++> `apps/admin_web/lib/demo-seed.ts` was not present on this branch; useful rows from `apps/admin_web/lib/mockData.ts` were migrated into this JSON. Mandatory shared IDs (`cust_kasee`, `cust_amina`, `agent-001`, `emp_poste`, …) are authoritative.
++
++## TypeScript (admin)
++
++```ts
++import { loadUniverse } from 'demo_universe';
++
++const u = loadUniverse(); // structuredClone of universe.json
++```
++
++Workspace package name: `demo_universe`.
++
++## Dart (customer + agent)
++
++```dart
++import 'package:demo_universe/demo_universe.dart';
++
++final u = DemoUniverse.load(); // reads ../data/universe.json (or pass path:)
++```
++
++Flutter apps should path-depend on `packages/demo_universe/dart` and optionally declare an asset pointing at `../data/universe.json` (or the synced `dart/assets/universe.json` copy).
++
++## Honesty banners (in meta.honesty)
++
++- Global: **Offline demo — no live API**
++- Cards: **MOCK — not Visa/Mastercard certified**
++- Resilience: **DEMO STORYBOARD — not a live HA failover**
++
++## Test
++
++```bash
++cd packages/demo_universe && pnpm install && pnpm exec vitest run ts/load.test.ts
++```
++
++## Collections
++
++staff, customers, wallets, agents, employers, employees, salaryHistory, journals, payments, agentTransactions, loanSchedules, loans, cards, cardAuths, remittances, fxRates, conversions, products, feeLimits, pendingApprovals, cases, reconDays, kyc, notifications, meta.demBookmarks.
+diff --git a/packages/demo_universe/dart/assets/universe.json b/packages/demo_universe/dart/assets/universe.json
+new file mode 100644
+index 0000000..0ff9184
+--- /dev/null
++++ b/packages/demo_universe/dart/assets/universe.json
+@@ -0,0 +1,905 @@
++{
++  "meta": {
++    "version": 1,
++    "name": "yole-poste-offline-demo",
++    "description": "Shared offline DEM-01\u2026DEM-12 seed graph for admin, customer, and agent apps",
++    "honesty": {
++      "globalBadge": "Offline demo \u2014 no live API",
++      "cardsBadge": "MOCK \u2014 not Visa/Mastercard certified",
++      "resilienceBadge": "DEMO STORYBOARD \u2014 not a live HA failover"
++    },
++    "demBookmarks": {
++      "DEM-01": {
++        "customerId": "cust_kasee",
++        "path": "customer/register-kyc-home"
++      },
++      "DEM-02": {
++        "approvalId": "apr_fee_w2w_001",
++        "path": "admin/products+approvals"
++      },
++      "DEM-03": {
++        "customerId": "cust_amina",
++        "loanId": "loan_amina_active_001",
++        "employerId": "emp_poste"
++      },
++      "DEM-04": {
++        "loanId": "loan_kasee_exception_001",
++        "path": "admin/credit-exceptions"
++      },
++      "DEM-05": {
++        "paymentId": "pay_kasee_idem_001",
++        "path": "admin/idempotency"
++      },
++      "DEM-06": {
++        "paymentIds": [
++          "pay_kasee_w2w_001",
++          "pay_kasee_mno_001",
++          "pay_kasee_bank_001",
++          "pay_kasee_bill_001"
++        ]
++      },
++      "DEM-07": {
++        "cardId": "card_kasee_virtual_001",
++        "authId": "cauth_kasee_3ds_001",
++        "caseId": "case_card_dispute_001"
++      },
++      "DEM-08": {
++        "remittanceIds": [
++          "rmt_clear_001",
++          "rmt_screen_hit_001"
++        ]
++      },
++      "DEM-09": {
++        "caseId": "case_aml_conf_001"
++      },
++      "DEM-10": {
++        "path": "admin/resilience"
++      },
++      "DEM-11": {
++        "reconDayId": "recon_2026-09-16"
++      },
++      "DEM-12": {
++        "path": "admin/export"
++      }
++    }
++  },
++  "staff": [
++    {
++      "id": "staff_admin",
++      "email": "admin@yole.com",
++      "password": "Password1!",
++      "role": "ADMIN",
++      "firstName": "Ada",
++      "lastName": "Admin"
++    },
++    {
++      "id": "staff_ops",
++      "email": "ops@yole.com",
++      "password": "Password1!",
++      "role": "OPS",
++      "firstName": "Omar",
++      "lastName": "Ops"
++    },
++    {
++      "id": "staff_support",
++      "email": "support@yole.com",
++      "password": "Password1!",
++      "role": "SUPPORT",
++      "firstName": "Sara",
++      "lastName": "Support"
++    },
++    {
++      "id": "staff_finance",
++      "email": "finance@yole.com",
++      "password": "Password1!",
++      "role": "FINANCE",
++      "firstName": "Fiona",
++      "lastName": "Finance"
++    }
++  ],
++  "customers": [
++    {
++      "id": "cust_kasee",
++      "email": "kasee.demo@yole.com",
++      "password": "Password1!",
++      "phoneE164": "+243990000001",
++      "firstName": "Kasee",
++      "lastName": "Demo",
++      "segment": "OPEN",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-08-15T10:30:00Z"
++    },
++    {
++      "id": "cust_amina",
++      "email": "amina.payroll@yole.com",
++      "password": "Password1!",
++      "phoneE164": "+243990000002",
++      "firstName": "Amina",
++      "lastName": "Payroll",
++      "segment": "CORPORATE",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "employerId": "emp_poste",
++      "enrolledByAgentId": null,
++      "createdAt": "2026-07-01T09:00:00Z"
++    },
++    {
++      "id": "cust_jp_kabila",
++      "email": "jkabila@example.cd",
++      "password": "Password1!",
++      "phoneE164": "+243990123456",
++      "firstName": "Jean-Paul",
++      "lastName": "Kabila",
++      "segment": "RETAIL",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-08-15T10:30:00Z"
++    },
++    {
++      "id": "cust_marie_tshala",
++      "email": "mtshala@example.cd",
++      "password": "Password1!",
++      "phoneE164": "+243991234567",
++      "firstName": "Marie",
++      "lastName": "Tshala",
++      "segment": "RETAIL",
++      "status": "ACTIVE",
++      "kycStatus": "PENDING_REVIEW",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-09-10T14:20:00Z"
++    }
++  ],
++  "wallets": [
++    {
++      "id": "wal_kasee_cdf",
++      "customerId": "cust_kasee",
++      "currency": "CDF",
++      "availableMinor": 25000000,
++      "ledgerMinor": 25000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_kasee_usd",
++      "customerId": "cust_kasee",
++      "currency": "USD",
++      "availableMinor": 15000,
++      "ledgerMinor": 15000,
++      "blockedMinor": 0,
++      "pendingMinor": 500
++    },
++    {
++      "id": "wal_amina_cdf",
++      "customerId": "cust_amina",
++      "currency": "CDF",
++      "availableMinor": 18000000,
++      "ledgerMinor": 18000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_amina_usd",
++      "customerId": "cust_amina",
++      "currency": "USD",
++      "availableMinor": 42000,
++      "ledgerMinor": 42000,
++      "blockedMinor": 5000,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_jp_usd",
++      "customerId": "cust_jp_kabila",
++      "currency": "USD",
++      "availableMinor": 125000,
++      "ledgerMinor": 125000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_jp_cdf",
++      "customerId": "cust_jp_kabila",
++      "currency": "CDF",
++      "availableMinor": 15000000,
++      "ledgerMinor": 15000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    }
++  ],
++  "agents": [
++    {
++      "id": "agent-001",
++      "name": "Kinshasa Agent 1",
++      "firstName": "Claude",
++      "lastName": "Mokonzi",
++      "phoneE164": "+243810111111",
++      "email": "agent001@yole-agents.cd",
++      "password": "Password1!",
++      "floatCdfMinor": 500000000,
++      "floatUsdMinor": 200000,
++      "floatWalletId": "wallet_float_agent001",
++      "status": "ACTIVE",
++      "createdAt": "2026-07-01T08:00:00Z"
++    },
++    {
++      "id": "agent-002",
++      "name": "Gombe Agent 2",
++      "firstName": "Beatrice",
++      "lastName": "Nzuzi",
++      "phoneE164": "+243810222222",
++      "email": "bnzuzi@yole-agents.cd",
++      "password": "Password1!",
++      "floatCdfMinor": 250000000,
++      "floatUsdMinor": 100000,
++      "floatWalletId": "wallet_float_agent002",
++      "status": "ACTIVE",
++      "createdAt": "2026-07-01T08:00:00Z"
++    }
++  ],
++  "employers": [
++    {
++      "id": "emp_poste",
++      "name": "Poste Demo SARL",
++      "taxId": "CD-POSTE-001",
++      "employeeCount": 12,
++      "createdAt": "2026-06-01T08:00:00Z"
++    },
++    {
++      "id": "emp_congo_mining",
++      "name": "Congo Mining Corp",
++      "taxId": "TAX001234",
++      "employeeCount": 145,
++      "createdAt": "2026-07-10T08:00:00Z"
++    }
++  ],
++  "employees": [
++    {
++      "id": "emp_row_amina",
++      "employerId": "emp_poste",
++      "customerId": "cust_amina",
++      "employeeNumber": "PD-10042",
++      "jobTitle": "Operations Analyst",
++      "grossSalaryCdfMinor": 85000000,
++      "netSalaryCdfMinor": 72000000,
++      "eligibleAdvanceMaxCdfMinor": 36000000,
++      "status": "ACTIVE",
++      "hiredAt": "2024-03-01"
++    }
++  ],
++  "salaryHistory": [
++    {
++      "id": "sal_amina_2026_06",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-06",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-06-28T10:00:00Z"
++    },
++    {
++      "id": "sal_amina_2026_07",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-07",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-07-28T10:00:00Z"
++    },
++    {
++      "id": "sal_amina_2026_08",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-08",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-08-28T10:00:00Z"
++    }
++  ],
++  "journals": [
++    {
++      "id": "jnl_kasee_w2w_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_usd",
++      "type": "PAYMENT",
++      "direction": "DEBIT",
++      "currency": "USD",
++      "amountMinor": 5000,
++      "balanceAfterMinor": 15000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_w2w_001",
++      "narration": "W2W to Jean-Paul",
++      "postedAt": "2026-09-16T10:30:05Z"
++    },
++    {
++      "id": "jnl_kasee_mno_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "PAYMENT",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 5000000,
++      "balanceAfterMinor": 25000000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_mno_001",
++      "narration": "Vodacom cash-in",
++      "postedAt": "2026-09-15T09:20:05Z"
++    },
++    {
++      "id": "jnl_kasee_bank_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_usd",
++      "type": "PAYMENT",
++      "direction": "CREDIT",
++      "currency": "USD",
++      "amountMinor": 10000,
++      "balanceAfterMinor": 20000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_bank_001",
++      "narration": "Rawbank inbound",
++      "postedAt": "2026-09-14T16:30:05Z"
++    },
++    {
++      "id": "jnl_kasee_bill_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "PAYMENT",
++      "direction": "DEBIT",
++      "currency": "CDF",
++      "amountMinor": 15000000,
++      "balanceAfterMinor": 20000000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_bill_001",
++      "narration": "SNEL bill",
++      "postedAt": "2026-09-13T08:10:05Z"
++    },
++    {
++      "id": "jnl_amina_disburse_001",
++      "customerId": "cust_amina",
++      "walletId": "wal_amina_cdf",
++      "type": "LOAN_DISBURSEMENT",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 20000000,
++      "balanceAfterMinor": 18000000,
++      "refType": "LOAN",
++      "refId": "loan_amina_active_001",
++      "narration": "Salary advance disbursement",
++      "postedAt": "2026-09-01T11:00:05Z"
++    },
++    {
++      "id": "jnl_agent_cashin_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "AGENT_CASH_IN",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 2000000,
++      "balanceAfterMinor": 27000000,
++      "refType": "AGENT_TXN",
++      "refId": "atx_cashin_001",
++      "narration": "Agent cash-in via agent-001",
++      "postedAt": "2026-09-12T12:00:05Z"
++    }
++  ],
++  "payments": [
++    {
++      "id": "pay_kasee_w2w_001",
++      "customerId": "cust_kasee",
++      "type": "W2W",
++      "status": "POSTED",
++      "currency": "USD",
++      "amountMinor": 5000,
++      "feeMinor": 50,
++      "totalMinor": 5050,
++      "sourceRef": "wal_kasee_usd",
++      "destRef": "cust_jp_kabila",
++      "journalId": "jnl_kasee_w2w_001",
++      "idempotencyKey": "idem_w2w_kasee_001",
++      "createdAt": "2026-09-16T10:30:00Z"
++    },
++    {
++      "id": "pay_kasee_mno_001",
++      "customerId": "cust_kasee",
++      "type": "MNO",
++      "status": "POSTED",
++      "currency": "CDF",
++      "amountMinor": 5000000,
++      "feeMinor": 50000,
++      "totalMinor": 5050000,
++      "sourceRef": "Vodacom",
++      "destRef": "wal_kasee_cdf",
++      "journalId": "jnl_kasee_mno_001",
++      "idempotencyKey": "idem_mno_kasee_001",
++      "createdAt": "2026-09-15T09:20:00Z"
++    },
++    {
++      "id": "pay_kasee_bank_001",
++      "customerId": "cust_kasee",
++      "type": "BANK",
++      "status": "POSTED",
++      "currency": "USD",
++      "amountMinor": 10000,
++      "feeMinor": 100,
++      "totalMinor": 10100,
++      "sourceRef": "Rawbank",
++      "destRef": "wal_kasee_usd",
++      "journalId": "jnl_kasee_bank_001",
++      "idempotencyKey": "idem_bank_kasee_001",
++      "createdAt": "2026-09-14T16:30:00Z"
++    },
++    {
++      "id": "pay_kasee_bill_001",
++      "customerId": "cust_kasee",
++      "type": "BILL",
++      "status": "POSTED",
++      "currency": "CDF",
++      "amountMinor": 15000000,
++      "feeMinor": 150000,
++      "totalMinor": 15150000,
++      "sourceRef": "wal_kasee_cdf",
++      "destRef": "SNEL",
++      "journalId": "jnl_kasee_bill_001",
++      "idempotencyKey": "idem_bill_kasee_001",
++      "createdAt": "2026-09-13T08:10:00Z"
++    },
++    {
++      "id": "pay_kasee_idem_001",
++      "customerId": "cust_kasee",
++      "type": "W2W",
++      "status": "COMPENSATED",
++      "currency": "USD",
++      "amountMinor": 2500,
++      "feeMinor": 25,
++      "totalMinor": 2525,
++      "sourceRef": "wal_kasee_usd",
++      "destRef": "cust_amina",
++      "journalId": null,
++      "idempotencyKey": "idem_replay_demo_001",
++      "createdAt": "2026-09-16T15:00:00Z",
++      "notes": "DEM-05 interrupt/replay \u2014 compensated, no duplicate"
++    }
++  ],
++  "agentTransactions": [
++    {
++      "id": "atx_cashin_001",
++      "agentId": "agent-001",
++      "customerId": "cust_kasee",
++      "type": "CASH_IN",
++      "currency": "CDF",
++      "amountMinor": 2000000,
++      "journalId": "jnl_agent_cashin_001",
++      "createdAt": "2026-09-12T12:00:00Z"
++    },
++    {
++      "id": "atx_enroll_001",
++      "agentId": "agent-001",
++      "customerId": "cust_kasee",
++      "type": "ENROLL",
++      "currency": null,
++      "amountMinor": 0,
++      "journalId": null,
++      "createdAt": "2026-08-15T10:00:00Z"
++    }
++  ],
++  "loanSchedules": [
++    {
++      "id": "sched_amina_001",
++      "loanId": "loan_amina_active_001",
++      "installments": [
++        {
++          "id": "inst_1",
++          "dueDate": "2026-09-28",
++          "principalMinor": 10000000,
++          "interestMinor": 500000,
++          "status": "PAID",
++          "paidAt": "2026-09-28T09:00:00Z"
++        },
++        {
++          "id": "inst_2",
++          "dueDate": "2026-10-28",
++          "principalMinor": 10000000,
++          "interestMinor": 500000,
++          "status": "DUE",
++          "paidAt": null
++        }
++      ]
++    }
++  ],
++  "loans": [
++    {
++      "id": "loan_amina_active_001",
++      "customerId": "cust_amina",
++      "employerId": "emp_poste",
++      "productId": "prod_salary_advance",
++      "status": "ACTIVE",
++      "principalMinor": 20000000,
++      "currency": "CDF",
++      "scheduleId": "sched_amina_001",
++      "receivableMinor": 10500000,
++      "disbursedAt": "2026-09-01T11:00:00Z",
++      "createdAt": "2026-09-01T10:55:00Z"
++    },
++    {
++      "id": "loan_kasee_exception_001",
++      "customerId": "cust_kasee",
++      "employerId": null,
++      "productId": "prod_nano_loan",
++      "status": "PENDING_EXCEPTION",
++      "principalMinor": 5000000,
++      "currency": "CDF",
++      "scheduleId": null,
++      "exceptionReason": "Amount exceeds auto-approval threshold",
++      "thresholdMinor": 3000000,
++      "createdAt": "2026-09-16T11:20:00Z"
++    }
++  ],
++  "cards": [
++    {
++      "id": "card_kasee_virtual_001",
++      "customerId": "cust_kasee",
++      "type": "VIRTUAL_DEBIT",
++      "last4": "4242",
++      "currency": "USD",
++      "status": "ACTIVE",
++      "dailyLimitMinor": 50000,
++      "monthlyLimitMinor": 200000,
++      "mockNetwork": "MOCK",
++      "createdAt": "2026-08-20T14:15:00Z"
++    }
++  ],
++  "cardAuths": [
++    {
++      "id": "cauth_kasee_3ds_001",
++      "cardId": "card_kasee_virtual_001",
++      "customerId": "cust_kasee",
++      "amountMinor": 3500,
++      "currency": "USD",
++      "merchant": "Kin Market MOCK",
++      "status": "CHALLENGED",
++      "threeDs": {
++        "version": "2.2-MOCK",
++        "result": "AUTHENTICATED"
++      },
++      "createdAt": "2026-09-15T18:22:00Z"
++    }
++  ],
++  "remittances": [
++    {
++      "id": "rmt_clear_001",
++      "customerId": "cust_kasee",
++      "direction": "INBOUND",
++      "partner": "MOCK-MTO-WEST",
++      "status": "CLEAR",
++      "sendCurrency": "USD",
++      "sendAmountMinor": 10000,
++      "receiveCurrency": "CDF",
++      "receiveAmountMinor": 27500000,
++      "fxConversionId": "fxc_rmt_001",
++      "walletId": "wal_kasee_cdf",
++      "createdAt": "2026-09-14T08:00:00Z"
++    },
++    {
++      "id": "rmt_screen_hit_001",
++      "customerId": "cust_kasee",
++      "direction": "INBOUND",
++      "partner": "MOCK-MTO-EAST",
++      "status": "SCREENING_HIT",
++      "sendCurrency": "USD",
++      "sendAmountMinor": 25000,
++      "receiveCurrency": "USD",
++      "receiveAmountMinor": 25000,
++      "fxConversionId": null,
++      "walletId": null,
++      "screeningHit": "PARTIAL_NAME_MATCH",
++      "createdAt": "2026-09-16T09:45:00Z"
++    }
++  ],
++  "fxRates": [
++    {
++      "id": "fx_usd_cdf",
++      "base": "USD",
++      "quote": "CDF",
++      "rate": 2750.0,
++      "asOf": "2026-09-16T06:00:00Z"
++    },
++    {
++      "id": "fx_cdf_usd",
++      "base": "CDF",
++      "quote": "USD",
++      "rate": 0.0003636,
++      "asOf": "2026-09-16T06:00:00Z"
++    }
++  ],
++  "conversions": [
++    {
++      "id": "fxc_rmt_001",
++      "customerId": "cust_kasee",
++      "fromCurrency": "USD",
++      "toCurrency": "CDF",
++      "fromAmountMinor": 10000,
++      "toAmountMinor": 27500000,
++      "rate": 2750.0,
++      "feeMinor": 0,
++      "createdAt": "2026-09-14T08:00:30Z"
++    }
++  ],
++  "products": [
++    {
++      "id": "prod_open_wallet",
++      "code": "OPEN_WALLET",
++      "name": "Open Market Wallet",
++      "segment": "OPEN",
++      "currencies": [
++        "CDF",
++        "USD"
++      ],
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_corp_wallet",
++      "code": "CORP_WALLET",
++      "name": "Corporate Linked Wallet",
++      "segment": "CORPORATE",
++      "currencies": [
++        "CDF",
++        "USD"
++      ],
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_salary_advance",
++      "code": "SALARY_ADVANCE",
++      "name": "Salary Advance",
++      "segment": "CORPORATE",
++      "maxAdvancePct": 50,
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_nano_loan",
++      "code": "NANO_LOAN",
++      "name": "Nano Loan",
++      "segment": "OPEN",
++      "autoApproveMaxMinor": 3000000,
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_virtual_debit",
++      "code": "VIRTUAL_DEBIT",
++      "name": "MOCK Virtual Debit",
++      "segment": "OPEN",
++      "status": "ACTIVE"
++    }
++  ],
++  "feeLimits": [
++    {
++      "id": "fee_w2w_current",
++      "kind": "FEE",
++      "paymentType": "W2W",
++      "feePercent": 1,
++      "minFeeMinor": 100,
++      "maxFeeMinor": 10000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "fee_mno_out_current",
++      "kind": "FEE",
++      "paymentType": "MNO_OUT",
++      "feePercent": 2,
++      "minFeeMinor": 200,
++      "maxFeeMinor": 20000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "lim_cust_daily_usd",
++      "kind": "LIMIT",
++      "limitType": "CUSTOMER_DAILY",
++      "currency": "USD",
++      "dailyLimitMinor": 100000,
++      "monthlyLimitMinor": 1000000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "lim_cust_daily_cdf",
++      "kind": "LIMIT",
++      "limitType": "CUSTOMER_DAILY",
++      "currency": "CDF",
++      "dailyLimitMinor": 100000000,
++      "monthlyLimitMinor": 1000000000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "fee_w2w_pending",
++      "kind": "FEE",
++      "paymentType": "W2W",
++      "feePercent": 0.8,
++      "minFeeMinor": 80,
++      "maxFeeMinor": 8000,
++      "effectiveFrom": "2026-10-01",
++      "status": "PENDING_APPROVAL"
++    }
++  ],
++  "pendingApprovals": [
++    {
++      "id": "apr_fee_w2w_001",
++      "type": "FEE_CHANGE",
++      "targetId": "fee_w2w_pending",
++      "summary": "Lower W2W fee to 0.8% effective 2026-10-01",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-15T10:00:00Z"
++    },
++    {
++      "id": "apr_loan_exception_001",
++      "type": "CREDIT_EXCEPTION",
++      "targetId": "loan_kasee_exception_001",
++      "summary": "Approve nano loan above auto threshold for cust_kasee",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-16T11:25:00Z"
++    },
++    {
++      "id": "apr_aml_case_001",
++      "type": "AML_CASE",
++      "targetId": "case_aml_conf_001",
++      "summary": "Two-step SoD approval for confidential AML case",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-16T08:30:00Z"
++    }
++  ],
++  "cases": [
++    {
++      "id": "case_aml_conf_001",
++      "type": "AML",
++      "confidential": true,
++      "description": "Structured remittance screening pattern \u2014 confidential investigation",
++      "customerId": "cust_kasee",
++      "status": "INVESTIGATION",
++      "steps": [
++        "ALERT",
++        "INVESTIGATION",
++        "MAKER_CHECKER"
++      ],
++      "currentStep": "INVESTIGATION",
++      "createdAt": "2026-09-16T08:00:00Z",
++      "decidedAt": null
++    },
++    {
++      "id": "case_card_dispute_001",
++      "type": "CARD_DISPUTE",
++      "confidential": false,
++      "description": "Mock 3DS auth dispute for card_kasee_virtual_001 / cauth_kasee_3ds_001",
++      "customerId": "cust_kasee",
++      "cardId": "card_kasee_virtual_001",
++      "cardAuthId": "cauth_kasee_3ds_001",
++      "status": "OPEN",
++      "createdAt": "2026-09-15T19:00:00Z",
++      "decidedAt": null
++    },
++    {
++      "id": "case_payment_dispute_001",
++      "type": "DISPUTE",
++      "confidential": false,
++      "description": "Migrated mock: payment not received (pay_kasee_idem_001 related)",
++      "customerId": "cust_kasee",
++      "status": "OPEN",
++      "createdAt": "2026-09-14T11:30:00Z",
++      "decidedAt": null
++    }
++  ],
++  "reconDays": [
++    {
++      "id": "recon_2026-09-16",
++      "businessDate": "2026-09-16",
++      "status": "OPEN_EXCEPTIONS",
++      "matchedCount": 42,
++      "exceptionCount": 2,
++      "exceptions": [
++        {
++          "id": "rex_001",
++          "rail": "MNO",
++          "partner": "Vodacom",
++          "amountMinor": 50000,
++          "currency": "CDF",
++          "reason": "FEE_MISMATCH"
++        },
++        {
++          "id": "rex_002",
++          "rail": "REMITTANCE",
++          "partner": "MOCK-MTO-EAST",
++          "refId": "rmt_screen_hit_001",
++          "reason": "SCREENING_HOLD"
++        }
++      ],
++      "eodSnapshot": {
++        "runAt": null,
++        "glBalanced": false,
++        "suspenseMinor": 50000,
++        "currency": "CDF",
++        "notes": "Awaiting DEM-11 EOD run"
++      }
++    }
++  ],
++  "kyc": [
++    {
++      "id": "kyc_kasee_001",
++      "customerId": "cust_kasee",
++      "phoneE164": "+243990000001",
++      "idNumber": "ID-KASEE-001",
++      "idType": "NATIONAL_ID",
++      "status": "APPROVED",
++      "reviewNotes": "Auto + manual verified for demo",
++      "screeningResult": "CLEAR",
++      "createdAt": "2026-08-15T10:35:00Z",
++      "updatedAt": "2026-08-15T11:00:00Z"
++    },
++    {
++      "id": "kyc_amina_001",
++      "customerId": "cust_amina",
++      "phoneE164": "+243990000002",
++      "idNumber": "ID-AMINA-001",
++      "idType": "NATIONAL_ID",
++      "status": "APPROVED",
++      "reviewNotes": "Corporate onboarding",
++      "screeningResult": "CLEAR",
++      "createdAt": "2026-07-01T09:10:00Z",
++      "updatedAt": "2026-07-01T09:30:00Z"
++    },
++    {
++      "id": "kyc_marie_001",
++      "customerId": "cust_marie_tshala",
++      "phoneE164": "+243991234567",
++      "idNumber": "ID123456789",
++      "idType": "NATIONAL_ID",
++      "status": "PENDING_REVIEW",
++      "reviewNotes": null,
++      "screeningResult": "PENDING",
++      "createdAt": "2026-09-10T14:25:00Z",
++      "updatedAt": "2026-09-10T14:25:00Z"
++    }
++  ],
++  "notifications": [
++    {
++      "id": "ntf_kasee_cashin",
++      "customerId": "cust_kasee",
++      "channel": "PUSH",
++      "title": "Cash-in received",
++      "body": "CDF 20,000 via agent-001",
++      "read": false,
++      "createdAt": "2026-09-12T12:00:10Z"
++    },
++    {
++      "id": "ntf_amina_loan",
++      "customerId": "cust_amina",
++      "channel": "PUSH",
++      "title": "Salary advance disbursed",
++      "body": "CDF 200,000 credited to your wallet",
++      "read": true,
++      "createdAt": "2026-09-01T11:00:10Z"
++    },
++    {
++      "id": "ntf_kasee_3ds",
++      "customerId": "cust_kasee",
++      "channel": "PUSH",
++      "title": "MOCK 3DS challenge",
++      "body": "Approve Kin Market MOCK $35.00",
++      "read": false,
++      "createdAt": "2026-09-15T18:22:05Z"
++    },
++    {
++      "id": "ntf_staff_aml",
++      "staffId": "staff_ops",
++      "channel": "IN_APP",
++      "title": "Confidential AML alert",
++      "body": "case_aml_conf_001 requires investigation",
++      "read": false,
++      "createdAt": "2026-09-16T08:01:00Z"
++    }
++  ]
++}
+diff --git a/packages/demo_universe/dart/lib/demo_universe.dart b/packages/demo_universe/dart/lib/demo_universe.dart
+new file mode 100644
+index 0000000..ed208fd
+--- /dev/null
++++ b/packages/demo_universe/dart/lib/demo_universe.dart
+@@ -0,0 +1,60 @@
++import 'dart:convert';
++import 'dart:io';
++
++/// Loads the shared offline demo universe JSON (same file as the TS package).
++///
++/// Prefer [DemoUniverse.loadFromFile] pointing at
++/// `packages/demo_universe/data/universe.json` (single source of truth).
++/// A synced copy also lives at `dart/assets/universe.json` for asset bundling.
++class DemoUniverse {
++  DemoUniverse._(this.data);
++
++  final Map<String, dynamic> data;
++
++  /// Deep-cloned universe from a filesystem path.
++  static DemoUniverse loadFromFile(String path) {
++    final raw = File(path).readAsStringSync();
++    return fromJsonString(raw);
++  }
++
++  /// Default relative load from package layout (data/ sibling of dart/).
++  static DemoUniverse load({String? path}) {
++    final resolved = path ?? _defaultDataPath();
++    return loadFromFile(resolved);
++  }
++
++  static DemoUniverse fromJsonString(String raw) {
++    final decoded = jsonDecode(raw) as Map<String, dynamic>;
++    return DemoUniverse._(_deepCloneMap(decoded));
++  }
++
++  static String _defaultDataPath() {
++    // When running from packages/demo_universe/dart, sibling is ../data/universe.json
++    final candidates = <String>[
++      '../data/universe.json',
++      'data/universe.json',
++      'assets/universe.json',
++      'packages/demo_universe/data/universe.json',
++    ];
++    for (final c in candidates) {
++      if (File(c).existsSync()) return c;
++    }
++    throw StateError(
++      'universe.json not found. Pass an absolute path to DemoUniverse.load(path: ...).',
++    );
++  }
++
++  List<dynamic> get customers => data['customers'] as List<dynamic>? ?? const [];
++  List<dynamic> get wallets => data['wallets'] as List<dynamic>? ?? const [];
++  List<dynamic> get agents => data['agents'] as List<dynamic>? ?? const [];
++  List<dynamic> get employers => data['employers'] as List<dynamic>? ?? const [];
++  List<dynamic> get journals => data['journals'] as List<dynamic>? ?? const [];
++  List<dynamic> get loans => data['loans'] as List<dynamic>? ?? const [];
++  List<dynamic> get pendingApprovals =>
++      data['pendingApprovals'] as List<dynamic>? ?? const [];
++  List<dynamic> get cases => data['cases'] as List<dynamic>? ?? const [];
++
++  static Map<String, dynamic> _deepCloneMap(Map<String, dynamic> src) {
++    return jsonDecode(jsonEncode(src)) as Map<String, dynamic>;
++  }
++}
+diff --git a/packages/demo_universe/dart/pubspec.yaml b/packages/demo_universe/dart/pubspec.yaml
+new file mode 100644
+index 0000000..2b128ab
+--- /dev/null
++++ b/packages/demo_universe/dart/pubspec.yaml
+@@ -0,0 +1,7 @@
++name: demo_universe
++description: Shared YOLE offline demo universe loader (same JSON as TS package).
++version: 0.1.0
++publish_to: none
++
++environment:
++  sdk: ">=3.0.0 <4.0.0"
+diff --git a/packages/demo_universe/data/universe.json b/packages/demo_universe/data/universe.json
+new file mode 100644
+index 0000000..0ff9184
+--- /dev/null
++++ b/packages/demo_universe/data/universe.json
+@@ -0,0 +1,905 @@
++{
++  "meta": {
++    "version": 1,
++    "name": "yole-poste-offline-demo",
++    "description": "Shared offline DEM-01\u2026DEM-12 seed graph for admin, customer, and agent apps",
++    "honesty": {
++      "globalBadge": "Offline demo \u2014 no live API",
++      "cardsBadge": "MOCK \u2014 not Visa/Mastercard certified",
++      "resilienceBadge": "DEMO STORYBOARD \u2014 not a live HA failover"
++    },
++    "demBookmarks": {
++      "DEM-01": {
++        "customerId": "cust_kasee",
++        "path": "customer/register-kyc-home"
++      },
++      "DEM-02": {
++        "approvalId": "apr_fee_w2w_001",
++        "path": "admin/products+approvals"
++      },
++      "DEM-03": {
++        "customerId": "cust_amina",
++        "loanId": "loan_amina_active_001",
++        "employerId": "emp_poste"
++      },
++      "DEM-04": {
++        "loanId": "loan_kasee_exception_001",
++        "path": "admin/credit-exceptions"
++      },
++      "DEM-05": {
++        "paymentId": "pay_kasee_idem_001",
++        "path": "admin/idempotency"
++      },
++      "DEM-06": {
++        "paymentIds": [
++          "pay_kasee_w2w_001",
++          "pay_kasee_mno_001",
++          "pay_kasee_bank_001",
++          "pay_kasee_bill_001"
++        ]
++      },
++      "DEM-07": {
++        "cardId": "card_kasee_virtual_001",
++        "authId": "cauth_kasee_3ds_001",
++        "caseId": "case_card_dispute_001"
++      },
++      "DEM-08": {
++        "remittanceIds": [
++          "rmt_clear_001",
++          "rmt_screen_hit_001"
++        ]
++      },
++      "DEM-09": {
++        "caseId": "case_aml_conf_001"
++      },
++      "DEM-10": {
++        "path": "admin/resilience"
++      },
++      "DEM-11": {
++        "reconDayId": "recon_2026-09-16"
++      },
++      "DEM-12": {
++        "path": "admin/export"
++      }
++    }
++  },
++  "staff": [
++    {
++      "id": "staff_admin",
++      "email": "admin@yole.com",
++      "password": "Password1!",
++      "role": "ADMIN",
++      "firstName": "Ada",
++      "lastName": "Admin"
++    },
++    {
++      "id": "staff_ops",
++      "email": "ops@yole.com",
++      "password": "Password1!",
++      "role": "OPS",
++      "firstName": "Omar",
++      "lastName": "Ops"
++    },
++    {
++      "id": "staff_support",
++      "email": "support@yole.com",
++      "password": "Password1!",
++      "role": "SUPPORT",
++      "firstName": "Sara",
++      "lastName": "Support"
++    },
++    {
++      "id": "staff_finance",
++      "email": "finance@yole.com",
++      "password": "Password1!",
++      "role": "FINANCE",
++      "firstName": "Fiona",
++      "lastName": "Finance"
++    }
++  ],
++  "customers": [
++    {
++      "id": "cust_kasee",
++      "email": "kasee.demo@yole.com",
++      "password": "Password1!",
++      "phoneE164": "+243990000001",
++      "firstName": "Kasee",
++      "lastName": "Demo",
++      "segment": "OPEN",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-08-15T10:30:00Z"
++    },
++    {
++      "id": "cust_amina",
++      "email": "amina.payroll@yole.com",
++      "password": "Password1!",
++      "phoneE164": "+243990000002",
++      "firstName": "Amina",
++      "lastName": "Payroll",
++      "segment": "CORPORATE",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "employerId": "emp_poste",
++      "enrolledByAgentId": null,
++      "createdAt": "2026-07-01T09:00:00Z"
++    },
++    {
++      "id": "cust_jp_kabila",
++      "email": "jkabila@example.cd",
++      "password": "Password1!",
++      "phoneE164": "+243990123456",
++      "firstName": "Jean-Paul",
++      "lastName": "Kabila",
++      "segment": "RETAIL",
++      "status": "ACTIVE",
++      "kycStatus": "APPROVED",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-08-15T10:30:00Z"
++    },
++    {
++      "id": "cust_marie_tshala",
++      "email": "mtshala@example.cd",
++      "password": "Password1!",
++      "phoneE164": "+243991234567",
++      "firstName": "Marie",
++      "lastName": "Tshala",
++      "segment": "RETAIL",
++      "status": "ACTIVE",
++      "kycStatus": "PENDING_REVIEW",
++      "enrolledByAgentId": "agent-001",
++      "createdAt": "2026-09-10T14:20:00Z"
++    }
++  ],
++  "wallets": [
++    {
++      "id": "wal_kasee_cdf",
++      "customerId": "cust_kasee",
++      "currency": "CDF",
++      "availableMinor": 25000000,
++      "ledgerMinor": 25000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_kasee_usd",
++      "customerId": "cust_kasee",
++      "currency": "USD",
++      "availableMinor": 15000,
++      "ledgerMinor": 15000,
++      "blockedMinor": 0,
++      "pendingMinor": 500
++    },
++    {
++      "id": "wal_amina_cdf",
++      "customerId": "cust_amina",
++      "currency": "CDF",
++      "availableMinor": 18000000,
++      "ledgerMinor": 18000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_amina_usd",
++      "customerId": "cust_amina",
++      "currency": "USD",
++      "availableMinor": 42000,
++      "ledgerMinor": 42000,
++      "blockedMinor": 5000,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_jp_usd",
++      "customerId": "cust_jp_kabila",
++      "currency": "USD",
++      "availableMinor": 125000,
++      "ledgerMinor": 125000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    },
++    {
++      "id": "wal_jp_cdf",
++      "customerId": "cust_jp_kabila",
++      "currency": "CDF",
++      "availableMinor": 15000000,
++      "ledgerMinor": 15000000,
++      "blockedMinor": 0,
++      "pendingMinor": 0
++    }
++  ],
++  "agents": [
++    {
++      "id": "agent-001",
++      "name": "Kinshasa Agent 1",
++      "firstName": "Claude",
++      "lastName": "Mokonzi",
++      "phoneE164": "+243810111111",
++      "email": "agent001@yole-agents.cd",
++      "password": "Password1!",
++      "floatCdfMinor": 500000000,
++      "floatUsdMinor": 200000,
++      "floatWalletId": "wallet_float_agent001",
++      "status": "ACTIVE",
++      "createdAt": "2026-07-01T08:00:00Z"
++    },
++    {
++      "id": "agent-002",
++      "name": "Gombe Agent 2",
++      "firstName": "Beatrice",
++      "lastName": "Nzuzi",
++      "phoneE164": "+243810222222",
++      "email": "bnzuzi@yole-agents.cd",
++      "password": "Password1!",
++      "floatCdfMinor": 250000000,
++      "floatUsdMinor": 100000,
++      "floatWalletId": "wallet_float_agent002",
++      "status": "ACTIVE",
++      "createdAt": "2026-07-01T08:00:00Z"
++    }
++  ],
++  "employers": [
++    {
++      "id": "emp_poste",
++      "name": "Poste Demo SARL",
++      "taxId": "CD-POSTE-001",
++      "employeeCount": 12,
++      "createdAt": "2026-06-01T08:00:00Z"
++    },
++    {
++      "id": "emp_congo_mining",
++      "name": "Congo Mining Corp",
++      "taxId": "TAX001234",
++      "employeeCount": 145,
++      "createdAt": "2026-07-10T08:00:00Z"
++    }
++  ],
++  "employees": [
++    {
++      "id": "emp_row_amina",
++      "employerId": "emp_poste",
++      "customerId": "cust_amina",
++      "employeeNumber": "PD-10042",
++      "jobTitle": "Operations Analyst",
++      "grossSalaryCdfMinor": 85000000,
++      "netSalaryCdfMinor": 72000000,
++      "eligibleAdvanceMaxCdfMinor": 36000000,
++      "status": "ACTIVE",
++      "hiredAt": "2024-03-01"
++    }
++  ],
++  "salaryHistory": [
++    {
++      "id": "sal_amina_2026_06",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-06",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-06-28T10:00:00Z"
++    },
++    {
++      "id": "sal_amina_2026_07",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-07",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-07-28T10:00:00Z"
++    },
++    {
++      "id": "sal_amina_2026_08",
++      "employeeId": "emp_row_amina",
++      "customerId": "cust_amina",
++      "period": "2026-08",
++      "grossCdfMinor": 85000000,
++      "netCdfMinor": 72000000,
++      "paidAt": "2026-08-28T10:00:00Z"
++    }
++  ],
++  "journals": [
++    {
++      "id": "jnl_kasee_w2w_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_usd",
++      "type": "PAYMENT",
++      "direction": "DEBIT",
++      "currency": "USD",
++      "amountMinor": 5000,
++      "balanceAfterMinor": 15000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_w2w_001",
++      "narration": "W2W to Jean-Paul",
++      "postedAt": "2026-09-16T10:30:05Z"
++    },
++    {
++      "id": "jnl_kasee_mno_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "PAYMENT",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 5000000,
++      "balanceAfterMinor": 25000000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_mno_001",
++      "narration": "Vodacom cash-in",
++      "postedAt": "2026-09-15T09:20:05Z"
++    },
++    {
++      "id": "jnl_kasee_bank_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_usd",
++      "type": "PAYMENT",
++      "direction": "CREDIT",
++      "currency": "USD",
++      "amountMinor": 10000,
++      "balanceAfterMinor": 20000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_bank_001",
++      "narration": "Rawbank inbound",
++      "postedAt": "2026-09-14T16:30:05Z"
++    },
++    {
++      "id": "jnl_kasee_bill_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "PAYMENT",
++      "direction": "DEBIT",
++      "currency": "CDF",
++      "amountMinor": 15000000,
++      "balanceAfterMinor": 20000000,
++      "refType": "PAYMENT",
++      "refId": "pay_kasee_bill_001",
++      "narration": "SNEL bill",
++      "postedAt": "2026-09-13T08:10:05Z"
++    },
++    {
++      "id": "jnl_amina_disburse_001",
++      "customerId": "cust_amina",
++      "walletId": "wal_amina_cdf",
++      "type": "LOAN_DISBURSEMENT",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 20000000,
++      "balanceAfterMinor": 18000000,
++      "refType": "LOAN",
++      "refId": "loan_amina_active_001",
++      "narration": "Salary advance disbursement",
++      "postedAt": "2026-09-01T11:00:05Z"
++    },
++    {
++      "id": "jnl_agent_cashin_001",
++      "customerId": "cust_kasee",
++      "walletId": "wal_kasee_cdf",
++      "type": "AGENT_CASH_IN",
++      "direction": "CREDIT",
++      "currency": "CDF",
++      "amountMinor": 2000000,
++      "balanceAfterMinor": 27000000,
++      "refType": "AGENT_TXN",
++      "refId": "atx_cashin_001",
++      "narration": "Agent cash-in via agent-001",
++      "postedAt": "2026-09-12T12:00:05Z"
++    }
++  ],
++  "payments": [
++    {
++      "id": "pay_kasee_w2w_001",
++      "customerId": "cust_kasee",
++      "type": "W2W",
++      "status": "POSTED",
++      "currency": "USD",
++      "amountMinor": 5000,
++      "feeMinor": 50,
++      "totalMinor": 5050,
++      "sourceRef": "wal_kasee_usd",
++      "destRef": "cust_jp_kabila",
++      "journalId": "jnl_kasee_w2w_001",
++      "idempotencyKey": "idem_w2w_kasee_001",
++      "createdAt": "2026-09-16T10:30:00Z"
++    },
++    {
++      "id": "pay_kasee_mno_001",
++      "customerId": "cust_kasee",
++      "type": "MNO",
++      "status": "POSTED",
++      "currency": "CDF",
++      "amountMinor": 5000000,
++      "feeMinor": 50000,
++      "totalMinor": 5050000,
++      "sourceRef": "Vodacom",
++      "destRef": "wal_kasee_cdf",
++      "journalId": "jnl_kasee_mno_001",
++      "idempotencyKey": "idem_mno_kasee_001",
++      "createdAt": "2026-09-15T09:20:00Z"
++    },
++    {
++      "id": "pay_kasee_bank_001",
++      "customerId": "cust_kasee",
++      "type": "BANK",
++      "status": "POSTED",
++      "currency": "USD",
++      "amountMinor": 10000,
++      "feeMinor": 100,
++      "totalMinor": 10100,
++      "sourceRef": "Rawbank",
++      "destRef": "wal_kasee_usd",
++      "journalId": "jnl_kasee_bank_001",
++      "idempotencyKey": "idem_bank_kasee_001",
++      "createdAt": "2026-09-14T16:30:00Z"
++    },
++    {
++      "id": "pay_kasee_bill_001",
++      "customerId": "cust_kasee",
++      "type": "BILL",
++      "status": "POSTED",
++      "currency": "CDF",
++      "amountMinor": 15000000,
++      "feeMinor": 150000,
++      "totalMinor": 15150000,
++      "sourceRef": "wal_kasee_cdf",
++      "destRef": "SNEL",
++      "journalId": "jnl_kasee_bill_001",
++      "idempotencyKey": "idem_bill_kasee_001",
++      "createdAt": "2026-09-13T08:10:00Z"
++    },
++    {
++      "id": "pay_kasee_idem_001",
++      "customerId": "cust_kasee",
++      "type": "W2W",
++      "status": "COMPENSATED",
++      "currency": "USD",
++      "amountMinor": 2500,
++      "feeMinor": 25,
++      "totalMinor": 2525,
++      "sourceRef": "wal_kasee_usd",
++      "destRef": "cust_amina",
++      "journalId": null,
++      "idempotencyKey": "idem_replay_demo_001",
++      "createdAt": "2026-09-16T15:00:00Z",
++      "notes": "DEM-05 interrupt/replay \u2014 compensated, no duplicate"
++    }
++  ],
++  "agentTransactions": [
++    {
++      "id": "atx_cashin_001",
++      "agentId": "agent-001",
++      "customerId": "cust_kasee",
++      "type": "CASH_IN",
++      "currency": "CDF",
++      "amountMinor": 2000000,
++      "journalId": "jnl_agent_cashin_001",
++      "createdAt": "2026-09-12T12:00:00Z"
++    },
++    {
++      "id": "atx_enroll_001",
++      "agentId": "agent-001",
++      "customerId": "cust_kasee",
++      "type": "ENROLL",
++      "currency": null,
++      "amountMinor": 0,
++      "journalId": null,
++      "createdAt": "2026-08-15T10:00:00Z"
++    }
++  ],
++  "loanSchedules": [
++    {
++      "id": "sched_amina_001",
++      "loanId": "loan_amina_active_001",
++      "installments": [
++        {
++          "id": "inst_1",
++          "dueDate": "2026-09-28",
++          "principalMinor": 10000000,
++          "interestMinor": 500000,
++          "status": "PAID",
++          "paidAt": "2026-09-28T09:00:00Z"
++        },
++        {
++          "id": "inst_2",
++          "dueDate": "2026-10-28",
++          "principalMinor": 10000000,
++          "interestMinor": 500000,
++          "status": "DUE",
++          "paidAt": null
++        }
++      ]
++    }
++  ],
++  "loans": [
++    {
++      "id": "loan_amina_active_001",
++      "customerId": "cust_amina",
++      "employerId": "emp_poste",
++      "productId": "prod_salary_advance",
++      "status": "ACTIVE",
++      "principalMinor": 20000000,
++      "currency": "CDF",
++      "scheduleId": "sched_amina_001",
++      "receivableMinor": 10500000,
++      "disbursedAt": "2026-09-01T11:00:00Z",
++      "createdAt": "2026-09-01T10:55:00Z"
++    },
++    {
++      "id": "loan_kasee_exception_001",
++      "customerId": "cust_kasee",
++      "employerId": null,
++      "productId": "prod_nano_loan",
++      "status": "PENDING_EXCEPTION",
++      "principalMinor": 5000000,
++      "currency": "CDF",
++      "scheduleId": null,
++      "exceptionReason": "Amount exceeds auto-approval threshold",
++      "thresholdMinor": 3000000,
++      "createdAt": "2026-09-16T11:20:00Z"
++    }
++  ],
++  "cards": [
++    {
++      "id": "card_kasee_virtual_001",
++      "customerId": "cust_kasee",
++      "type": "VIRTUAL_DEBIT",
++      "last4": "4242",
++      "currency": "USD",
++      "status": "ACTIVE",
++      "dailyLimitMinor": 50000,
++      "monthlyLimitMinor": 200000,
++      "mockNetwork": "MOCK",
++      "createdAt": "2026-08-20T14:15:00Z"
++    }
++  ],
++  "cardAuths": [
++    {
++      "id": "cauth_kasee_3ds_001",
++      "cardId": "card_kasee_virtual_001",
++      "customerId": "cust_kasee",
++      "amountMinor": 3500,
++      "currency": "USD",
++      "merchant": "Kin Market MOCK",
++      "status": "CHALLENGED",
++      "threeDs": {
++        "version": "2.2-MOCK",
++        "result": "AUTHENTICATED"
++      },
++      "createdAt": "2026-09-15T18:22:00Z"
++    }
++  ],
++  "remittances": [
++    {
++      "id": "rmt_clear_001",
++      "customerId": "cust_kasee",
++      "direction": "INBOUND",
++      "partner": "MOCK-MTO-WEST",
++      "status": "CLEAR",
++      "sendCurrency": "USD",
++      "sendAmountMinor": 10000,
++      "receiveCurrency": "CDF",
++      "receiveAmountMinor": 27500000,
++      "fxConversionId": "fxc_rmt_001",
++      "walletId": "wal_kasee_cdf",
++      "createdAt": "2026-09-14T08:00:00Z"
++    },
++    {
++      "id": "rmt_screen_hit_001",
++      "customerId": "cust_kasee",
++      "direction": "INBOUND",
++      "partner": "MOCK-MTO-EAST",
++      "status": "SCREENING_HIT",
++      "sendCurrency": "USD",
++      "sendAmountMinor": 25000,
++      "receiveCurrency": "USD",
++      "receiveAmountMinor": 25000,
++      "fxConversionId": null,
++      "walletId": null,
++      "screeningHit": "PARTIAL_NAME_MATCH",
++      "createdAt": "2026-09-16T09:45:00Z"
++    }
++  ],
++  "fxRates": [
++    {
++      "id": "fx_usd_cdf",
++      "base": "USD",
++      "quote": "CDF",
++      "rate": 2750.0,
++      "asOf": "2026-09-16T06:00:00Z"
++    },
++    {
++      "id": "fx_cdf_usd",
++      "base": "CDF",
++      "quote": "USD",
++      "rate": 0.0003636,
++      "asOf": "2026-09-16T06:00:00Z"
++    }
++  ],
++  "conversions": [
++    {
++      "id": "fxc_rmt_001",
++      "customerId": "cust_kasee",
++      "fromCurrency": "USD",
++      "toCurrency": "CDF",
++      "fromAmountMinor": 10000,
++      "toAmountMinor": 27500000,
++      "rate": 2750.0,
++      "feeMinor": 0,
++      "createdAt": "2026-09-14T08:00:30Z"
++    }
++  ],
++  "products": [
++    {
++      "id": "prod_open_wallet",
++      "code": "OPEN_WALLET",
++      "name": "Open Market Wallet",
++      "segment": "OPEN",
++      "currencies": [
++        "CDF",
++        "USD"
++      ],
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_corp_wallet",
++      "code": "CORP_WALLET",
++      "name": "Corporate Linked Wallet",
++      "segment": "CORPORATE",
++      "currencies": [
++        "CDF",
++        "USD"
++      ],
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_salary_advance",
++      "code": "SALARY_ADVANCE",
++      "name": "Salary Advance",
++      "segment": "CORPORATE",
++      "maxAdvancePct": 50,
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_nano_loan",
++      "code": "NANO_LOAN",
++      "name": "Nano Loan",
++      "segment": "OPEN",
++      "autoApproveMaxMinor": 3000000,
++      "status": "ACTIVE"
++    },
++    {
++      "id": "prod_virtual_debit",
++      "code": "VIRTUAL_DEBIT",
++      "name": "MOCK Virtual Debit",
++      "segment": "OPEN",
++      "status": "ACTIVE"
++    }
++  ],
++  "feeLimits": [
++    {
++      "id": "fee_w2w_current",
++      "kind": "FEE",
++      "paymentType": "W2W",
++      "feePercent": 1,
++      "minFeeMinor": 100,
++      "maxFeeMinor": 10000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "fee_mno_out_current",
++      "kind": "FEE",
++      "paymentType": "MNO_OUT",
++      "feePercent": 2,
++      "minFeeMinor": 200,
++      "maxFeeMinor": 20000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "lim_cust_daily_usd",
++      "kind": "LIMIT",
++      "limitType": "CUSTOMER_DAILY",
++      "currency": "USD",
++      "dailyLimitMinor": 100000,
++      "monthlyLimitMinor": 1000000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "lim_cust_daily_cdf",
++      "kind": "LIMIT",
++      "limitType": "CUSTOMER_DAILY",
++      "currency": "CDF",
++      "dailyLimitMinor": 100000000,
++      "monthlyLimitMinor": 1000000000,
++      "effectiveFrom": "2026-01-01",
++      "status": "ACTIVE"
++    },
++    {
++      "id": "fee_w2w_pending",
++      "kind": "FEE",
++      "paymentType": "W2W",
++      "feePercent": 0.8,
++      "minFeeMinor": 80,
++      "maxFeeMinor": 8000,
++      "effectiveFrom": "2026-10-01",
++      "status": "PENDING_APPROVAL"
++    }
++  ],
++  "pendingApprovals": [
++    {
++      "id": "apr_fee_w2w_001",
++      "type": "FEE_CHANGE",
++      "targetId": "fee_w2w_pending",
++      "summary": "Lower W2W fee to 0.8% effective 2026-10-01",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-15T10:00:00Z"
++    },
++    {
++      "id": "apr_loan_exception_001",
++      "type": "CREDIT_EXCEPTION",
++      "targetId": "loan_kasee_exception_001",
++      "summary": "Approve nano loan above auto threshold for cust_kasee",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-16T11:25:00Z"
++    },
++    {
++      "id": "apr_aml_case_001",
++      "type": "AML_CASE",
++      "targetId": "case_aml_conf_001",
++      "summary": "Two-step SoD approval for confidential AML case",
++      "makerStaffId": "staff_ops",
++      "status": "PENDING",
++      "createdAt": "2026-09-16T08:30:00Z"
++    }
++  ],
++  "cases": [
++    {
++      "id": "case_aml_conf_001",
++      "type": "AML",
++      "confidential": true,
++      "description": "Structured remittance screening pattern \u2014 confidential investigation",
++      "customerId": "cust_kasee",
++      "status": "INVESTIGATION",
++      "steps": [
++        "ALERT",
++        "INVESTIGATION",
++        "MAKER_CHECKER"
++      ],
++      "currentStep": "INVESTIGATION",
++      "createdAt": "2026-09-16T08:00:00Z",
++      "decidedAt": null
++    },
++    {
++      "id": "case_card_dispute_001",
++      "type": "CARD_DISPUTE",
++      "confidential": false,
++      "description": "Mock 3DS auth dispute for card_kasee_virtual_001 / cauth_kasee_3ds_001",
++      "customerId": "cust_kasee",
++      "cardId": "card_kasee_virtual_001",
++      "cardAuthId": "cauth_kasee_3ds_001",
++      "status": "OPEN",
++      "createdAt": "2026-09-15T19:00:00Z",
++      "decidedAt": null
++    },
++    {
++      "id": "case_payment_dispute_001",
++      "type": "DISPUTE",
++      "confidential": false,
++      "description": "Migrated mock: payment not received (pay_kasee_idem_001 related)",
++      "customerId": "cust_kasee",
++      "status": "OPEN",
++      "createdAt": "2026-09-14T11:30:00Z",
++      "decidedAt": null
++    }
++  ],
++  "reconDays": [
++    {
++      "id": "recon_2026-09-16",
++      "businessDate": "2026-09-16",
++      "status": "OPEN_EXCEPTIONS",
++      "matchedCount": 42,
++      "exceptionCount": 2,
++      "exceptions": [
++        {
++          "id": "rex_001",
++          "rail": "MNO",
++          "partner": "Vodacom",
++          "amountMinor": 50000,
++          "currency": "CDF",
++          "reason": "FEE_MISMATCH"
++        },
++        {
++          "id": "rex_002",
++          "rail": "REMITTANCE",
++          "partner": "MOCK-MTO-EAST",
++          "refId": "rmt_screen_hit_001",
++          "reason": "SCREENING_HOLD"
++        }
++      ],
++      "eodSnapshot": {
++        "runAt": null,
++        "glBalanced": false,
++        "suspenseMinor": 50000,
++        "currency": "CDF",
++        "notes": "Awaiting DEM-11 EOD run"
++      }
++    }
++  ],
++  "kyc": [
++    {
++      "id": "kyc_kasee_001",
++      "customerId": "cust_kasee",
++      "phoneE164": "+243990000001",
++      "idNumber": "ID-KASEE-001",
++      "idType": "NATIONAL_ID",
++      "status": "APPROVED",
++      "reviewNotes": "Auto + manual verified for demo",
++      "screeningResult": "CLEAR",
++      "createdAt": "2026-08-15T10:35:00Z",
++      "updatedAt": "2026-08-15T11:00:00Z"
++    },
++    {
++      "id": "kyc_amina_001",
++      "customerId": "cust_amina",
++      "phoneE164": "+243990000002",
++      "idNumber": "ID-AMINA-001",
++      "idType": "NATIONAL_ID",
++      "status": "APPROVED",
++      "reviewNotes": "Corporate onboarding",
++      "screeningResult": "CLEAR",
++      "createdAt": "2026-07-01T09:10:00Z",
++      "updatedAt": "2026-07-01T09:30:00Z"
++    },
++    {
++      "id": "kyc_marie_001",
++      "customerId": "cust_marie_tshala",
++      "phoneE164": "+243991234567",
++      "idNumber": "ID123456789",
++      "idType": "NATIONAL_ID",
++      "status": "PENDING_REVIEW",
++      "reviewNotes": null,
++      "screeningResult": "PENDING",
++      "createdAt": "2026-09-10T14:25:00Z",
++      "updatedAt": "2026-09-10T14:25:00Z"
++    }
++  ],
++  "notifications": [
++    {
++      "id": "ntf_kasee_cashin",
++      "customerId": "cust_kasee",
++      "channel": "PUSH",
++      "title": "Cash-in received",
++      "body": "CDF 20,000 via agent-001",
++      "read": false,
++      "createdAt": "2026-09-12T12:00:10Z"
++    },
++    {
++      "id": "ntf_amina_loan",
++      "customerId": "cust_amina",
++      "channel": "PUSH",
++      "title": "Salary advance disbursed",
++      "body": "CDF 200,000 credited to your wallet",
++      "read": true,
++      "createdAt": "2026-09-01T11:00:10Z"
++    },
++    {
++      "id": "ntf_kasee_3ds",
++      "customerId": "cust_kasee",
++      "channel": "PUSH",
++      "title": "MOCK 3DS challenge",
++      "body": "Approve Kin Market MOCK $35.00",
++      "read": false,
++      "createdAt": "2026-09-15T18:22:05Z"
++    },
++    {
++      "id": "ntf_staff_aml",
++      "staffId": "staff_ops",
++      "channel": "IN_APP",
++      "title": "Confidential AML alert",
++      "body": "case_aml_conf_001 requires investigation",
++      "read": false,
++      "createdAt": "2026-09-16T08:01:00Z"
++    }
++  ]
++}
+diff --git a/packages/demo_universe/package.json b/packages/demo_universe/package.json
+new file mode 100644
+index 0000000..f9b3427
+--- /dev/null
++++ b/packages/demo_universe/package.json
+@@ -0,0 +1,19 @@
++{
++  "name": "demo_universe",
++  "version": "0.1.0",
++  "private": true,
++  "type": "module",
++  "main": "./ts/index.ts",
++  "types": "./ts/index.ts",
++  "exports": {
++    ".": "./ts/index.ts",
++    "./data/universe.json": "./data/universe.json"
++  },
++  "scripts": {
++    "test": "vitest run"
++  },
++  "devDependencies": {
++    "typescript": "^5.4.0",
++    "vitest": "^2.1.0"
++  }
++}
+diff --git a/packages/demo_universe/ts/clone.test.ts b/packages/demo_universe/ts/clone.test.ts
+new file mode 100644
+index 0000000..e35df20
+--- /dev/null
++++ b/packages/demo_universe/ts/clone.test.ts
+@@ -0,0 +1,8 @@
++import { loadUniverse } from './load';
++
++test('loadUniverse deep clones so mutations do not stick', () => {
++  const a = loadUniverse();
++  a.customers.find((c) => c.id === 'cust_kasee')!.firstName = 'MUTATED';
++  const b = loadUniverse();
++  expect(b.customers.find((c) => c.id === 'cust_kasee')!.firstName).toBe('Kasee');
++});
+diff --git a/packages/demo_universe/ts/index.ts b/packages/demo_universe/ts/index.ts
+new file mode 100644
+index 0000000..3159912
+--- /dev/null
++++ b/packages/demo_universe/ts/index.ts
+@@ -0,0 +1,2 @@
++export { loadUniverse } from './load';
++export type * from './types';
+diff --git a/packages/demo_universe/ts/load.test.ts b/packages/demo_universe/ts/load.test.ts
+new file mode 100644
+index 0000000..bc3cf97
+--- /dev/null
++++ b/packages/demo_universe/ts/load.test.ts
+@@ -0,0 +1,15 @@
++import { loadUniverse } from './load';
++
++test('loadUniverse returns cust_kasee with CDF+USD wallets and linked journals', () => {
++  const u = loadUniverse();
++  expect(u.customers.find((c) => c.id === 'cust_kasee')).toBeTruthy();
++  const wallets = u.wallets.filter((w) => w.customerId === 'cust_kasee');
++  expect(wallets.map((w) => w.currency).sort()).toEqual(['CDF', 'USD']);
++  expect(u.journals.some((j) => j.customerId === 'cust_kasee')).toBe(true);
++  expect(u.agents.some((a) => a.id === 'agent-001')).toBe(true);
++  expect(u.employers.some((e) => e.id === 'emp_poste')).toBe(true);
++  expect(u.loans.some((l) => l.status === 'ACTIVE' && l.scheduleId)).toBe(true);
++  expect(u.loans.some((l) => l.status === 'PENDING_EXCEPTION')).toBe(true);
++  expect(u.pendingApprovals.length).toBeGreaterThan(0);
++  expect(u.cases.some((c) => c.type === 'AML' && c.confidential === true)).toBe(true);
++});
+diff --git a/packages/demo_universe/ts/load.ts b/packages/demo_universe/ts/load.ts
+new file mode 100644
+index 0000000..45e3f94
+--- /dev/null
++++ b/packages/demo_universe/ts/load.ts
+@@ -0,0 +1,6 @@
++import raw from '../data/universe.json';
++import type { Universe } from './types';
++
++export function loadUniverse(): Universe {
++  return structuredClone(raw) as Universe;
++}
+diff --git a/packages/demo_universe/ts/types.ts b/packages/demo_universe/ts/types.ts
+new file mode 100644
+index 0000000..bff503c
+--- /dev/null
++++ b/packages/demo_universe/ts/types.ts
+@@ -0,0 +1,339 @@
++/** Shared offline demo universe types (DEM-01…DEM-12 seed graph). */
++
++export interface UniverseMeta {
++  version: number;
++  name: string;
++  description?: string;
++  honesty?: {
++    globalBadge: string;
++    cardsBadge: string;
++    resilienceBadge: string;
++  };
++  demBookmarks?: Record<string, unknown>;
++}
++
++export interface Staff {
++  id: string;
++  email: string;
++  password: string;
++  role: string;
++  firstName?: string;
++  lastName?: string;
++}
++
++export interface Customer {
++  id: string;
++  email: string;
++  password: string;
++  phoneE164?: string | null;
++  firstName: string;
++  lastName: string;
++  segment: string;
++  status?: string;
++  kycStatus: string;
++  employerId?: string | null;
++  enrolledByAgentId?: string | null;
++  createdAt?: string;
++}
++
++export interface Wallet {
++  id: string;
++  customerId: string;
++  currency: string;
++  availableMinor: number;
++  ledgerMinor: number;
++  blockedMinor: number;
++  pendingMinor: number;
++}
++
++export interface Agent {
++  id: string;
++  name: string;
++  firstName?: string;
++  lastName?: string;
++  phoneE164?: string;
++  email?: string;
++  password?: string;
++  floatCdfMinor: number;
++  floatUsdMinor: number;
++  floatWalletId?: string;
++  status: string;
++  createdAt?: string;
++}
++
++export interface Employer {
++  id: string;
++  name: string;
++  taxId: string;
++  employeeCount?: number;
++  createdAt?: string;
++}
++
++export interface Employee {
++  id: string;
++  employerId: string;
++  customerId: string;
++  employeeNumber: string;
++  jobTitle?: string;
++  grossSalaryCdfMinor: number;
++  netSalaryCdfMinor: number;
++  eligibleAdvanceMaxCdfMinor: number;
++  status: string;
++  hiredAt?: string;
++}
++
++export interface SalaryHistoryEntry {
++  id: string;
++  employeeId: string;
++  customerId: string;
++  period: string;
++  grossCdfMinor: number;
++  netCdfMinor: number;
++  paidAt: string;
++}
++
++export interface Journal {
++  id: string;
++  customerId: string;
++  walletId: string;
++  type: string;
++  direction: string;
++  currency: string;
++  amountMinor: number;
++  balanceAfterMinor?: number;
++  refType?: string;
++  refId?: string;
++  narration?: string;
++  postedAt: string;
++}
++
++export interface Payment {
++  id: string;
++  customerId: string;
++  type: string;
++  status: string;
++  currency: string;
++  amountMinor: number;
++  feeMinor: number;
++  totalMinor: number;
++  sourceRef?: string | null;
++  destRef?: string | null;
++  journalId?: string | null;
++  idempotencyKey?: string;
++  createdAt: string;
++  notes?: string;
++}
++
++export interface AgentTransaction {
++  id: string;
++  agentId: string;
++  customerId: string;
++  type: string;
++  currency?: string | null;
++  amountMinor: number;
++  journalId?: string | null;
++  createdAt: string;
++}
++
++export interface LoanSchedule {
++  id: string;
++  loanId: string;
++  installments: Array<{
++    id: string;
++    dueDate: string;
++    principalMinor: number;
++    interestMinor: number;
++    status: string;
++    paidAt?: string | null;
++  }>;
++}
++
++export interface Loan {
++  id: string;
++  customerId: string;
++  employerId?: string | null;
++  productId: string;
++  status: string;
++  principalMinor: number;
++  currency: string;
++  scheduleId?: string | null;
++  receivableMinor?: number;
++  exceptionReason?: string;
++  thresholdMinor?: number;
++  disbursedAt?: string;
++  createdAt: string;
++}
++
++export interface Card {
++  id: string;
++  customerId: string;
++  type: string;
++  last4: string;
++  currency: string;
++  status: string;
++  dailyLimitMinor: number;
++  monthlyLimitMinor: number;
++  mockNetwork?: string;
++  createdAt: string;
++}
++
++export interface CardAuth {
++  id: string;
++  cardId: string;
++  customerId: string;
++  amountMinor: number;
++  currency: string;
++  merchant: string;
++  status: string;
++  threeDs?: Record<string, unknown>;
++  createdAt: string;
++}
++
++export interface Remittance {
++  id: string;
++  customerId: string;
++  direction: string;
++  partner: string;
++  status: string;
++  sendCurrency: string;
++  sendAmountMinor: number;
++  receiveCurrency: string;
++  receiveAmountMinor: number;
++  fxConversionId?: string | null;
++  walletId?: string | null;
++  screeningHit?: string;
++  createdAt: string;
++}
++
++export interface FxRate {
++  id: string;
++  base: string;
++  quote: string;
++  rate: number;
++  asOf: string;
++}
++
++export interface Conversion {
++  id: string;
++  customerId: string;
++  fromCurrency: string;
++  toCurrency: string;
++  fromAmountMinor: number;
++  toAmountMinor: number;
++  rate: number;
++  feeMinor: number;
++  createdAt: string;
++}
++
++export interface Product {
++  id: string;
++  code: string;
++  name: string;
++  segment: string;
++  currencies?: string[];
++  maxAdvancePct?: number;
++  autoApproveMaxMinor?: number;
++  status: string;
++}
++
++export interface FeeLimit {
++  id: string;
++  kind: string;
++  paymentType?: string;
++  limitType?: string;
++  currency?: string;
++  feePercent?: number;
++  minFeeMinor?: number;
++  maxFeeMinor?: number;
++  dailyLimitMinor?: number;
++  monthlyLimitMinor?: number;
++  effectiveFrom: string;
++  status: string;
++}
++
++export interface PendingApproval {
++  id: string;
++  type: string;
++  targetId: string;
++  summary: string;
++  makerStaffId: string;
++  status: string;
++  createdAt: string;
++}
++
++export interface Case {
++  id: string;
++  type: string;
++  confidential?: boolean;
++  description: string;
++  customerId?: string | null;
++  cardId?: string;
++  cardAuthId?: string;
++  status: string;
++  steps?: string[];
++  currentStep?: string;
++  createdAt: string;
++  decidedAt?: string | null;
++}
++
++export interface ReconDay {
++  id: string;
++  businessDate: string;
++  status: string;
++  matchedCount: number;
++  exceptionCount: number;
++  exceptions: Array<Record<string, unknown>>;
++  eodSnapshot: Record<string, unknown>;
++}
++
++export interface KycSubmission {
++  id: string;
++  customerId: string;
++  phoneE164: string;
++  idNumber: string;
++  idType: string;
++  status: string;
++  reviewNotes?: string | null;
++  screeningResult?: string;
++  createdAt: string;
++  updatedAt: string;
++}
++
++export interface Notification {
++  id: string;
++  customerId?: string;
++  staffId?: string;
++  channel: string;
++  title: string;
++  body: string;
++  read: boolean;
++  createdAt: string;
++}
++
++export interface Universe {
++  meta: UniverseMeta;
++  staff: Staff[];
++  customers: Customer[];
++  wallets: Wallet[];
++  agents: Agent[];
++  employers: Employer[];
++  employees: Employee[];
++  salaryHistory: SalaryHistoryEntry[];
++  journals: Journal[];
++  payments: Payment[];
++  agentTransactions: AgentTransaction[];
++  loanSchedules: LoanSchedule[];
++  loans: Loan[];
++  cards: Card[];
++  cardAuths: CardAuth[];
++  remittances: Remittance[];
++  fxRates: FxRate[];
++  conversions: Conversion[];
++  products: Product[];
++  feeLimits: FeeLimit[];
++  pendingApprovals: PendingApproval[];
++  cases: Case[];
++  reconDays: ReconDay[];
++  kyc: KycSubmission[];
++  notifications: Notification[];
++}
+diff --git a/packages/demo_universe/tsconfig.json b/packages/demo_universe/tsconfig.json
+new file mode 100644
+index 0000000..3614358
+--- /dev/null
++++ b/packages/demo_universe/tsconfig.json
+@@ -0,0 +1,13 @@
++{
++  "compilerOptions": {
++    "target": "ES2022",
++    "module": "ESNext",
++    "moduleResolution": "bundler",
++    "resolveJsonModule": true,
++    "esModuleInterop": true,
++    "strict": true,
++    "skipLibCheck": true,
++    "types": ["vitest/globals"]
++  },
++  "include": ["ts/**/*", "vitest.config.ts"]
++}
+diff --git a/packages/demo_universe/vitest.config.ts b/packages/demo_universe/vitest.config.ts
+new file mode 100644
+index 0000000..7382f40
+--- /dev/null
++++ b/packages/demo_universe/vitest.config.ts
+@@ -0,0 +1,7 @@
++import { defineConfig } from 'vitest/config';
++
++export default defineConfig({
++  test: {
++    globals: true,
++  },
++});

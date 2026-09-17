@@ -1,0 +1,3732 @@
+=== COMMITS ===
+b1acc28 feat(admin): offline DEM thin shells and mutations
+=== STAT ===
+ apps/admin_web/app/dashboard/approvals/page.tsx    | 114 +++++
+ apps/admin_web/app/dashboard/cards/page.tsx        | 308 +++++++------
+ apps/admin_web/app/dashboard/cases/page.tsx        | 371 ++++++++-------
+ .../app/dashboard/credit-exceptions/page.tsx       | 133 ++++++
+ apps/admin_web/app/dashboard/customer360/page.tsx  | 423 +++++++++++++-----
+ apps/admin_web/app/dashboard/export/page.tsx       |  70 +++
+ apps/admin_web/app/dashboard/idempotency/page.tsx  | 135 ++++++
+ apps/admin_web/app/dashboard/products/page.tsx     | 157 +++++++
+ apps/admin_web/app/dashboard/recon/page.tsx        | 270 +++++++----
+ apps/admin_web/app/dashboard/remittance/page.tsx   | 141 ++++++
+ apps/admin_web/app/dashboard/resilience/page.tsx   | 129 ++++++
+ apps/admin_web/components/sidebar/Sidebar.tsx      | 235 ++++------
+ apps/admin_web/lib/api.ts                          |  95 ++++
+ apps/admin_web/lib/offline/store.mutations.test.ts |  67 +++
+ apps/admin_web/lib/offline/store.ts                | 495 ++++++++++++++++++++-
+ apps/admin_web/lib/rbac.ts                         |  56 ++-
+ 16 files changed, 2533 insertions(+), 666 deletions(-)
+=== DIFF ===
+diff --git a/apps/admin_web/app/dashboard/approvals/page.tsx b/apps/admin_web/app/dashboard/approvals/page.tsx
+new file mode 100644
+index 0000000..4b1512a
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/approvals/page.tsx
+@@ -0,0 +1,114 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function ApprovalsPage() {
++  const [rows, setRows] = useState<any[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [busy, setBusy] = useState<string | null>(null);
++
++  const load = async () => {
++    setLoading(true);
++    try {
++      const data = await api.listPendingApprovals();
++      setRows(Array.isArray(data) ? data : []);
++    } finally {
++      setLoading(false);
++    }
++  };
++
++  useEffect(() => {
++    load();
++  }, []);
++
++  const decide = async (id: string, decision: string) => {
++    setBusy(id);
++    try {
++      await api.approvePending(id, decision);
++      await load();
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(null);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Pending approvals (DEM-02 maker-checker)</PanelHeader>
++        <PanelBody className="p-0">
++          {loading ? (
++            <div className="p-4 text-center">Loading...</div>
++          ) : rows.length === 0 ? (
++            <div className="p-4 text-center text-gray-500">No pending approvals</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>ID</th>
++                    <th>Type</th>
++                    <th>Summary</th>
++                    <th>Maker</th>
++                    <th>Status</th>
++                    <th>Actions</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {rows.map((a) => (
++                    <tr key={a.id}>
++                      <td className="font-monospace small">{a.id}</td>
++                      <td>
++                        <span className="badge bg-secondary">{a.type}</span>
++                      </td>
++                      <td>{a.summary}</td>
++                      <td className="detail-label">{a.makerStaffId}</td>
++                      <td>
++                        <span
++                          className={`badge ${
++                            a.status === 'APPROVED'
++                              ? 'bg-teal'
++                              : a.status === 'REJECTED'
++                              ? 'bg-danger'
++                              : 'bg-warning'
++                          }`}
++                        >
++                          {a.status}
++                        </span>
++                      </td>
++                      <td>
++                        {a.status === 'PENDING' ? (
++                          <div className="d-flex gap-1">
++                            <button
++                              className="btn btn-xs btn-success"
++                              disabled={busy === a.id}
++                              onClick={() => decide(a.id, 'APPROVE')}
++                            >
++                              Approve
++                            </button>
++                            <button
++                              className="btn btn-xs btn-default"
++                              disabled={busy === a.id}
++                              onClick={() => decide(a.id, 'REJECT')}
++                            >
++                              Reject
++                            </button>
++                          </div>
++                        ) : (
++                          '—'
++                        )}
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/cards/page.tsx b/apps/admin_web/app/dashboard/cards/page.tsx
+index 66e7e55..af5959b 100644
+--- a/apps/admin_web/app/dashboard/cards/page.tsx
++++ b/apps/admin_web/app/dashboard/cards/page.tsx
+@@ -1,173 +1,233 @@
+ 'use client';
+ 
++import Link from 'next/link';
+ import { useState, useEffect } from 'react';
+ import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
+ 
+ export default function CardsPage() {
+   const [cards, setCards] = useState<any[]>([]);
++  const [auths, setAuths] = useState<any[]>([]);
++  const [honesty, setHonesty] = useState<any>(null);
+   const [loading, setLoading] = useState(true);
+   const [filterCustomerId, setFilterCustomerId] = useState('');
+ 
+   useEffect(() => {
+     loadCards();
+   }, []);
+ 
+   const loadCards = async (customerId?: string) => {
+     setLoading(true);
+     try {
+-      const data = await api.listCards(customerId);
++      const [data, a, h] = await Promise.all([
++        api.listCards(customerId),
++        api.listCardAuths(),
++        api.getHonesty(),
++      ]);
+       setCards(Array.isArray(data) ? data : data.cards || []);
++      setAuths(Array.isArray(a) ? a : []);
++      setHonesty(h);
+     } catch (err) {
+-      console.error('Failed to load cards:', err);
++      console.error(err);
+       setCards([]);
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+-  const handleFilter = () => {
+-    loadCards(filterCustomerId || undefined);
+-  };
++  const banner = honesty?.cardsBadge || 'MOCK — not Visa/Mastercard certified';
+ 
+   return (
+     <div>
+-      {/* Filters */}
+-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+-        <div className="flex gap-4">
+-          <div className="flex-1">
+-            <label className="block text-sm font-medium mb-2">Filter by Customer ID</label>
+-            <input
+-              type="text"
+-              value={filterCustomerId}
+-              onChange={(e) => setFilterCustomerId(e.target.value)}
+-              placeholder="cust_..."
+-              className="w-full px-3 py-2 border rounded-lg"
+-            />
+-          </div>
+-          <div className="flex items-end">
+-            <button
+-              onClick={handleFilter}
+-              disabled={loading}
+-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+-            >
+-              {loading ? 'Loading...' : 'Filter'}
+-            </button>
+-          </div>
+-          {filterCustomerId && (
+-            <div className="flex items-end">
++      <div className="alert alert-warning mb-3" role="alert">
++        <strong>{banner}</strong>
++      </div>
++
++      <Panel>
++        <PanelHeader>Filter</PanelHeader>
++        <PanelBody>
++          <div className="row g-2">
++            <div className="col-md-8">
++              <input
++                className="form-control"
++                value={filterCustomerId}
++                onChange={(e) => setFilterCustomerId(e.target.value)}
++                placeholder="Filter by Customer ID (cust_...)"
++              />
++            </div>
++            <div className="col-md-2">
+               <button
++                className="btn btn-theme w-100"
++                disabled={loading}
++                onClick={() => loadCards(filterCustomerId || undefined)}
++              >
++                Filter
++              </button>
++            </div>
++            <div className="col-md-2">
++              <button
++                className="btn btn-default w-100"
+                 onClick={() => {
+                   setFilterCustomerId('');
+                   loadCards();
+                 }}
+-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+               >
+                 Clear
+               </button>
+             </div>
+-          )}
+-        </div>
+-      </div>
+-
+-      {/* Results */}
+-      <div className="bg-white rounded-lg shadow">
+-        <div className="p-4 bg-gray-50 border-b">
+-          <h2 className="font-semibold">
+-            {cards.length} {cards.length === 1 ? 'card' : 'cards'} found
+-          </h2>
+-        </div>
+-
+-        {loading ? (
+-          <div className="p-8 text-center">Loading...</div>
+-        ) : cards.length === 0 ? (
+-          <div className="p-8 text-center text-gray-500">
+-            <p>No cards found</p>
+-            {filterCustomerId && (
+-              <p className="text-sm mt-2">Try adjusting your filter or clearing it</p>
+-            )}
+           </div>
+-        ) : (
+-          <div className="overflow-x-auto">
+-            <table className="w-full">
+-              <thead className="bg-gray-50 border-b">
+-                <tr>
+-                  <th className="text-left p-3 text-sm font-medium">Card ID</th>
+-                  <th className="text-left p-3 text-sm font-medium">Customer ID</th>
+-                  <th className="text-left p-3 text-sm font-medium">Last 4</th>
+-                  <th className="text-left p-3 text-sm font-medium">Currency</th>
+-                  <th className="text-left p-3 text-sm font-medium">Status</th>
+-                  <th className="text-left p-3 text-sm font-medium">Daily Limit</th>
+-                  <th className="text-left p-3 text-sm font-medium">Monthly Limit</th>
+-                  <th className="text-left p-3 text-sm font-medium">Created</th>
+-                </tr>
+-              </thead>
+-              <tbody>
+-                {cards.map((card) => (
+-                  <tr key={card.id} className="border-b hover:bg-gray-50">
+-                    <td className="p-3 font-mono text-xs">{card.id}</td>
+-                    <td className="p-3 font-mono text-xs">
+-                      <Link
+-                        href={`/dashboard/customer360?customerId=${card.customerId}`}
+-                        className="text-blue-600 hover:underline"
+-                      >
+-                        {card.customerId}
+-                      </Link>
+-                    </td>
+-                    <td className="p-3 font-mono font-bold">•••• {card.last4}</td>
+-                    <td className="p-3 text-sm">{card.currency}</td>
+-                    <td className="p-3">
+-                      <span
+-                        className={`px-2 py-1 rounded text-xs font-medium ${
+-                          card.status === 'ACTIVE'
+-                            ? 'bg-green-100 text-green-800'
+-                            : card.status === 'FROZEN'
+-                            ? 'bg-orange-100 text-orange-800'
+-                            : 'bg-red-100 text-red-800'
+-                        }`}
+-                      >
+-                        {card.status}
+-                      </span>
+-                    </td>
+-                    <td className="p-3 text-sm">
+-                      {card.currency} {(parseInt(card.dailyLimitMinor) / 100).toFixed(2)}
+-                    </td>
+-                    <td className="p-3 text-sm">
+-                      {card.currency} {(parseInt(card.monthlyLimitMinor) / 100).toFixed(2)}
+-                    </td>
+-                    <td className="p-3 text-sm text-gray-600">
+-                      {new Date(card.createdAt).toLocaleDateString()}
+-                    </td>
+-                  </tr>
+-                ))}
+-              </tbody>
+-            </table>
+-          </div>
+-        )}
+-      </div>
++        </PanelBody>
++      </Panel>
+ 
+-      {/* Summary Stats */}
+-      {!loading && cards.length > 0 && (
+-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <div className="text-sm text-gray-600">Active Cards</div>
+-            <div className="text-3xl font-bold text-green-600 mt-2">
+-              {cards.filter((c) => c.status === 'ACTIVE').length}
++      <div className="row mb-3">
++        <div className="col-md-4">
++          <div className="widget widget-stats bg-teal">
++            <div className="stats-icon">
++              <i className="fa fa-check"></i>
++            </div>
++            <div className="stats-info">
++              <h4>ACTIVE</h4>
++              <p>{cards.filter((c) => c.status === 'ACTIVE').length}</p>
+             </div>
+           </div>
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <div className="text-sm text-gray-600">Frozen Cards</div>
+-            <div className="text-3xl font-bold text-orange-600 mt-2">
+-              {cards.filter((c) => c.status === 'FROZEN').length}
++        </div>
++        <div className="col-md-4">
++          <div className="widget widget-stats bg-orange">
++            <div className="stats-icon">
++              <i className="fa fa-snowflake"></i>
++            </div>
++            <div className="stats-info">
++              <h4>FROZEN</h4>
++              <p>{cards.filter((c) => c.status === 'FROZEN').length}</p>
+             </div>
+           </div>
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <div className="text-sm text-gray-600">Blocked Cards</div>
+-            <div className="text-3xl font-bold text-red-600 mt-2">
+-              {cards.filter((c) => c.status === 'BLOCKED').length}
++        </div>
++        <div className="col-md-4">
++          <div className="widget widget-stats bg-red">
++            <div className="stats-icon">
++              <i className="fa fa-ban"></i>
++            </div>
++            <div className="stats-info">
++              <h4>BLOCKED</h4>
++              <p>{cards.filter((c) => c.status === 'BLOCKED').length}</p>
+             </div>
+           </div>
+         </div>
+-      )}
++      </div>
++
++      <Panel>
++        <PanelHeader>
++          {cards.length} {cards.length === 1 ? 'card' : 'cards'} found
++        </PanelHeader>
++        <PanelBody className="p-0">
++          {loading ? (
++            <div className="p-4 text-center">Loading...</div>
++          ) : cards.length === 0 ? (
++            <div className="p-4 text-center text-gray-500">No cards found</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped table-hover mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>Card ID</th>
++                    <th>Customer</th>
++                    <th>Last 4</th>
++                    <th>Network</th>
++                    <th>Currency</th>
++                    <th>Status</th>
++                    <th>Daily Limit</th>
++                    <th>Monthly Limit</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {cards.map((card) => (
++                    <tr key={card.id}>
++                      <td className="font-monospace small">{card.id}</td>
++                      <td>
++                        <Link href={`/dashboard/customer360?customerId=${card.customerId}`}>
++                          {card.customerId}
++                        </Link>
++                      </td>
++                      <td className="fw-bold">•••• {card.last4}</td>
++                      <td>
++                        <span className="badge bg-secondary">{card.mockNetwork || 'MOCK'}</span>
++                      </td>
++                      <td>{card.currency}</td>
++                      <td>
++                        <span
++                          className={`badge ${
++                            card.status === 'ACTIVE'
++                              ? 'bg-teal'
++                              : card.status === 'FROZEN'
++                              ? 'bg-orange'
++                              : 'bg-danger'
++                          }`}
++                        >
++                          {card.status}
++                        </span>
++                      </td>
++                      <td>
++                        {card.currency} {(parseInt(card.dailyLimitMinor) / 100).toFixed(2)}
++                      </td>
++                      <td>
++                        {card.currency} {(parseInt(card.monthlyLimitMinor) / 100).toFixed(2)}
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++
++      <Panel>
++        <PanelHeader>Mock 3DS authorizations (DEM-07)</PanelHeader>
++        <PanelBody className="p-0">
++          {!auths.length ? (
++            <div className="p-4 text-center text-gray-500">No mock 3DS auths</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>Auth ID</th>
++                    <th>Card</th>
++                    <th>Merchant</th>
++                    <th>Amount</th>
++                    <th>Status</th>
++                    <th>3DS</th>
++                    <th>Dispute</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {auths.map((a) => (
++                    <tr key={a.id}>
++                      <td className="font-monospace small">{a.id}</td>
++                      <td className="font-monospace small">{a.cardId}</td>
++                      <td>{a.merchant}</td>
++                      <td>
++                        {a.currency} {(Number(a.amountMinor) / 100).toFixed(2)}
++                      </td>
++                      <td>
++                        <span className="badge bg-warning">{a.status}</span>
++                      </td>
++                      <td className="detail-label">
++                        {a.threeDs
++                          ? `${a.threeDs.version || ''} / ${a.threeDs.result || ''}`
++                          : '—'}
++                      </td>
++                      <td>
++                        <Link href="/dashboard/cases">case_card_dispute_001</Link>
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
+     </div>
+   );
+ }
+diff --git a/apps/admin_web/app/dashboard/cases/page.tsx b/apps/admin_web/app/dashboard/cases/page.tsx
+index ce48728..469384c 100644
+--- a/apps/admin_web/app/dashboard/cases/page.tsx
++++ b/apps/admin_web/app/dashboard/cases/page.tsx
+@@ -1,52 +1,42 @@
+ 'use client';
+ 
+-import { useState, useEffect } from 'react';
+ import Link from 'next/link';
++import { useState, useEffect, FormEvent } from 'react';
+ import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
+ 
+ export default function CasesPage() {
+   const [cases, setCases] = useState<any[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [filterStatus, setFilterStatus] = useState('');
+   const [showCreateForm, setShowCreateForm] = useState(false);
+-  const [formData, setFormData] = useState({
+-    type: 'DISPUTE',
+-    description: '',
+-    customerId: '',
+-  });
++  const [formData, setFormData] = useState({ type: 'DISPUTE', description: '', customerId: '' });
+   const [creating, setCreating] = useState(false);
++  const [busy, setBusy] = useState<string | null>(null);
+ 
+   useEffect(() => {
+     loadCases();
+   }, []);
+ 
+   const loadCases = async (status?: string) => {
+     setLoading(true);
+     try {
+       const data = await api.listCases(status);
+       setCases(Array.isArray(data) ? data : data.cases || []);
+     } catch (err) {
+-      console.error('Failed to load cases:', err);
++      console.error(err);
+       setCases([]);
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+-  const handleFilter = () => {
+-    loadCases(filterStatus || undefined);
+-  };
+-
+-  const handleCreate = async (e: React.FormEvent) => {
++  const handleCreate = async (e: FormEvent) => {
+     e.preventDefault();
+-    if (!formData.type || !formData.description) {
+-      alert('Please fill in all required fields');
+-      return;
+-    }
+-
++    if (!formData.type || !formData.description) return;
+     setCreating(true);
+     try {
+       await api.createCase(formData);
+       setFormData({ type: 'DISPUTE', description: '', customerId: '' });
+       setShowCreateForm(false);
+       await loadCases(filterStatus || undefined);
+@@ -55,214 +45,251 @@ export default function CasesPage() {
+     } finally {
+       setCreating(false);
+     }
+   };
+ 
+   const handleDecision = async (caseId: string, decision: string) => {
+-    if (!confirm(`Are you sure you want to set this case status to "${decision}"?`)) {
+-      return;
+-    }
+-
++    if (!confirm(`Set this case status to "${decision}"?`)) return;
+     try {
+       await api.updateCase(caseId, decision);
+       await loadCases(filterStatus || undefined);
+     } catch (err: any) {
+       alert(`Failed to update case: ${err.message}`);
+     }
+   };
+ 
++  const advanceAml = async (caseId: string, action: string) => {
++    setBusy(caseId + action);
++    try {
++      await api.advanceAmlCase(caseId, action, {
++        approverRole: 'ADMIN',
++        recommendation: action === 'RECOMMEND' ? 'ESCALATE' : undefined,
++      });
++      await loadCases(filterStatus || undefined);
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(null);
++    }
++  };
++
+   return (
+     <div>
+-      <div className="flex justify-between items-center mb-6">
+-        <button
+-          onClick={() => setShowCreateForm(!showCreateForm)}
+-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+-        >
++      <div className="mb-3 d-flex gap-2">
++        <button className="btn btn-theme" onClick={() => setShowCreateForm(!showCreateForm)}>
+           {showCreateForm ? 'Cancel' : '+ Create Case'}
+         </button>
+       </div>
+ 
+-      {/* Create Form */}
+       {showCreateForm && (
+-        <div className="bg-white p-6 rounded-lg shadow mb-6">
+-          <h2 className="text-xl font-bold mb-4">Create New Case</h2>
+-          <form onSubmit={handleCreate}>
+-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+-              <div>
+-                <label className="block text-sm font-medium mb-2">Type</label>
++        <Panel>
++          <PanelHeader>Create Case</PanelHeader>
++          <PanelBody>
++            <form onSubmit={handleCreate} className="row g-3">
++              <div className="col-md-4">
++                <label className="form-label">Type</label>
+                 <select
++                  className="form-select"
+                   value={formData.type}
+                   onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+-                  className="w-full px-3 py-2 border rounded-lg"
+-                  required
+                 >
+                   <option value="DISPUTE">Dispute</option>
+                   <option value="INQUIRY">Inquiry</option>
+                   <option value="FRAUD">Fraud</option>
+-                  <option value="OTHER">Other</option>
++                  <option value="AML">AML</option>
+                 </select>
+               </div>
+-              <div>
+-                <label className="block text-sm font-medium mb-2">Customer ID (Optional)</label>
++              <div className="col-md-4">
++                <label className="form-label">Customer ID</label>
+                 <input
+-                  type="text"
++                  className="form-control"
+                   value={formData.customerId}
+                   onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
+                   placeholder="cust_..."
+-                  className="w-full px-3 py-2 border rounded-lg"
+                 />
+               </div>
++              <div className="col-md-12">
++                <label className="form-label">Description</label>
++                <textarea
++                  className="form-control"
++                  rows={3}
++                  required
++                  value={formData.description}
++                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
++                />
++              </div>
++              <div className="col-12">
++                <button className="btn btn-success" disabled={creating}>
++                  {creating ? 'Creating...' : 'Create Case'}
++                </button>
++              </div>
++            </form>
++          </PanelBody>
++        </Panel>
++      )}
++
++      <Panel>
++        <PanelHeader>Filter</PanelHeader>
++        <PanelBody>
++          <div className="row g-2">
++            <div className="col-md-6">
++              <select
++                className="form-select"
++                value={filterStatus}
++                onChange={(e) => setFilterStatus(e.target.value)}
++              >
++                <option value="">All statuses</option>
++                <option value="PENDING">Pending</option>
++                <option value="OPEN">Open</option>
++                <option value="INVESTIGATION">Investigation</option>
++                <option value="PENDING_APPROVAL">Pending approval</option>
++                <option value="IN_PROGRESS">In Progress</option>
++                <option value="RESOLVED">Resolved</option>
++                <option value="CLOSED">Closed</option>
++                <option value="APPROVED">Approved</option>
++              </select>
+             </div>
+-            <div className="mt-4">
+-              <label className="block text-sm font-medium mb-2">Description</label>
+-              <textarea
+-                value={formData.description}
+-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+-                placeholder="Describe the case..."
+-                rows={4}
+-                required
+-                className="w-full px-3 py-2 border rounded-lg"
+-              />
+-            </div>
+-            <div className="mt-4">
++            <div className="col-md-3">
+               <button
+-                type="submit"
+-                disabled={creating}
+-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
++                className="btn btn-theme w-100"
++                onClick={() => loadCases(filterStatus || undefined)}
+               >
+-                {creating ? 'Creating...' : 'Create Case'}
++                Filter
+               </button>
+             </div>
+-          </form>
+-        </div>
+-      )}
+-
+-      {/* Filter */}
+-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+-        <div className="flex gap-4">
+-          <div className="flex-1">
+-            <label className="block text-sm font-medium mb-2">Filter by Status</label>
+-            <select
+-              value={filterStatus}
+-              onChange={(e) => setFilterStatus(e.target.value)}
+-              className="w-full px-3 py-2 border rounded-lg"
+-            >
+-              <option value="">All</option>
+-              <option value="PENDING">Pending</option>
+-              <option value="IN_PROGRESS">In Progress</option>
+-              <option value="RESOLVED">Resolved</option>
+-              <option value="CLOSED">Closed</option>
+-            </select>
+-          </div>
+-          <div className="flex items-end">
+-            <button
+-              onClick={handleFilter}
+-              disabled={loading}
+-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+-            >
+-              {loading ? 'Loading...' : 'Filter'}
+-            </button>
+-          </div>
+-          {filterStatus && (
+-            <div className="flex items-end">
++            <div className="col-md-3">
+               <button
++                className="btn btn-default w-100"
+                 onClick={() => {
+                   setFilterStatus('');
+                   loadCases();
+                 }}
+-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+               >
+                 Clear
+               </button>
+             </div>
+-          )}
+-        </div>
+-      </div>
+-
+-      {/* Cases List */}
+-      <div className="bg-white rounded-lg shadow">
+-        <div className="p-4 bg-gray-50 border-b">
+-          <h2 className="font-semibold">
+-            {cases.length} {cases.length === 1 ? 'case' : 'cases'} found
+-          </h2>
+-        </div>
+-
+-        {loading ? (
+-          <div className="p-8 text-center">Loading...</div>
+-        ) : cases.length === 0 ? (
+-          <div className="p-8 text-center text-gray-500">
+-            <p>No cases found</p>
+-            {filterStatus && (
+-              <p className="text-sm mt-2">Try adjusting your filter or clearing it</p>
+-            )}
+           </div>
+-        ) : (
+-          <div className="divide-y">
+-            {cases.map((caseItem) => (
+-              <div key={caseItem.id} className="p-6 hover:bg-gray-50">
+-                <div className="flex justify-between items-start">
+-                  <div className="flex-1">
+-                    <div className="flex items-center gap-3 mb-2">
+-                      <span className="text-lg font-bold">{caseItem.type}</span>
+-                      <span
+-                        className={`px-2 py-1 rounded text-xs font-medium ${
+-                          caseItem.status === 'RESOLVED' || caseItem.status === 'CLOSED'
+-                            ? 'bg-green-100 text-green-800'
+-                            : caseItem.status === 'IN_PROGRESS'
+-                            ? 'bg-blue-100 text-blue-800'
+-                            : 'bg-yellow-100 text-yellow-800'
+-                        }`}
+-                      >
+-                        {caseItem.status}
+-                      </span>
+-                    </div>
+-                    <p className="text-sm text-gray-700 mb-2">{caseItem.description}</p>
+-                    <div className="flex gap-4 text-xs text-gray-500">
+-                      <span>ID: {caseItem.id}</span>
+-                      {caseItem.customerId && (
+-                        <span>
+-                          Customer:{' '}
+-                          <Link
+-                            href={`/dashboard/customer360?customerId=${caseItem.customerId}`}
+-                            className="text-blue-600 hover:underline"
+-                          >
+-                            {caseItem.customerId}
+-                          </Link>
++        </PanelBody>
++      </Panel>
++
++      <Panel>
++        <PanelHeader>{cases.length} Cases — AML confidential workflow (DEM-09)</PanelHeader>
++        <PanelBody>
++          {loading ? (
++            <div className="text-center py-4">Loading...</div>
++          ) : cases.length === 0 ? (
++            <div className="text-center text-gray-500 py-4">No cases found</div>
++          ) : (
++            <div className="list-group list-group-flush">
++              {cases.map((caseItem) => (
++                <div key={caseItem.id} className="list-group-item px-0">
++                  <div className="d-flex justify-content-between gap-3">
++                    <div>
++                      <div className="d-flex align-items-center gap-2 mb-1 flex-wrap">
++                        <span className="badge bg-secondary">{caseItem.type}</span>
++                        {caseItem.confidential && (
++                          <span className="badge bg-danger">CONFIDENTIAL</span>
++                        )}
++                        <span
++                          className={`badge ${
++                            caseItem.status === 'RESOLVED' ||
++                            caseItem.status === 'CLOSED' ||
++                            caseItem.status === 'APPROVED'
++                              ? 'bg-teal'
++                              : caseItem.status === 'INVESTIGATION' ||
++                                caseItem.status === 'IN_PROGRESS'
++                              ? 'bg-primary'
++                              : 'bg-warning'
++                          }`}
++                        >
++                          {caseItem.status}
+                         </span>
+-                      )}
+-                      <span>Created: {new Date(caseItem.createdAt).toLocaleString()}</span>
+-                      {caseItem.decidedAt && (
+-                        <span>Decided: {new Date(caseItem.decidedAt).toLocaleString()}</span>
++                        {caseItem.currentStep && (
++                          <span className="badge bg-indigo">step: {caseItem.currentStep}</span>
++                        )}
++                        {caseItem.approverRole && (
++                          <span className="badge bg-dark">approverRole: {caseItem.approverRole}</span>
++                        )}
++                      </div>
++                      <div className="detail-label mb-1">
++                        ID: {caseItem.id}
++                        {caseItem.customerId && (
++                          <>
++                            {' · '}
++                            <Link href={`/dashboard/customer360?customerId=${caseItem.customerId}`}>
++                              {caseItem.customerId}
++                            </Link>
++                          </>
++                        )}
++                      </div>
++                      <div>{caseItem.description}</div>
++                      {caseItem.steps && (
++                        <div className="detail-label mt-1">
++                          Workflow: {(caseItem.steps || []).join(' → ')}
++                        </div>
+                       )}
+                     </div>
+-                  </div>
+-                  {caseItem.status === 'PENDING' && (
+-                    <div className="flex gap-2 ml-4">
+-                      <button
+-                        onClick={() => handleDecision(caseItem.id, 'IN_PROGRESS')}
+-                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+-                      >
+-                        In Progress
+-                      </button>
+-                      <button
+-                        onClick={() => handleDecision(caseItem.id, 'RESOLVED')}
+-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+-                      >
+-                        Resolve
+-                      </button>
+-                      <button
+-                        onClick={() => handleDecision(caseItem.id, 'CLOSED')}
+-                        className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700"
+-                      >
+-                        Close
+-                      </button>
++                    <div className="d-flex flex-column gap-1">
++                      {caseItem.type === 'AML' && caseItem.confidential ? (
++                        <>
++                          <button
++                            className="btn btn-xs btn-primary"
++                            disabled={!!busy}
++                            onClick={() => advanceAml(caseItem.id, 'INVESTIGATE')}
++                          >
++                            Investigate
++                          </button>
++                          <button
++                            className="btn btn-xs btn-warning"
++                            disabled={!!busy}
++                            onClick={() => advanceAml(caseItem.id, 'RECOMMEND')}
++                          >
++                            Recommend
++                          </button>
++                          <button
++                            className="btn btn-xs btn-success"
++                            disabled={!!busy}
++                            onClick={() => advanceAml(caseItem.id, 'APPROVE')}
++                          >
++                            Maker-checker approve
++                          </button>
++                          <button
++                            className="btn btn-xs btn-default"
++                            disabled={!!busy}
++                            onClick={() => advanceAml(caseItem.id, 'REJECT')}
++                          >
++                            Deny
++                          </button>
++                        </>
++                      ) : caseItem.status === 'PENDING' || caseItem.status === 'OPEN' ? (
++                        <>
++                          <button
++                            className="btn btn-xs btn-primary"
++                            onClick={() => handleDecision(caseItem.id, 'IN_PROGRESS')}
++                          >
++                            In Progress
++                          </button>
++                          <button
++                            className="btn btn-xs btn-success"
++                            onClick={() => handleDecision(caseItem.id, 'RESOLVED')}
++                          >
++                            Resolve
++                          </button>
++                          <button
++                            className="btn btn-xs btn-default"
++                            onClick={() => handleDecision(caseItem.id, 'CLOSED')}
++                          >
++                            Close
++                          </button>
++                        </>
++                      ) : null}
+                     </div>
+-                  )}
++                  </div>
+                 </div>
+-              </div>
+-            ))}
+-          </div>
+-        )}
+-      </div>
++              ))}
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
+     </div>
+   );
+ }
+diff --git a/apps/admin_web/app/dashboard/credit-exceptions/page.tsx b/apps/admin_web/app/dashboard/credit-exceptions/page.tsx
+new file mode 100644
+index 0000000..fce8965
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/credit-exceptions/page.tsx
+@@ -0,0 +1,133 @@
++'use client';
++
++import Link from 'next/link';
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function CreditExceptionsPage() {
++  const [loans, setLoans] = useState<any[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [busy, setBusy] = useState<string | null>(null);
++
++  const load = async () => {
++    setLoading(true);
++    try {
++      const all = await api.listLoans();
++      const list = (Array.isArray(all) ? all : []).filter(
++        (l: any) =>
++          l.status === 'PENDING_EXCEPTION' ||
++          l.status === 'REJECTED_EXCEPTION' ||
++          l.exceptionReason,
++      );
++      // also include ACTIVE ones that were exceptions if still in listCreditExceptions
++      const ex = await api.listCreditExceptions();
++      const merged = [...list];
++      for (const e of Array.isArray(ex) ? ex : []) {
++        if (!merged.find((x) => x.id === e.id)) merged.push(e);
++      }
++      setLoans(merged);
++    } finally {
++      setLoading(false);
++    }
++  };
++
++  useEffect(() => {
++    load();
++  }, []);
++
++  const decide = async (loanId: string, decision: string) => {
++    setBusy(loanId);
++    try {
++      await api.decideCreditException(loanId, decision);
++      await load();
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(null);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Credit exceptions (DEM-04)</PanelHeader>
++        <PanelBody className="p-0">
++          {loading ? (
++            <div className="p-4 text-center">Loading...</div>
++          ) : loans.length === 0 ? (
++            <div className="p-4 text-center text-gray-500">No credit exceptions</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>Loan</th>
++                    <th>Customer</th>
++                    <th>Principal</th>
++                    <th>Reason</th>
++                    <th>Status</th>
++                    <th>Actions</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {loans.map((l) => (
++                    <tr key={l.id}>
++                      <td className="font-monospace small">{l.id}</td>
++                      <td>
++                        <Link href={`/dashboard/customer360?customerId=${l.customerId}`}>
++                          {l.customerId}
++                        </Link>
++                      </td>
++                      <td>
++                        {l.currency} {(Number(l.principalMinor) / 100).toLocaleString()}
++                      </td>
++                      <td>{l.exceptionReason || '—'}</td>
++                      <td>
++                        <span
++                          className={`badge ${
++                            l.status === 'ACTIVE'
++                              ? 'bg-teal'
++                              : l.status === 'PENDING_EXCEPTION'
++                              ? 'bg-warning'
++                              : 'bg-secondary'
++                          }`}
++                        >
++                          {l.status}
++                        </span>
++                      </td>
++                      <td>
++                        {l.status === 'PENDING_EXCEPTION' ? (
++                          <div className="d-flex gap-1">
++                            <button
++                              className="btn btn-xs btn-success"
++                              disabled={busy === l.id}
++                              onClick={() => decide(l.id, 'APPROVE')}
++                            >
++                              Approve
++                            </button>
++                            <button
++                              className="btn btn-xs btn-default"
++                              disabled={busy === l.id}
++                              onClick={() => decide(l.id, 'REJECT')}
++                            >
++                              Reject
++                            </button>
++                          </div>
++                        ) : l.scheduleId ? (
++                          <span className="detail-label">schedule {l.scheduleId}</span>
++                        ) : (
++                          '—'
++                        )}
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/customer360/page.tsx b/apps/admin_web/app/dashboard/customer360/page.tsx
+index 44216f0..d8b74ab 100644
+--- a/apps/admin_web/app/dashboard/customer360/page.tsx
++++ b/apps/admin_web/app/dashboard/customer360/page.tsx
+@@ -1,157 +1,336 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useEffect, FormEvent } from 'react';
++import { useSearchParams } from 'next/navigation';
+ import { api } from '@/lib/api';
++import { DEMO_CUSTOMERS, DEMO_SEED_ENABLED } from '@/lib/demo-seed';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
+ 
+ export default function Customer360Page() {
++  const searchParams = useSearchParams();
+   const [customerId, setCustomerId] = useState('');
+   const [customer, setCustomer] = useState<any>(null);
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState('');
+ 
+-  const handleSearch = async (e: React.FormEvent) => {
+-    e.preventDefault();
+-    if (!customerId) return;
+-
++  const loadCustomer = async (id: string) => {
++    if (!id) return;
+     setLoading(true);
+     setError('');
+     setCustomer(null);
+-
+     try {
+-      const data = await api.getCustomer360(customerId);
++      const data = await api.getCustomer360(id);
+       setCustomer(data);
+     } catch (err: any) {
+       setError(err.message || 'Failed to load customer');
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
++  useEffect(() => {
++    const q = searchParams?.get('customerId');
++    if (q) {
++      setCustomerId(q);
++      loadCustomer(q);
++      return;
++    }
++    if (DEMO_SEED_ENABLED && DEMO_CUSTOMERS.length > 0) {
++      const first = DEMO_CUSTOMERS[0].id;
++      setCustomerId(first);
++      loadCustomer(first);
++    }
++  }, [searchParams]);
++
++  const handleSearch = async (e: FormEvent) => {
++    e.preventDefault();
++    await loadCustomer(customerId);
++  };
++
++  const schedules = customer?.loanSchedules || [];
++
+   return (
+     <div>
+-      <form onSubmit={handleSearch} className="bg-white p-6 rounded-lg shadow mb-6">
+-        <div className="flex gap-4">
+-          <input
+-            type="text"
+-            value={customerId}
+-            onChange={(e) => setCustomerId(e.target.value)}
+-            placeholder="Enter Customer ID"
+-            className="flex-1 px-4 py-2 border rounded-lg"
+-          />
+-          <button
+-            type="submit"
+-            disabled={loading}
+-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+-          >
+-            {loading ? 'Loading...' : 'Search'}
+-          </button>
+-        </div>
+-        {error && (
+-          <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+-        )}
+-      </form>
++      <Panel>
++        <PanelHeader>Lookup Customer</PanelHeader>
++        <PanelBody>
++          {DEMO_SEED_ENABLED && (
++            <div className="mb-3 d-flex flex-wrap gap-2 align-items-center">
++              <span className="detail-label">Demo customers:</span>
++              {DEMO_CUSTOMERS.map((cust) => (
++                <button
++                  key={cust.id}
++                  type="button"
++                  className="btn btn-xs btn-outline-theme"
++                  onClick={() => {
++                    setCustomerId(cust.id);
++                    loadCustomer(cust.id);
++                  }}
++                >
++                  {cust.firstName} {cust.lastName}
++                </button>
++              ))}
++            </div>
++          )}
++          <form onSubmit={handleSearch} className="row g-2">
++            <div className="col-md-9">
++              <input
++                className="form-control"
++                value={customerId}
++                onChange={(e) => setCustomerId(e.target.value)}
++                placeholder="Enter Customer ID"
++              />
++            </div>
++            <div className="col-md-3">
++              <button type="submit" className="btn btn-theme w-100" disabled={loading}>
++                {loading ? 'Loading...' : 'Search'}
++              </button>
++            </div>
++          </form>
++          {error && <div className="alert alert-danger mt-3 mb-0">{error}</div>}
++        </PanelBody>
++      </Panel>
+ 
+       {customer && (
+-        <div className="space-y-6">
+-          {/* Customer Info */}
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <h2 className="text-xl font-bold mb-4">Customer Information</h2>
+-            <div className="grid grid-cols-2 gap-4">
+-              <div>
+-                <label className="text-sm text-gray-600">Customer ID</label>
+-                <p className="font-mono">{customer.customer.id}</p>
+-              </div>
+-              <div>
+-                <label className="text-sm text-gray-600">Name</label>
+-                <p>{customer.customer.firstName} {customer.customer.lastName}</p>
+-              </div>
+-              <div>
+-                <label className="text-sm text-gray-600">Email</label>
+-                <p>{customer.customer.email || 'N/A'}</p>
+-              </div>
+-              <div>
+-                <label className="text-sm text-gray-600">Phone</label>
+-                <p>{customer.customer.phoneE164 || 'N/A'}</p>
+-              </div>
+-              <div>
+-                <label className="text-sm text-gray-600">Created</label>
+-                <p>{new Date(customer.customer.createdAt).toLocaleString()}</p>
+-              </div>
+-              <div>
+-                <label className="text-sm text-gray-600">KYC Status</label>
+-                <span className={`px-2 py-1 rounded text-sm ${
+-                  customer.customer.kycStatus === 'APPROVED' ? 'bg-green-100 text-green-800' :
+-                  customer.customer.kycStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+-                  'bg-gray-100 text-gray-800'
+-                }`}>
+-                  {customer.customer.kycStatus}
+-                </span>
++        <>
++          <Panel>
++            <PanelHeader>Customer Information</PanelHeader>
++            <PanelBody>
++              <div className="row">
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">Customer ID</div>
++                  <div className="font-monospace">{customer.customer.id}</div>
++                </div>
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">Name</div>
++                  <div>
++                    {customer.customer.firstName} {customer.customer.lastName}
++                  </div>
++                </div>
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">Email</div>
++                  <div>{customer.customer.email || 'N/A'}</div>
++                </div>
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">Phone</div>
++                  <div>{customer.customer.phoneE164 || 'N/A'}</div>
++                </div>
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">Segment</div>
++                  <div>{customer.customer.segment || '—'}</div>
++                </div>
++                <div className="col-md-4 mb-3">
++                  <div className="detail-label">KYC Status</div>
++                  <span
++                    className={`badge ${
++                      customer.customer.kycStatus === 'APPROVED'
++                        ? 'bg-teal'
++                        : customer.customer.kycStatus === 'PENDING'
++                        ? 'bg-warning'
++                        : 'bg-secondary'
++                    }`}
++                  >
++                    {customer.customer.kycStatus}
++                  </span>
++                </div>
+               </div>
+-            </div>
+-          </div>
++            </PanelBody>
++          </Panel>
+ 
+-          {/* Wallets */}
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <h2 className="text-xl font-bold mb-4">Wallets & Balances</h2>
+-            {customer.wallets?.map((wallet: any) => (
+-              <div key={wallet.id} className="mb-4">
+-                <h3 className="font-semibold text-sm text-gray-600 mb-2">Wallet: {wallet.id}</h3>
+-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+-                  {wallet.pockets?.map((pocket: any) => (
+-                    <div key={pocket.id} className="border rounded p-3">
+-                      <div className="text-lg font-bold">{pocket.currency}</div>
+-                      <div className="text-sm text-gray-600">Available</div>
+-                      <div className="font-mono">{(parseInt(pocket.availableMinor) / 100).toFixed(2)}</div>
+-                      <div className="text-xs text-gray-500 mt-1">
+-                        Ledger: {(parseInt(pocket.ledgerMinor) / 100).toFixed(2)}
++          <Panel>
++            <PanelHeader>Wallets &amp; Balances</PanelHeader>
++            <PanelBody>
++              {customer.wallets?.map((wallet: any) => (
++                <div key={wallet.id} className="mb-3">
++                  <div className="detail-label mb-2">
++                    Wallet: {wallet.id} ({wallet.currency})
++                  </div>
++                  <div className="row">
++                    {(wallet.pockets || [wallet]).map((pocket: any) => (
++                      <div key={pocket.id || wallet.id} className="col-md-6 mb-2">
++                        <div className="card border-0 bg-light">
++                          <div className="card-body py-3">
++                            <div className="fw-semibold">{pocket.currency || wallet.currency}</div>
++                            <div>
++                              Available:{' '}
++                              {(
++                                parseInt(pocket.availableMinor || wallet.availableMinor || '0') /
++                                100
++                              ).toFixed(2)}
++                            </div>
++                            <div>
++                              Ledger:{' '}
++                              {(
++                                parseInt(pocket.ledgerMinor || wallet.ledgerMinor || '0') / 100
++                              ).toFixed(2)}
++                            </div>
++                            <div className="detail-label">
++                              Blocked:{' '}
++                              {(
++                                parseInt(pocket.blockedMinor || wallet.blockedMinor || '0') / 100
++                              ).toFixed(2)}{' '}
++                              · Pending:{' '}
++                              {(
++                                parseInt(
++                                  pocket.pendingOutMinor ||
++                                    pocket.pendingMinor ||
++                                    wallet.pendingMinor ||
++                                    '0',
++                                ) / 100
++                              ).toFixed(2)}
++                            </div>
++                          </div>
++                        </div>
+                       </div>
+-                    </div>
+-                  ))}
++                    ))}
++                  </div>
+                 </div>
+-              </div>
+-            ))}
+-          </div>
++              ))}
++            </PanelBody>
++          </Panel>
++
++          <Panel>
++            <PanelHeader>Loans (DEM-03/04)</PanelHeader>
++            <PanelBody className="p-0">
++              {!customer.loans?.length ? (
++                <div className="p-4 text-center text-gray-500">No loans</div>
++              ) : (
++                <div className="table-responsive">
++                  <table className="table table-striped mb-0 align-middle">
++                    <thead>
++                      <tr>
++                        <th>ID</th>
++                        <th>Product</th>
++                        <th>Principal</th>
++                        <th>Status</th>
++                        <th>Receivable</th>
++                        <th>Schedule</th>
++                      </tr>
++                    </thead>
++                    <tbody>
++                      {customer.loans.map((l: any) => (
++                        <tr key={l.id}>
++                          <td className="font-monospace small">{l.id}</td>
++                          <td>{l.productId}</td>
++                          <td>
++                            {l.currency} {(Number(l.principalMinor) / 100).toLocaleString()}
++                          </td>
++                          <td>
++                            <span
++                              className={`badge ${
++                                l.status === 'ACTIVE' ? 'bg-teal' : 'bg-warning'
++                              }`}
++                            >
++                              {l.status}
++                            </span>
++                          </td>
++                          <td>
++                            {l.receivableMinor != null
++                              ? (Number(l.receivableMinor) / 100).toLocaleString()
++                              : '—'}
++                          </td>
++                          <td className="font-monospace small">{l.scheduleId || '—'}</td>
++                        </tr>
++                      ))}
++                    </tbody>
++                  </table>
++                </div>
++              )}
++            </PanelBody>
++          </Panel>
++
++          <Panel>
++            <PanelHeader>Loan schedule / installments</PanelHeader>
++            <PanelBody className="p-0">
++              {!schedules.length ? (
++                <div className="p-4 text-center text-gray-500">
++                  No schedules — approve a credit exception or open Amina for DEM-03
++                </div>
++              ) : (
++                schedules.map((sched: any) => (
++                  <div key={sched.id} className="mb-3">
++                    <div className="px-3 pt-3 detail-label">
++                      Schedule {sched.id} · loan {sched.loanId}
++                    </div>
++                    <div className="table-responsive">
++                      <table className="table table-striped mb-0 align-middle">
++                        <thead>
++                          <tr>
++                            <th>Installment</th>
++                            <th>Due</th>
++                            <th>Principal</th>
++                            <th>Interest</th>
++                            <th>Status</th>
++                            <th>Paid</th>
++                          </tr>
++                        </thead>
++                        <tbody>
++                          {(sched.installments || []).map((inst: any) => (
++                            <tr key={inst.id}>
++                              <td className="font-monospace small">{inst.id}</td>
++                              <td>{inst.dueDate}</td>
++                              <td>{(Number(inst.principalMinor) / 100).toLocaleString()}</td>
++                              <td>{(Number(inst.interestMinor) / 100).toLocaleString()}</td>
++                              <td>
++                                <span
++                                  className={`badge ${
++                                    inst.status === 'PAID' ? 'bg-teal' : 'bg-warning'
++                                  }`}
++                                >
++                                  {inst.status}
++                                </span>
++                              </td>
++                              <td className="detail-label">
++                                {inst.paidAt ? new Date(inst.paidAt).toLocaleDateString() : '—'}
++                              </td>
++                            </tr>
++                          ))}
++                        </tbody>
++                      </table>
++                    </div>
++                  </div>
++                ))
++              )}
++            </PanelBody>
++          </Panel>
+ 
+-          {/* Recent Payments */}
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <h2 className="text-xl font-bold mb-4">Recent Payments</h2>
+-            {customer.recentPayments && customer.recentPayments.length > 0 ? (
+-              <table className="w-full">
+-                <thead>
+-                  <tr className="border-b">
+-                    <th className="text-left p-2">ID</th>
+-                    <th className="text-left p-2">Type</th>
+-                    <th className="text-left p-2">Amount</th>
+-                    <th className="text-left p-2">Status</th>
+-                    <th className="text-left p-2">Date</th>
+-                  </tr>
+-                </thead>
+-                <tbody>
+-                  {customer.recentPayments.map((payment: any) => (
+-                    <tr key={payment.id} className="border-b hover:bg-gray-50">
+-                      <td className="p-2 font-mono text-sm">{payment.id}</td>
+-                      <td className="p-2">{payment.type}</td>
+-                      <td className="p-2">{payment.currency} {(parseInt(payment.amountMinor) / 100).toFixed(2)}</td>
+-                      <td className="p-2">
+-                        <span className={`px-2 py-1 rounded text-xs ${
+-                          payment.status === 'POSTED' ? 'bg-green-100 text-green-800' :
+-                          payment.status === 'FAILED' ? 'bg-red-100 text-red-800' :
+-                          'bg-yellow-100 text-yellow-800'
+-                        }`}>
+-                          {payment.status}
+-                        </span>
+-                      </td>
+-                      <td className="p-2 text-sm">{new Date(payment.createdAt).toLocaleDateString()}</td>
+-                    </tr>
+-                  ))}
+-                </tbody>
+-              </table>
+-            ) : (
+-              <p className="text-gray-500">No recent payments</p>
+-            )}
+-          </div>
+-        </div>
++          <Panel>
++            <PanelHeader>Recent Payments</PanelHeader>
++            <PanelBody className="p-0">
++              {!customer.recentPayments?.length ? (
++                <div className="p-4 text-center text-gray-500">No recent payments</div>
++              ) : (
++                <div className="table-responsive">
++                  <table className="table table-striped mb-0 align-middle">
++                    <thead>
++                      <tr>
++                        <th>ID</th>
++                        <th>Type</th>
++                        <th>Amount</th>
++                        <th>Status</th>
++                      </tr>
++                    </thead>
++                    <tbody>
++                      {customer.recentPayments.map((p: any) => (
++                        <tr key={p.id}>
++                          <td className="font-monospace small">{p.id}</td>
++                          <td>{p.type}</td>
++                          <td>
++                            {p.currency} {(parseInt(p.amountMinor) / 100).toFixed(2)}
++                          </td>
++                          <td>
++                            <span className="badge bg-teal">{p.status}</span>
++                          </td>
++                        </tr>
++                      ))}
++                    </tbody>
++                  </table>
++                </div>
++              )}
++            </PanelBody>
++          </Panel>
++        </>
+       )}
+     </div>
+   );
+ }
+diff --git a/apps/admin_web/app/dashboard/export/page.tsx b/apps/admin_web/app/dashboard/export/page.tsx
+new file mode 100644
+index 0000000..bcb0d01
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/export/page.tsx
+@@ -0,0 +1,70 @@
++'use client';
++
++import { useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function ExportPage() {
++  const [busy, setBusy] = useState(false);
++  const [meta, setMeta] = useState<any>(null);
++
++  const download = async () => {
++    setBusy(true);
++    try {
++      const pack = await api.buildExportPack();
++      const blob = new Blob([JSON.stringify(pack, null, 2)], { type: 'application/json' });
++      const url = URL.createObjectURL(blob);
++      const a = document.createElement('a');
++      a.href = url;
++      a.download = 'yole-demo-export.json';
++      document.body.appendChild(a);
++      a.click();
++      a.remove();
++      URL.revokeObjectURL(url);
++      setMeta({
++        exportedAt: pack.exportedAt,
++        filename: pack.filename || 'yole-demo-export.json',
++        customers: pack.customers?.length,
++        wallets: pack.wallets?.length,
++        loans: pack.loans?.length,
++        payments: pack.payments?.length,
++        cases: pack.cases?.length,
++      });
++    } catch (e: any) {
++      alert(e.message || 'Export failed');
++    } finally {
++      setBusy(false);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Export pack (DEM-12)</PanelHeader>
++        <PanelBody>
++          <p>
++            Download an open-format JSON export of the offline demo universe (customers, wallets,
++            loans, payments, journals, cases, remittances, cards).
++          </p>
++          <button className="btn btn-theme" disabled={busy} onClick={download}>
++            {busy ? 'Building...' : 'Download yole-demo-export.json'}
++          </button>
++          {meta && (
++            <div className="mt-3">
++              <div className="alert alert-success mb-0">
++                Exported <strong>{meta.filename}</strong> at {meta.exportedAt}
++                <ul className="mb-0 mt-2">
++                  <li>Customers: {meta.customers}</li>
++                  <li>Wallets: {meta.wallets}</li>
++                  <li>Loans: {meta.loans}</li>
++                  <li>Payments: {meta.payments}</li>
++                  <li>Cases: {meta.cases}</li>
++                </ul>
++              </div>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/idempotency/page.tsx b/apps/admin_web/app/dashboard/idempotency/page.tsx
+new file mode 100644
+index 0000000..48d4910
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/idempotency/page.tsx
+@@ -0,0 +1,135 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++const DEMO_KEY = 'idem_replay_demo_001';
++
++export default function IdempotencyPage() {
++  const [key, setKey] = useState(DEMO_KEY);
++  const [result, setResult] = useState<any>(null);
++  const [payments, setPayments] = useState<any[]>([]);
++  const [busy, setBusy] = useState(false);
++
++  const loadPayments = async () => {
++    const data = await api.searchPayments({ customerId: 'cust_kasee' });
++    setPayments(Array.isArray(data) ? data : []);
++  };
++
++  useEffect(() => {
++    loadPayments();
++  }, []);
++
++  const replay = async () => {
++    setBusy(true);
++    try {
++      const r = await api.replayIdempotentConfirm(key);
++      setResult(r);
++      await loadPayments();
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(false);
++    }
++  };
++
++  const compensate = async (paymentId: string) => {
++    setBusy(true);
++    try {
++      const r = await api.compensatePayment(paymentId);
++      setResult({ compensate: r });
++      await loadPayments();
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(false);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Idempotency lab (DEM-05)</PanelHeader>
++        <PanelBody>
++          <p className="detail-label mb-3">
++            Replay the same idempotency key — must return the same payment, no duplicate. Compensate
++            posts a reversing journal + notification.
++          </p>
++          <div className="row g-2 align-items-end mb-3">
++            <div className="col-md-8">
++              <label className="form-label">Idempotency key</label>
++              <input
++                className="form-control font-monospace"
++                value={key}
++                onChange={(e) => setKey(e.target.value)}
++              />
++            </div>
++            <div className="col-md-4">
++              <button className="btn btn-theme w-100" disabled={busy} onClick={replay}>
++                Replay confirm
++              </button>
++            </div>
++          </div>
++          {result && (
++            <pre className="bg-light p-3 small mb-0" style={{ maxHeight: 240, overflow: 'auto' }}>
++              {JSON.stringify(result, null, 2)}
++            </pre>
++          )}
++        </PanelBody>
++      </Panel>
++
++      <Panel>
++        <PanelHeader>Customer payments (cust_kasee)</PanelHeader>
++        <PanelBody className="p-0">
++          <div className="table-responsive">
++            <table className="table table-striped mb-0 align-middle">
++              <thead>
++                <tr>
++                  <th>ID</th>
++                  <th>Key</th>
++                  <th>Amount</th>
++                  <th>Status</th>
++                  <th>Action</th>
++                </tr>
++              </thead>
++              <tbody>
++                {payments.map((p) => (
++                  <tr key={p.id}>
++                    <td className="font-monospace small">{p.id}</td>
++                    <td className="font-monospace small">{p.idempotencyKey || '—'}</td>
++                    <td>
++                      {p.currency} {(Number(p.amountMinor) / 100).toFixed(2)}
++                    </td>
++                    <td>
++                      <span
++                        className={`badge ${
++                          p.status === 'COMPENSATED' ? 'bg-orange' : 'bg-teal'
++                        }`}
++                      >
++                        {p.status}
++                      </span>
++                    </td>
++                    <td>
++                      {p.status !== 'COMPENSATED' ? (
++                        <button
++                          className="btn btn-xs btn-warning"
++                          disabled={busy}
++                          onClick={() => compensate(p.id)}
++                        >
++                          Compensate
++                        </button>
++                      ) : (
++                        '—'
++                      )}
++                    </td>
++                  </tr>
++                ))}
++              </tbody>
++            </table>
++          </div>
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/products/page.tsx b/apps/admin_web/app/dashboard/products/page.tsx
+new file mode 100644
+index 0000000..1db00f2
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/products/page.tsx
+@@ -0,0 +1,157 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function ProductsPage() {
++  const [products, setProducts] = useState<any[]>([]);
++  const [fees, setFees] = useState<any[]>([]);
++  const [limits, setLimits] = useState<any[]>([]);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    (async () => {
++      setLoading(true);
++      try {
++        const [p, f, l] = await Promise.all([
++          api.listProducts(),
++          api.listFeeConfigs(),
++          api.listLimitConfigs(),
++        ]);
++        setProducts(Array.isArray(p) ? p : []);
++        setFees(Array.isArray(f) ? f : []);
++        setLimits(Array.isArray(l) ? l : []);
++      } finally {
++        setLoading(false);
++      }
++    })();
++  }, []);
++
++  if (loading) {
++    return (
++      <Panel>
++        <PanelBody className="text-center py-4">Loading...</PanelBody>
++      </Panel>
++    );
++  }
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Products &amp; rules (DEM-02)</PanelHeader>
++        <PanelBody className="p-0">
++          {products.length === 0 ? (
++            <div className="p-4 text-center text-gray-500">No products</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>Code</th>
++                    <th>Name</th>
++                    <th>Segment</th>
++                    <th>Status</th>
++                    <th>Rules</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {products.map((p) => (
++                    <tr key={p.id}>
++                      <td className="font-monospace small">{p.code}</td>
++                      <td>{p.name}</td>
++                      <td>{p.segment}</td>
++                      <td>
++                        <span className="badge bg-teal">{p.status}</span>
++                      </td>
++                      <td className="detail-label">
++                        {p.maxAdvancePct != null && `maxAdvance ${p.maxAdvancePct}% `}
++                        {p.autoApproveMaxMinor != null &&
++                          `autoApprove ≤ ${p.autoApproveMaxMinor}`}
++                        {p.currencies && p.currencies.join(', ')}
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++
++      <Panel>
++        <PanelHeader>Fee limits</PanelHeader>
++        <PanelBody className="p-0">
++          <div className="table-responsive">
++            <table className="table table-striped mb-0 align-middle">
++              <thead>
++                <tr>
++                  <th>ID</th>
++                  <th>Type</th>
++                  <th>Value</th>
++                  <th>Effective</th>
++                  <th>Status</th>
++                </tr>
++              </thead>
++              <tbody>
++                {fees.map((f) => (
++                  <tr key={f.id}>
++                    <td className="font-monospace small">{f.id}</td>
++                    <td>{f.paymentType}</td>
++                    <td>{f.value}</td>
++                    <td>{f.effectiveFrom}</td>
++                    <td>
++                      <span
++                        className={`badge ${
++                          f.status === 'ACTIVE'
++                            ? 'bg-teal'
++                            : f.status === 'PENDING_APPROVAL'
++                            ? 'bg-warning'
++                            : 'bg-secondary'
++                        }`}
++                      >
++                        {f.status}
++                      </span>
++                    </td>
++                  </tr>
++                ))}
++              </tbody>
++            </table>
++          </div>
++        </PanelBody>
++      </Panel>
++
++      <Panel>
++        <PanelHeader>Limits</PanelHeader>
++        <PanelBody className="p-0">
++          <div className="table-responsive">
++            <table className="table table-striped mb-0 align-middle">
++              <thead>
++                <tr>
++                  <th>ID</th>
++                  <th>Currency</th>
++                  <th>Daily</th>
++                  <th>Monthly</th>
++                  <th>Status</th>
++                </tr>
++              </thead>
++              <tbody>
++                {limits.map((l) => (
++                  <tr key={l.id}>
++                    <td className="font-monospace small">{l.id}</td>
++                    <td>{l.currency}</td>
++                    <td>{l.dailyLimit}</td>
++                    <td>{l.monthlyLimit}</td>
++                    <td>
++                      <span className="badge bg-teal">{l.status}</span>
++                    </td>
++                  </tr>
++                ))}
++              </tbody>
++            </table>
++          </div>
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/recon/page.tsx b/apps/admin_web/app/dashboard/recon/page.tsx
+index 72f44f3..fa0e9e2 100644
+--- a/apps/admin_web/app/dashboard/recon/page.tsx
++++ b/apps/admin_web/app/dashboard/recon/page.tsx
+@@ -1,119 +1,239 @@
+ 'use client';
+ 
+-import { useState } from 'react';
++import { useState, useEffect } from 'react';
++import Link from 'next/link';
+ import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++function money(minor?: string | number, currency = '') {
++  const n = typeof minor === 'string' ? parseInt(minor || '0', 10) : minor || 0;
++  const formatted = (n / 100).toLocaleString(undefined, {
++    minimumFractionDigits: 2,
++    maximumFractionDigits: 2,
++  });
++  return currency ? `${currency} ${formatted}` : formatted;
++}
+ 
+ export default function ReconPage() {
+-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
++  const [selectedDate, setSelectedDate] = useState('2026-09-16');
+   const [summary, setSummary] = useState<any>(null);
+   const [loading, setLoading] = useState(false);
++  const [eodResult, setEodResult] = useState<any>(null);
++  const [running, setRunning] = useState(false);
++
++  useEffect(() => {
++    loadSummary(selectedDate);
++  }, []);
+ 
+   const loadSummary = async (date: string) => {
+     setLoading(true);
+     try {
+       const data = await api.getDailySummary(date);
+       setSummary(data);
+     } catch (err) {
+-      console.error('Failed to load summary:', err);
++      console.error(err);
+       setSummary(null);
+     } finally {
+       setLoading(false);
+     }
+   };
+ 
+-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+-    const date = e.target.value;
+-    setSelectedDate(date);
+-    loadSummary(date);
++  const runEod = async () => {
++    setRunning(true);
++    try {
++      const r = await api.runEod(selectedDate);
++      setEodResult(r);
++      await loadSummary(selectedDate);
++    } catch (e: any) {
++      alert(e.message || 'EOD failed');
++    } finally {
++      setRunning(false);
++    }
+   };
+ 
++  const exceptions = Array.isArray(summary?.details?.exceptions)
++    ? summary.details.exceptions
++    : Array.isArray(summary?.details?.unmatched)
++    ? summary.details.unmatched
++    : [];
++  const eod = summary?.details?.eodSnapshot || eodResult?.eodSnapshot || {};
++  const suspense = summary?.details?.suspenseMinor ?? eod.suspenseMinor ?? 0;
++  const glBalanced = summary?.details?.glBalanced ?? eod.glBalanced ?? false;
++
+   return (
+     <div>
+-      {/* Date Picker */}
+-      <div className="bg-white p-6 rounded-lg shadow mb-6">
+-        <label className="block text-sm font-medium mb-2">Select Date</label>
+-        <input
+-          type="date"
+-          value={selectedDate}
+-          onChange={handleDateChange}
+-          className="px-4 py-2 border rounded-lg"
+-        />
+-        <button
+-          onClick={() => loadSummary(selectedDate)}
+-          disabled={loading}
+-          className="ml-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+-        >
+-          {loading ? 'Loading...' : 'Load Summary'}
+-        </button>
+-      </div>
++      <Panel>
++        <PanelHeader>Select Date — EOD / BOD (DEM-11)</PanelHeader>
++        <PanelBody>
++          <div className="row g-2 align-items-end">
++            <div className="col-md-4">
++              <input
++                type="date"
++                className="form-control"
++                value={selectedDate}
++                onChange={(e) => {
++                  setSelectedDate(e.target.value);
++                  loadSummary(e.target.value);
++                }}
++              />
++            </div>
++            <div className="col-md-3">
++              <button
++                className="btn btn-theme"
++                disabled={loading}
++                onClick={() => loadSummary(selectedDate)}
++              >
++                {loading ? 'Loading...' : 'Load Summary'}
++              </button>
++            </div>
++            <div className="col-md-3">
++              <button className="btn btn-success" disabled={running} onClick={runEod}>
++                {running ? 'Running EOD...' : 'Run EOD'}
++              </button>
++            </div>
++          </div>
++        </PanelBody>
++      </Panel>
+ 
+-      {/* Summary Display */}
+       {loading ? (
+-        <div className="text-center py-8">Loading...</div>
++        <Panel>
++          <PanelBody className="text-center py-4">Loading...</PanelBody>
++        </Panel>
+       ) : summary ? (
+-        <div className="space-y-6">
+-          {/* Overview Cards */}
+-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+-            <div className="bg-white p-6 rounded-lg shadow">
+-              <div className="text-sm text-gray-600">Total Transactions</div>
+-              <div className="text-3xl font-bold text-blue-600 mt-2">
+-                {summary.totalTransactions || 0}
++        <>
++          <div className="row">
++            <div className="col-md-3 mb-3">
++              <div className="widget widget-stats bg-blue">
++                <div className="stats-info">
++                  <h4>TOTAL TRANSACTIONS</h4>
++                  <p>{summary.totalTransactions || 0}</p>
++                </div>
+               </div>
+             </div>
+-            <div className="bg-white p-6 rounded-lg shadow">
+-              <div className="text-sm text-gray-600">Total Volume</div>
+-              <div className="text-3xl font-bold text-green-600 mt-2">
+-                {summary.totalVolumeMinor
+-                  ? `${(parseInt(summary.totalVolumeMinor) / 100).toFixed(2)}`
+-                  : '0.00'}
++            <div className="col-md-3 mb-3">
++              <div className="widget widget-stats bg-teal">
++                <div className="stats-info">
++                  <h4>TOTAL VOLUME</h4>
++                  <p>{money(summary.totalVolumeMinor)}</p>
++                </div>
+               </div>
+             </div>
+-            <div className="bg-white p-6 rounded-lg shadow">
+-              <div className="text-sm text-gray-600">Status</div>
+-              <div className="text-3xl font-bold text-purple-600 mt-2">
+-                {summary.status || 'N/A'}
++            <div className="col-md-3 mb-3">
++              <div className="widget widget-stats bg-indigo">
++                <div className="stats-info">
++                  <h4>STATUS</h4>
++                  <p>{summary.status || 'N/A'}</p>
++                </div>
+               </div>
+             </div>
+-          </div>
+-
+-          {/* Details */}
+-          <div className="bg-white p-6 rounded-lg shadow">
+-            <h2 className="text-xl font-bold mb-4">Reconciliation Details</h2>
+-            <div className="space-y-4">
+-              {summary.details ? (
+-                <div className="prose">
+-                  <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-sm">
+-                    {JSON.stringify(summary.details, null, 2)}
+-                  </pre>
+-                </div>
+-              ) : (
+-                <div className="text-center py-8 text-gray-500">
+-                  <p>No detailed reconciliation data available for this date</p>
+-                  <p className="text-sm mt-2">Daily reconciliation aggregates all transactions and ledger entries</p>
++            <div className="col-md-3 mb-3">
++              <div className={`widget widget-stats ${exceptions.length ? 'bg-orange' : 'bg-green'}`}>
++                <div className="stats-info">
++                  <h4>EXCEPTIONS</h4>
++                  <p>{exceptions.length || summary.exceptionCount || 0}</p>
+                 </div>
+-              )}
++              </div>
+             </div>
+           </div>
+ 
+-          {/* Notes */}
+-          <div className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+-            <div className="flex">
+-              <div className="text-blue-600 text-xl mr-3">ℹ️</div>
+-              <div>
+-                <h3 className="font-semibold text-blue-900 mb-2">About Daily Reconciliation</h3>
+-                <p className="text-sm text-blue-800">
+-                  Daily reconciliation ensures all transactions, ledger entries, and wallet balances are consistent.
+-                  This process runs automatically each day and flags any discrepancies for manual review.
+-                </p>
+-              </div>
++          <div className="row">
++            <div className="col-xl-6 mb-3">
++              <Panel className="h-100">
++                <PanelHeader>GL / EOD snapshot</PanelHeader>
++                <PanelBody>
++                  <div className="mb-3">
++                    <div className="detail-label">GL balanced</div>
++                    <div>
++                      <span className={`badge ${glBalanced ? 'bg-teal' : 'bg-warning'}`}>
++                        {glBalanced ? 'BALANCED' : 'OPEN'}
++                      </span>
++                    </div>
++                  </div>
++                  <div className="mb-3">
++                    <div className="detail-label">Suspense</div>
++                    <div className="fs-5 fw-semibold">
++                      {money(suspense, (eod as any).currency || 'CDF')}
++                    </div>
++                  </div>
++                  <div className="mb-3">
++                    <div className="detail-label">EOD runAt</div>
++                    <div>{(eod as any).runAt || 'Not run yet'}</div>
++                  </div>
++                  <div>
++                    <div className="detail-label">BOD ready</div>
++                    <div>{(eod as any).bodReady ? 'Yes' : 'Pending EOD'}</div>
++                  </div>
++                  {(eod as any).notes && (
++                    <div className="mt-3 detail-label">{(eod as any).notes}</div>
++                  )}
++                </PanelBody>
++              </Panel>
++            </div>
++            <div className="col-xl-6 mb-3">
++              <Panel className="h-100">
++                <PanelHeader>Matched / exceptions</PanelHeader>
++                <PanelBody>
++                  <div className="mb-2">
++                    Matched: <strong>{summary.matchedCount ?? '—'}</strong>
++                  </div>
++                  <div>
++                    Exception count: <strong>{summary.exceptionCount ?? exceptions.length}</strong>
++                  </div>
++                </PanelBody>
++              </Panel>
+             </div>
+           </div>
+-        </div>
++
++          <Panel>
++            <PanelHeader>
++              Suspense / Exceptions
++              {exceptions.length > 0 && (
++                <span className="badge bg-orange ms-2">{exceptions.length}</span>
++              )}
++            </PanelHeader>
++            <PanelBody className="p-0">
++              {exceptions.length === 0 ? (
++                <div className="p-4 text-center text-gray-500">No open exceptions</div>
++              ) : (
++                <div className="table-responsive">
++                  <table className="table table-striped mb-0 align-middle">
++                    <thead>
++                      <tr>
++                        <th>ID</th>
++                        <th>Rail</th>
++                        <th>Partner</th>
++                        <th className="text-end">Amount</th>
++                        <th>Reason</th>
++                      </tr>
++                    </thead>
++                    <tbody>
++                      {exceptions.map((exc: any) => (
++                        <tr key={exc.id}>
++                          <td className="font-monospace small">{exc.id}</td>
++                          <td>{exc.rail}</td>
++                          <td>{exc.partner || '—'}</td>
++                          <td className="text-end">
++                            {exc.amountMinor != null
++                              ? money(exc.amountMinor, exc.currency)
++                              : '—'}
++                          </td>
++                          <td>{exc.reason}</td>
++                        </tr>
++                      ))}
++                    </tbody>
++                  </table>
++                </div>
++              )}
++            </PanelBody>
++          </Panel>
++        </>
+       ) : (
+-        <div className="bg-white p-8 rounded-lg shadow text-center">
+-          <p className="text-gray-500">Select a date and click "Load Summary" to view reconciliation data</p>
+-        </div>
++        <Panel>
++          <PanelBody className="text-center text-gray-500 py-4">
++            Pick a date to load reconciliation
++          </PanelBody>
++        </Panel>
+       )}
+     </div>
+   );
+ }
+diff --git a/apps/admin_web/app/dashboard/remittance/page.tsx b/apps/admin_web/app/dashboard/remittance/page.tsx
+new file mode 100644
+index 0000000..01a91ac
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/remittance/page.tsx
+@@ -0,0 +1,141 @@
++'use client';
++
++import Link from 'next/link';
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function RemittancePage() {
++  const [rows, setRows] = useState<any[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [busy, setBusy] = useState<string | null>(null);
++  const [recon, setRecon] = useState<any>(null);
++
++  const load = async () => {
++    setLoading(true);
++    try {
++      const data = await api.listRemittances();
++      setRows(Array.isArray(data) ? data : []);
++    } finally {
++      setLoading(false);
++    }
++  };
++
++  useEffect(() => {
++    load();
++  }, []);
++
++  const act = async (id: string, action: string) => {
++    setBusy(id + action);
++    try {
++      const r = await api.remittanceAction(id, action);
++      if (action === 'PARTNER_RECON') setRecon(r);
++      await load();
++    } catch (e: any) {
++      alert(e.message || 'Failed');
++    } finally {
++      setBusy(null);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>Remittance admin (DEM-08)</PanelHeader>
++        <PanelBody className="p-0">
++          {loading ? (
++            <div className="p-4 text-center">Loading...</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>ID</th>
++                    <th>Customer</th>
++                    <th>Partner</th>
++                    <th>Send → Receive</th>
++                    <th>Status</th>
++                    <th>Actions</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {rows.map((r) => (
++                    <tr key={r.id}>
++                      <td className="font-monospace small">{r.id}</td>
++                      <td>
++                        <Link href={`/dashboard/customer360?customerId=${r.customerId}`}>
++                          {r.customerId}
++                        </Link>
++                      </td>
++                      <td>{r.partner}</td>
++                      <td>
++                        {r.sendCurrency} {(Number(r.sendAmountMinor) / 100).toFixed(2)} →{' '}
++                        {r.receiveCurrency} {(Number(r.receiveAmountMinor) / 100).toFixed(2)}
++                      </td>
++                      <td>
++                        <span
++                          className={`badge ${
++                            r.status === 'CLEAR' || r.status === 'CLEARED'
++                              ? 'bg-teal'
++                              : r.status === 'SCREENING_HIT'
++                              ? 'bg-warning'
++                              : r.status === 'REFUNDED'
++                              ? 'bg-orange'
++                              : 'bg-secondary'
++                          }`}
++                        >
++                          {r.status}
++                        </span>
++                        {r.screeningHit && (
++                          <span className="badge bg-danger ms-1">{r.screeningHit}</span>
++                        )}
++                      </td>
++                      <td>
++                        <div className="d-flex flex-wrap gap-1">
++                          {r.status === 'SCREENING_HIT' && (
++                            <>
++                              <button
++                                className="btn btn-xs btn-success"
++                                disabled={!!busy}
++                                onClick={() => act(r.id, 'CLEAR')}
++                              >
++                                Clear
++                              </button>
++                              <button
++                                className="btn btn-xs btn-warning"
++                                disabled={!!busy}
++                                onClick={() => act(r.id, 'REFUND')}
++                              >
++                                Refund
++                              </button>
++                            </>
++                          )}
++                          <button
++                            className="btn btn-xs btn-default"
++                            disabled={!!busy}
++                            onClick={() => act(r.id, 'PARTNER_RECON')}
++                          >
++                            Partner recon
++                          </button>
++                        </div>
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++
++      {recon && (
++        <Panel>
++          <PanelHeader>Partner recon stub</PanelHeader>
++          <PanelBody>
++            <pre className="bg-light p-3 small mb-0">{JSON.stringify(recon, null, 2)}</pre>
++          </PanelBody>
++        </Panel>
++      )}
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/resilience/page.tsx b/apps/admin_web/app/dashboard/resilience/page.tsx
+new file mode 100644
+index 0000000..d3cb1c2
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/resilience/page.tsx
+@@ -0,0 +1,129 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function ResiliencePage() {
++  const [journals, setJournals] = useState<any[]>([]);
++  const [honesty, setHonesty] = useState<any>(null);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    (async () => {
++      setLoading(true);
++      try {
++        const [j, h] = await Promise.all([api.listJournals(), api.getHonesty()]);
++        setJournals(Array.isArray(j) ? j : []);
++        setHonesty(h);
++      } finally {
++        setLoading(false);
++      }
++    })();
++  }, []);
++
++  const debit = journals
++    .filter((j) => j.direction === 'DEBIT')
++    .reduce((s, j) => s + Number(j.amountMinor), 0);
++  const credit = journals
++    .filter((j) => j.direction === 'CREDIT')
++    .reduce((s, j) => s + Number(j.amountMinor), 0);
++
++  const banner =
++    honesty?.resilienceBadge || 'DEMO STORYBOARD — not a live HA failover';
++
++  return (
++    <div>
++      <div className="alert alert-warning mb-3" role="alert">
++        <strong>{banner}</strong>
++      </div>
++
++      <Panel>
++        <PanelHeader>Resilience storyboard (DEM-10)</PanelHeader>
++        <PanelBody>
++          <ol className="mb-0">
++            <li>Primary node simulated failure (storyboard only)</li>
++            <li>Traffic failed over to standby — demo narrative</li>
++            <li>Ledger journals remain balanced — integrity check below</li>
++            <li>No live HA / DR claim — offline seed only</li>
++          </ol>
++        </PanelBody>
++      </Panel>
++
++      <div className="row">
++        <div className="col-md-4 mb-3">
++          <div className="widget widget-stats bg-blue">
++            <div className="stats-info">
++              <h4>JOURNAL DEBITS</h4>
++              <p>{(debit / 100).toLocaleString()}</p>
++            </div>
++          </div>
++        </div>
++        <div className="col-md-4 mb-3">
++          <div className="widget widget-stats bg-teal">
++            <div className="stats-info">
++              <h4>JOURNAL CREDITS</h4>
++              <p>{(credit / 100).toLocaleString()}</p>
++            </div>
++          </div>
++        </div>
++        <div className="col-md-4 mb-3">
++          <div className="widget widget-stats bg-indigo">
++            <div className="stats-info">
++              <h4>ENTRIES</h4>
++              <p>{journals.length}</p>
++            </div>
++          </div>
++        </div>
++      </div>
++
++      <Panel>
++        <PanelHeader>Balanced journals</PanelHeader>
++        <PanelBody className="p-0">
++          {loading ? (
++            <div className="p-4 text-center">Loading...</div>
++          ) : (
++            <div className="table-responsive">
++              <table className="table table-striped mb-0 align-middle">
++                <thead>
++                  <tr>
++                    <th>ID</th>
++                    <th>Type</th>
++                    <th>Direction</th>
++                    <th>Amount</th>
++                    <th>Ref</th>
++                    <th>Posted</th>
++                  </tr>
++                </thead>
++                <tbody>
++                  {journals.map((j) => (
++                    <tr key={j.id}>
++                      <td className="font-monospace small">{j.id}</td>
++                      <td>{j.type}</td>
++                      <td>
++                        <span
++                          className={`badge ${
++                            j.direction === 'CREDIT' ? 'bg-teal' : 'bg-orange'
++                          }`}
++                        >
++                          {j.direction}
++                        </span>
++                      </td>
++                      <td>
++                        {j.currency} {(Number(j.amountMinor) / 100).toFixed(2)}
++                      </td>
++                      <td className="font-monospace small">{j.refId || '—'}</td>
++                      <td className="detail-label">
++                        {j.postedAt ? new Date(j.postedAt).toLocaleString() : '—'}
++                      </td>
++                    </tr>
++                  ))}
++                </tbody>
++              </table>
++            </div>
++          )}
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/components/sidebar/Sidebar.tsx b/apps/admin_web/components/sidebar/Sidebar.tsx
+index f800526..a16b532 100644
+--- a/apps/admin_web/components/sidebar/Sidebar.tsx
++++ b/apps/admin_web/components/sidebar/Sidebar.tsx
+@@ -1,195 +1,118 @@
+ 'use client';
+ 
+-import { usePathname } from 'next/navigation';
+ import Link from 'next/link';
+-import { authService, StaffRole } from '@/lib/auth';
++import { usePathname } from 'next/navigation';
++import { authService } from '@/lib/auth';
+ import { getAuthorizedRoutes } from '@/lib/rbac';
+ 
+-const navigationGroups = [
++type NavItem = { name: string; href: string; icon: string };
++type NavGroup = { title: string; items: NavItem[] };
++
++const NAV: NavGroup[] = [
+   {
+     title: 'Overview',
+-    items: [
+-      { name: 'Dashboard', href: '/dashboard', icon: '📊' },
+-    ],
++    items: [{ name: 'Dashboard', href: '/dashboard', icon: 'fa fa-sitemap' }],
+   },
+   {
+     title: 'Customers',
+     items: [
+-      { name: 'Customer 360', href: '/dashboard/customer360', icon: '👤' },
+-      { name: 'KYC Queue', href: '/dashboard/kyc', icon: '📋' },
+-      { name: 'Agents', href: '/dashboard/agents', icon: '👥' },
++      { name: 'Customer 360', href: '/dashboard/customer360', icon: 'fa fa-user' },
++      { name: 'KYC Queue', href: '/dashboard/kyc', icon: 'fa fa-id-card' },
++      { name: 'Agents', href: '/dashboard/agents', icon: 'fa fa-users' },
+     ],
+   },
+   {
+     title: 'Money Movement',
+     items: [
+-      { name: 'Payments', href: '/dashboard/payments', icon: '💰' },
+-      { name: 'Cards', href: '/dashboard/cards', icon: '💳' },
+-      { name: 'Payroll', href: '/dashboard/payroll', icon: '💼' },
++      { name: 'Payments', href: '/dashboard/payments', icon: 'fa fa-money-bill' },
++      { name: 'Cards', href: '/dashboard/cards', icon: 'fa fa-credit-card' },
++      { name: 'Payroll', href: '/dashboard/payroll', icon: 'fa fa-briefcase' },
++      { name: 'Remittance', href: '/dashboard/remittance', icon: 'fa fa-globe' },
++      { name: 'Idempotency lab', href: '/dashboard/idempotency', icon: 'fa fa-redo' },
+     ],
+   },
+   {
+-    title: 'Operations',
++    title: 'Credit & Products',
+     items: [
+-      { name: 'Reconciliation', href: '/dashboard/recon', icon: '📊' },
+-      { name: 'Cases', href: '/dashboard/cases', icon: '🎫' },
++      { name: 'Products & rules', href: '/dashboard/products', icon: 'fa fa-box' },
++      { name: 'Pending approvals', href: '/dashboard/approvals', icon: 'fa fa-check-double' },
++      { name: 'Credit exceptions', href: '/dashboard/credit-exceptions', icon: 'fa fa-exclamation-circle' },
+     ],
+   },
+   {
+-    title: 'Configuration',
++    title: 'Operations',
+     items: [
+-      { name: 'Fees & Limits', href: '/dashboard/config', icon: '⚙️' },
++      { name: 'Reconciliation', href: '/dashboard/recon', icon: 'fa fa-balance-scale' },
++      { name: 'Cases', href: '/dashboard/cases', icon: 'fa fa-ticket' },
++      { name: 'Resilience (demo)', href: '/dashboard/resilience', icon: 'fa fa-server' },
++      { name: 'Export pack', href: '/dashboard/export', icon: 'fa fa-download' },
+     ],
+   },
++  {
++    title: 'Configuration',
++    items: [{ name: 'Fees & Limits', href: '/dashboard/config', icon: 'fa fa-cog' }],
++  },
+ ];
+ 
+ export default function Sidebar() {
+   const pathname = usePathname();
+-  const currentUser = authService.getCurrentUser();
+-  const authorizedRoutes = currentUser ? getAuthorizedRoutes(currentUser.role) : [];
++  const user = authService.getCurrentUser();
++  const authorizedRoutes = user ? getAuthorizedRoutes(user.role) : [];
+ 
+-  const canAccess = (href: string) => {
+-    return authorizedRoutes.some(r => href === r || href.startsWith(r + '/'));
+-  };
++  const canAccess = (href: string) =>
++    authorizedRoutes.some((r) => href === r || href.startsWith(r + '/'));
+ 
+   return (
+-    <div className="app-sidebar" data-bs-theme="dark">
+-      <style jsx global>{`
+-        .app-sidebar {
+-          width: 250px;
+-          background: #2d353c;
+-          color: #b6c2c9;
+-          display: flex;
+-          flex-direction: column;
+-          height: 100vh;
+-          position: fixed;
+-          left: 0;
+-          top: 0;
+-          overflow-y: auto;
+-        }
+-        .sidebar-header {
+-          padding: 1rem 1.5rem;
+-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+-        }
+-        .sidebar-brand {
+-          font-size: 1.25rem;
+-          font-weight: 700;
+-          color: #00acac;
+-        }
+-        .sidebar-user {
+-          padding: 1.5rem;
+-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+-          text-align: center;
+-        }
+-        .sidebar-user-avatar {
+-          width: 60px;
+-          height: 60px;
+-          border-radius: 50%;
+-          background: #00acac;
+-          display: flex;
+-          align-items: center;
+-          justify-content: center;
+-          margin: 0 auto 0.75rem;
+-          font-size: 1.5rem;
+-          color: white;
+-          font-weight: 600;
+-        }
+-        .sidebar-user-name {
+-          font-weight: 600;
+-          color: white;
+-          margin-bottom: 0.25rem;
+-        }
+-        .sidebar-user-role {
+-          font-size: 0.75rem;
+-          color: #b6c2c9;
+-          text-transform: uppercase;
+-        }
+-        .sidebar-nav {
+-          flex: 1;
+-          padding: 1rem 0;
+-        }
+-        .nav-group-title {
+-          padding: 0.75rem 1.5rem 0.5rem;
+-          font-size: 0.75rem;
+-          font-weight: 600;
+-          text-transform: uppercase;
+-          color: #7a8288;
+-        }
+-        .nav-item {
+-          margin: 0.125rem 0.75rem;
+-        }
+-        .nav-link {
+-          display: flex;
+-          align-items: center;
+-          padding: 0.625rem 0.75rem;
+-          color: #b6c2c9;
+-          text-decoration: none;
+-          border-radius: 0.25rem;
+-          transition: all 0.15s;
+-          font-size: 0.875rem;
+-        }
+-        .nav-link:hover {
+-          background: rgba(255, 255, 255, 0.05);
+-          color: white;
+-        }
+-        .nav-link.active {
+-          background: #00acac;
+-          color: white;
+-        }
+-        .nav-link .icon {
+-          margin-right: 0.75rem;
+-          font-size: 1.125rem;
+-        }
+-        .nav-link.disabled {
+-          opacity: 0.4;
+-          pointer-events: none;
+-        }
+-      `}</style>
+-
+-      <div className="sidebar-header">
+-        <div className="sidebar-brand">YOLE Admin</div>
+-      </div>
++    <>
++      <div id="sidebar" className="app-sidebar" data-bs-theme="dark">
++        <div className="app-sidebar-content" data-scrollbar="true" data-height="100%">
++          <div className="menu">
++            <div className="menu-profile">
++              <div className="menu-profile-link">
++                <div className="menu-profile-cover with-shadow"></div>
++                <div className="menu-profile-image menu-profile-image-icon bg-gray-900 text-gray-600">
++                  <i className="fa fa-user"></i>
++                </div>
++                <div className="menu-profile-info">
++                  <div className="d-flex align-items-center">
++                    <div className="flex-grow-1">{user?.email || 'Staff'}</div>
++                  </div>
++                  <small>{user?.role || 'YOLE'}</small>
++                </div>
++              </div>
++            </div>
+ 
+-      {currentUser && (
+-        <div className="sidebar-user">
+-          <div className="sidebar-user-avatar">
+-            {currentUser.email.charAt(0).toUpperCase()}
++            {NAV.map((group) => {
++              const items = group.items.filter((item) => canAccess(item.href));
++              if (!items.length) return null;
++              return (
++                <div key={group.title}>
++                  <div className="menu-header">{group.title}</div>
++                  {items.map((item) => {
++                    const active =
++                      pathname === item.href ||
++                      (item.href !== '/dashboard' && pathname.startsWith(item.href));
++                    return (
++                      <div key={item.href} className={`menu-item${active ? ' active' : ''}`}>
++                        <Link href={item.href} className="menu-link">
++                          <div className="menu-icon">
++                            <i className={item.icon}></i>
++                          </div>
++                          <div className="menu-text">{item.name}</div>
++                        </Link>
++                      </div>
++                    );
++                  })}
++                </div>
++              );
++            })}
+           </div>
+-          <div className="sidebar-user-name">{currentUser.email.split('@')[0]}</div>
+-          <div className="sidebar-user-role">{currentUser.role}</div>
+         </div>
+-      )}
+-
+-      <div className="sidebar-nav">
+-        {navigationGroups.map((group) => {
+-          const visibleItems = group.items.filter(item => canAccess(item.href));
+-          if (visibleItems.length === 0) return null;
+-
+-          return (
+-            <div key={group.title}>
+-              <div className="nav-group-title">{group.title}</div>
+-              <div>
+-                {visibleItems.map((item) => {
+-                  const isActive = pathname === item.href || 
+-                    (item.href !== '/dashboard' && pathname.startsWith(item.href));
+-                  
+-                  return (
+-                    <div key={item.href} className="nav-item">
+-                      <Link
+-                        href={item.href}
+-                        className={`nav-link ${isActive ? 'active' : ''}`}
+-                      >
+-                        <span className="icon">{item.icon}</span>
+-                        <span>{item.name}</span>
+-                      </Link>
+-                    </div>
+-                  );
+-                })}
+-              </div>
+-            </div>
+-          );
+-        })}
+       </div>
+-    </div>
++      <div className="app-sidebar-bg" data-bs-theme="dark"></div>
++      <div className="app-sidebar-mobile-backdrop">
++        <a href="#/" data-dismiss="app-sidebar-mobile" className="stretched-link"></a>
++      </div>
++    </>
+   );
+ }
+diff --git a/apps/admin_web/lib/api.ts b/apps/admin_web/lib/api.ts
+index f12f086..9c34175 100644
+--- a/apps/admin_web/lib/api.ts
++++ b/apps/admin_web/lib/api.ts
+@@ -318,9 +318,104 @@ export class AdminApiClient {
+     }
+     return this.request(`/v1/admin/cases/${caseId}/status`, {
+       method: 'PUT',
+       body: JSON.stringify({ status }),
+     });
+   }
++
++  async listProducts() {
++    if (OFFLINE_DEMO) return this.store().listProducts();
++    return [];
++  }
++
++  async listPendingApprovals(status?: string) {
++    if (OFFLINE_DEMO) return this.store().listPendingApprovals(status);
++    return [];
++  }
++
++  async approvePending(approvalId: string, decision: string, approverStaffId?: string) {
++    if (OFFLINE_DEMO) return this.store().approvePending(approvalId, decision, approverStaffId);
++    throw new Error('approvePending requires OFFLINE_DEMO');
++  }
++
++  async listCreditExceptions() {
++    if (OFFLINE_DEMO) return this.store().listCreditExceptions();
++    return [];
++  }
++
++  async decideCreditException(loanId: string, decision: string) {
++    if (OFFLINE_DEMO) return this.store().decideCreditException(loanId, decision);
++    throw new Error('decideCreditException requires OFFLINE_DEMO');
++  }
++
++  async getLoanSchedule(scheduleId: string) {
++    if (OFFLINE_DEMO) return this.store().getLoanSchedule(scheduleId);
++    return null;
++  }
++
++  async listLoans(customerId?: string) {
++    if (OFFLINE_DEMO) return this.store().listLoans(customerId);
++    return [];
++  }
++
++  async compensatePayment(paymentId: string) {
++    if (OFFLINE_DEMO) return this.store().compensatePayment(paymentId);
++    throw new Error('compensatePayment requires OFFLINE_DEMO');
++  }
++
++  async replayIdempotentConfirm(idempotencyKey: string, payload?: Record<string, unknown>) {
++    if (OFFLINE_DEMO) return this.store().replayIdempotentConfirm(idempotencyKey, payload);
++    throw new Error('replayIdempotentConfirm requires OFFLINE_DEMO');
++  }
++
++  async listRemittances(status?: string) {
++    if (OFFLINE_DEMO) return this.store().listRemittances(status);
++    return [];
++  }
++
++  async remittanceAction(remittanceId: string, action: string) {
++    if (OFFLINE_DEMO) return this.store().remittanceAction(remittanceId, action);
++    throw new Error('remittanceAction requires OFFLINE_DEMO');
++  }
++
++  async advanceAmlCase(caseId: string, action: string, opts?: { approverRole?: string; recommendation?: string }) {
++    if (OFFLINE_DEMO) return this.store().advanceAmlCase(caseId, action, opts);
++    throw new Error('advanceAmlCase requires OFFLINE_DEMO');
++  }
++
++  async listJournals(filters?: { customerId?: string; refId?: string; walletId?: string }) {
++    if (OFFLINE_DEMO) return this.store().listJournals(filters);
++    return [];
++  }
++
++  async listNotifications(filters?: { customerId?: string }) {
++    if (OFFLINE_DEMO) return this.store().listNotifications(filters);
++    return [];
++  }
++
++  async listCardAuths(cardId?: string) {
++    if (OFFLINE_DEMO) return this.store().listCardAuths(cardId);
++    return [];
++  }
++
++  async runEod(businessDate?: string) {
++    if (OFFLINE_DEMO) return this.store().runEod(businessDate);
++    throw new Error('runEod requires OFFLINE_DEMO');
++  }
++
++  async buildExportPack() {
++    if (OFFLINE_DEMO) return this.store().buildExportPack();
++    throw new Error('buildExportPack requires OFFLINE_DEMO');
++  }
++
++  async getHonesty() {
++    if (OFFLINE_DEMO) return this.store().getHonesty();
++    return {
++      globalBadge: 'Offline demo — no live API',
++      cardsBadge: 'MOCK — not Visa/Mastercard certified',
++      resilienceBadge: 'DEMO STORYBOARD — not a live HA failover',
++    };
++  }
++
+ }
+ 
+ export const api = new AdminApiClient();
+diff --git a/apps/admin_web/lib/offline/store.mutations.test.ts b/apps/admin_web/lib/offline/store.mutations.test.ts
+new file mode 100644
+index 0000000..a6304f7
+--- /dev/null
++++ b/apps/admin_web/lib/offline/store.mutations.test.ts
+@@ -0,0 +1,67 @@
++import { OfflineDemoStore } from './store';
++
++describe('OfflineDemoStore DEM mutations', () => {
++  test('approvePending FEE_CHANGE activates pending fee and supersedes current', () => {
++    const store = OfflineDemoStore.createFresh();
++    const result = store.approvePending('apr_fee_w2w_001', 'APPROVE');
++    expect(result.status).toBe('APPROVED');
++
++    const approvals = store.listPendingApprovals();
++    const apr = approvals.find((a) => a.id === 'apr_fee_w2w_001');
++    expect(apr?.status).toBe('APPROVED');
++
++    const fees = store.listFeeConfigs();
++    const pending = fees.find((f) => f.id === 'fee_w2w_pending');
++    const current = fees.find((f) => f.id === 'fee_w2w_current');
++    expect(pending?.status).toBe('ACTIVE');
++    expect(current?.status).toBe('SUPERSEDED');
++  });
++
++  test('decideCreditException APPROVE activates loan, schedule, wallet credit, journal', () => {
++    const store = OfflineDemoStore.createFresh();
++    const before = store.getCustomer360('cust_kasee');
++    const cdfBefore = Number(
++      before.wallets.find((w) => w.id === 'wal_kasee_cdf')?.availableMinor || 0,
++    );
++
++    const result = store.decideCreditException('loan_kasee_exception_001', 'APPROVE');
++    expect(result.status).toBe('ACTIVE');
++    expect(result.scheduleId).toBeTruthy();
++
++    const loan = store.listCreditExceptions().find((l) => l.id === 'loan_kasee_exception_001')
++      || store.getCustomer360('cust_kasee').loans.find((l) => l.id === 'loan_kasee_exception_001');
++    expect(loan?.status).toBe('ACTIVE');
++    expect(loan?.scheduleId).toBeTruthy();
++
++    const schedule = store.getLoanSchedule(loan!.scheduleId!);
++    expect(schedule?.installments?.length).toBeGreaterThan(0);
++
++    const after = store.getCustomer360('cust_kasee');
++    const cdfAfter = Number(
++      after.wallets.find((w) => w.id === 'wal_kasee_cdf')?.availableMinor || 0,
++    );
++    expect(cdfAfter).toBe(cdfBefore + 5000000);
++
++    const journals = store.listJournals({ refId: 'loan_kasee_exception_001' });
++    expect(journals.length).toBeGreaterThan(0);
++    expect(journals[0].direction).toBe('CREDIT');
++  });
++
++  test('compensatePayment posts reversing journal and notification', () => {
++    const store = OfflineDemoStore.createFresh();
++    const paymentId = 'pay_kasee_w2w_001';
++    const result = store.compensatePayment(paymentId);
++    expect(result.status).toBe('COMPENSATED');
++
++    const payments = store.searchPayments({ customerId: 'cust_kasee' });
++    const pay = payments.find((p) => p.id === paymentId);
++    expect(pay?.status).toBe('COMPENSATED');
++
++    const journals = store.listJournals({ refId: paymentId });
++    const reversing = journals.filter((j) => j.type === 'COMPENSATION' || j.direction === 'CREDIT');
++    expect(reversing.length).toBeGreaterThan(0);
++
++    const notes = store.listNotifications({ customerId: 'cust_kasee' });
++    expect(notes.some((n) => n.title.toLowerCase().includes('compensat'))).toBe(true);
++  });
++});
+diff --git a/apps/admin_web/lib/offline/store.ts b/apps/admin_web/lib/offline/store.ts
+index 06a46a5..81b8cbc 100644
+--- a/apps/admin_web/lib/offline/store.ts
++++ b/apps/admin_web/lib/offline/store.ts
+@@ -3,20 +3,27 @@ import type {
+   Universe,
+   Staff,
+   Customer,
+   Wallet,
+   Payment,
+   Loan,
++  LoanSchedule,
+   Card,
+   Case,
+   KycSubmission,
+   Agent,
+   Employer,
+   Employee,
+   FeeLimit,
+   ReconDay,
++  Journal,
++  Notification,
++  Product,
++  PendingApproval,
++  Remittance,
++  CardAuth,
+ } from 'demo_universe';
+ 
+ function strMinor(n: number | string | undefined | null): string {
+   if (n === undefined || n === null) return '0';
+   return String(n);
+ }
+@@ -43,13 +50,12 @@ function walletForAdmin(w: Wallet) {
+   return {
+     ...w,
+     availableMinor: strMinor(w.availableMinor),
+     ledgerMinor: strMinor(w.ledgerMinor),
+     blockedMinor: strMinor(w.blockedMinor),
+     pendingMinor: strMinor(w.pendingMinor),
+-    // Compat for pocket-based Color Admin / legacy 360 UI
+     pockets: [
+       {
+         id: `${w.id}_pocket`,
+         currency: w.currency,
+         availableMinor: strMinor(w.availableMinor),
+         ledgerMinor: strMinor(w.ledgerMinor),
+@@ -96,17 +102,22 @@ function limitForAdmin(f: FeeLimit) {
+     value: `${fmt(daily)} / ${fmt(monthly)}`,
+     status: f.status,
+     effectiveFrom: f.effectiveFrom,
+   };
+ }
+ 
++function nowIso() {
++  return new Date().toISOString();
++}
++
+ export type Customer360 = {
+   customer: Customer;
+   wallets: ReturnType<typeof walletForAdmin>[];
+   recentPayments: ReturnType<typeof paymentForAdmin>[];
+   loans: Loan[];
++  loanSchedules: LoanSchedule[];
+   cards: ReturnType<typeof cardForAdmin>[];
+   cases: Case[];
+ };
+ 
+ /**
+  * In-memory admin offline store backed by shared demo_universe seed.
+@@ -207,16 +218,19 @@ export class OfflineDemoStore {
+       .slice()
+       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+       .slice(0, 12)
+       .map(paymentForAdmin);
+ 
+     const loans = this.u.loans.filter((l) => l.customerId === customerId);
++    const loanSchedules = this.u.loanSchedules.filter((s) =>
++      loans.some((l) => l.id === s.loanId || l.scheduleId === s.id),
++    );
+     const cards = this.u.cards.filter((c) => c.customerId === customerId).map(cardForAdmin);
+     const cases = this.u.cases.filter((c) => c.customerId === customerId);
+ 
+-    return { customer, wallets, recentPayments, loans, cards, cases };
++    return { customer, wallets, recentPayments, loans, loanSchedules, cards, cases };
+   }
+ 
+   listKycSubmissions(status?: string): KycSubmission[] {
+     if (!status) return this.u.kyc.slice();
+     return this.u.kyc.filter((k) => k.status === status);
+   }
+@@ -314,12 +328,17 @@ export class OfflineDemoStore {
+     const list = customerId
+       ? this.u.cards.filter((c) => c.customerId === customerId)
+       : this.u.cards.slice();
+     return list.map(cardForAdmin);
+   }
+ 
++  listCardAuths(cardId?: string) {
++    if (!cardId) return this.u.cardAuths.slice();
++    return this.u.cardAuths.filter((a) => a.cardId === cardId);
++  }
++
+   listEmployers() {
+     return this.u.employers.map((e) => {
+       const employees = this.u.employees
+         .filter((emp) => emp.employerId === e.id)
+         .map((emp) => ({
+           customerId: emp.customerId,
+@@ -401,22 +420,26 @@ export class OfflineDemoStore {
+ 
+   getDailySummary(date: string) {
+     const day: ReconDay | undefined =
+       this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];
+     const payments = this.u.payments;
+     const totalVolume = payments.reduce((s, p) => s + Number(p.amountMinor), 0);
++    const eod = day?.eodSnapshot || {};
+     return {
+       date: day?.businessDate || date,
+       totalTransactions: payments.length,
+       totalVolumeMinor: strMinor(totalVolume),
+       status: day?.status || 'BALANCED',
+       matchedCount: day?.matchedCount,
+       exceptionCount: day?.exceptionCount,
+       details: {
+         exceptions: day?.exceptions || [],
+-        eodSnapshot: day?.eodSnapshot || {},
++        unmatched: day?.exceptions || [],
++        eodSnapshot: eod,
++        suspenseMinor: strMinor((eod as { suspenseMinor?: number }).suspenseMinor ?? 0),
++        glBalanced: Boolean((eod as { glBalanced?: boolean }).glBalanced),
+         rails: {},
+         ledgerDeltaMinor: '0',
+       },
+     };
+   }
+ 
+@@ -445,12 +468,478 @@ export class OfflineDemoStore {
+       if (['RESOLVED', 'CLOSED', 'APPROVED', 'REJECTED'].includes(status)) {
+         row.decidedAt = new Date().toISOString();
+       }
+     }
+     return { id: caseId, status };
+   }
++
++  // ─── DEM list helpers ─────────────────────────────────────────────
++
++  listProducts(): Product[] {
++    return this.u.products.slice();
++  }
++
++  listPendingApprovals(status?: string): PendingApproval[] {
++    if (!status) return this.u.pendingApprovals.slice();
++    return this.u.pendingApprovals.filter((a) => a.status === status);
++  }
++
++  listCreditExceptions() {
++    return this.u.loans.filter((l) =>
++      ['PENDING_EXCEPTION', 'EXCEPTION', 'REJECTED_EXCEPTION'].includes(l.status) ||
++      l.status === 'PENDING_EXCEPTION',
++    );
++  }
++
++  listLoans(customerId?: string) {
++    if (!customerId) return this.u.loans.slice();
++    return this.u.loans.filter((l) => l.customerId === customerId);
++  }
++
++  getLoanSchedule(scheduleId: string): LoanSchedule | null {
++    return this.u.loanSchedules.find((s) => s.id === scheduleId) || null;
++  }
++
++  listRemittances(status?: string): Remittance[] {
++    if (!status) return this.u.remittances.slice();
++    return this.u.remittances.filter((r) => r.status === status);
++  }
++
++  listJournals(filters?: { customerId?: string; refId?: string; walletId?: string }): Journal[] {
++    return this.u.journals.filter((j) => {
++      if (filters?.customerId && j.customerId !== filters.customerId) return false;
++      if (filters?.refId && j.refId !== filters.refId) return false;
++      if (filters?.walletId && j.walletId !== filters.walletId) return false;
++      return true;
++    });
++  }
++
++  listNotifications(filters?: { customerId?: string }): Notification[] {
++    if (!filters?.customerId) return this.u.notifications.slice();
++    return this.u.notifications.filter((n) => n.customerId === filters.customerId);
++  }
++
++  getHonesty() {
++    return this.u.meta.honesty || {
++      globalBadge: 'Offline demo — no live API',
++      cardsBadge: 'MOCK — not Visa/Mastercard certified',
++      resilienceBadge: 'DEMO STORYBOARD — not a live HA failover',
++    };
++  }
++
++  // ─── DEM mutations ────────────────────────────────────────────────
++
++  /**
++   * DEM-02: approve/reject pendingApprovals. FEE_CHANGE activates pending fee.
++   */
++  approvePending(approvalId: string, decision: string, _approverStaffId?: string) {
++    const apr = this.u.pendingApprovals.find((a) => a.id === approvalId);
++    if (!apr) throw new Error(`Approval not found: ${approvalId}`);
++    const approved = decision === 'APPROVE' || decision === 'APPROVED';
++    apr.status = approved ? 'APPROVED' : 'REJECTED';
++
++    if (apr.type === 'FEE_CHANGE') {
++      const pendingFee = this.u.feeLimits.find((f) => f.id === apr.targetId);
++      if (pendingFee) {
++        if (approved) {
++          // Supersede other ACTIVE fees of same paymentType
++          for (const f of this.u.feeLimits) {
++            if (
++              f.kind === 'FEE' &&
++              f.paymentType === pendingFee.paymentType &&
++              f.id !== pendingFee.id &&
++              f.status === 'ACTIVE'
++            ) {
++              f.status = 'SUPERSEDED';
++            }
++          }
++          pendingFee.status = 'ACTIVE';
++        } else {
++          pendingFee.status = 'REJECTED';
++        }
++      }
++    }
++
++    if (apr.type === 'CREDIT_EXCEPTION' && approved) {
++      this.decideCreditException(apr.targetId, 'APPROVE');
++    }
++
++    if (apr.type === 'AML_CASE' && approved) {
++      this.advanceAmlCase(apr.targetId, 'APPROVE', { approverRole: 'ADMIN' });
++    }
++
++    return { id: approvalId, status: apr.status, type: apr.type, targetId: apr.targetId };
++  }
++
++  /**
++   * DEM-04: approve PENDING_EXCEPTION → ACTIVE + schedule + wallet credit + journal.
++   */
++  decideCreditException(loanId: string, decision: string) {
++    const loan = this.u.loans.find((l) => l.id === loanId);
++    if (!loan) throw new Error(`Loan not found: ${loanId}`);
++
++    const approved = decision === 'APPROVE' || decision === 'APPROVED';
++    if (!approved) {
++      loan.status = 'REJECTED_EXCEPTION';
++      const apr = this.u.pendingApprovals.find(
++        (a) => a.type === 'CREDIT_EXCEPTION' && a.targetId === loanId && a.status === 'PENDING',
++      );
++      if (apr) apr.status = 'REJECTED';
++      return { id: loanId, status: loan.status, scheduleId: loan.scheduleId ?? null };
++    }
++
++    const scheduleId = `sched_${loanId}`;
++    const half = Math.floor(loan.principalMinor / 2);
++    const interest = Math.floor(loan.principalMinor * 0.05);
++    const schedule: LoanSchedule = {
++      id: scheduleId,
++      loanId: loan.id,
++      installments: [
++        {
++          id: `${scheduleId}_inst_1`,
++          dueDate: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
++          principalMinor: half,
++          interestMinor: interest,
++          status: 'DUE',
++          paidAt: null,
++        },
++        {
++          id: `${scheduleId}_inst_2`,
++          dueDate: new Date(Date.now() + 44 * 86400000).toISOString().slice(0, 10),
++          principalMinor: loan.principalMinor - half,
++          interestMinor: interest,
++          status: 'DUE',
++          paidAt: null,
++        },
++      ],
++    };
++    // replace if exists
++    const existingIdx = this.u.loanSchedules.findIndex((s) => s.loanId === loan.id);
++    if (existingIdx >= 0) this.u.loanSchedules[existingIdx] = schedule;
++    else this.u.loanSchedules.push(schedule);
++
++    loan.status = 'ACTIVE';
++    loan.scheduleId = scheduleId;
++    loan.receivableMinor = loan.principalMinor + interest * 2;
++    loan.disbursedAt = nowIso();
++
++    const wallet =
++      this.u.wallets.find((w) => w.customerId === loan.customerId && w.currency === loan.currency) ||
++      this.u.wallets.find((w) => w.customerId === loan.customerId);
++    if (wallet) {
++      wallet.availableMinor += loan.principalMinor;
++      wallet.ledgerMinor += loan.principalMinor;
++      const jnl: Journal = {
++        id: `jnl_disburse_${loan.id}`,
++        customerId: loan.customerId,
++        walletId: wallet.id,
++        type: 'LOAN_DISBURSEMENT',
++        direction: 'CREDIT',
++        currency: loan.currency,
++        amountMinor: loan.principalMinor,
++        balanceAfterMinor: wallet.availableMinor,
++        refType: 'LOAN',
++        refId: loan.id,
++        narration: `Credit exception approved — ${loan.productId}`,
++        postedAt: nowIso(),
++      };
++      this.u.journals.push(jnl);
++    }
++
++    const apr = this.u.pendingApprovals.find(
++      (a) => a.type === 'CREDIT_EXCEPTION' && a.targetId === loanId && a.status === 'PENDING',
++    );
++    if (apr) apr.status = 'APPROVED';
++
++    this.u.notifications.push({
++      id: `ntf_loan_${loan.id}_${Date.now()}`,
++      customerId: loan.customerId,
++      channel: 'PUSH',
++      title: 'Loan disbursed',
++      body: `Credit exception approved — ${loan.currency} ${loan.principalMinor / 100} credited`,
++      read: false,
++      createdAt: nowIso(),
++    });
++
++    return { id: loanId, status: loan.status, scheduleId };
++  }
++
++  /**
++   * DEM-05: Compensate posts reversing journal + notification; marks payment COMPENSATED.
++   */
++  compensatePayment(paymentId: string) {
++    const pay = this.u.payments.find((p) => p.id === paymentId);
++    if (!pay) throw new Error(`Payment not found: ${paymentId}`);
++    if (pay.status === 'COMPENSATED') {
++      return { id: paymentId, status: 'COMPENSATED', alreadyCompensated: true };
++    }
++
++    pay.status = 'COMPENSATED';
++    const walletId =
++      (pay.sourceRef && this.u.wallets.some((w) => w.id === pay.sourceRef)
++        ? pay.sourceRef
++        : null) ||
++      this.u.wallets.find((w) => w.customerId === pay.customerId && w.currency === pay.currency)
++        ?.id ||
++      this.u.wallets.find((w) => w.customerId === pay.customerId)?.id;
++
++    if (walletId) {
++      const wallet = this.u.wallets.find((w) => w.id === walletId)!;
++      // Reverse original debit → credit customer back
++      wallet.availableMinor += pay.totalMinor || pay.amountMinor;
++      wallet.ledgerMinor += pay.totalMinor || pay.amountMinor;
++      const jnl: Journal = {
++        id: `jnl_comp_${paymentId}`,
++        customerId: pay.customerId,
++        walletId,
++        type: 'COMPENSATION',
++        direction: 'CREDIT',
++        currency: pay.currency,
++        amountMinor: pay.totalMinor || pay.amountMinor,
++        balanceAfterMinor: wallet.availableMinor,
++        refType: 'PAYMENT',
++        refId: paymentId,
++        narration: `Compensation for ${paymentId}`,
++        postedAt: nowIso(),
++      };
++      this.u.journals.push(jnl);
++      pay.journalId = jnl.id;
++    }
++
++    this.u.notifications.push({
++      id: `ntf_comp_${paymentId}_${Date.now()}`,
++      customerId: pay.customerId,
++      channel: 'PUSH',
++      title: 'Payment compensated',
++      body: `Payment ${paymentId} was compensated — funds restored`,
++      read: false,
++      createdAt: nowIso(),
++    });
++
++    return { id: paymentId, status: 'COMPENSATED', journalId: pay.journalId };
++  }
++
++  /**
++   * DEM-05: Replay same idempotency key returns the same payment (no duplicate).
++   */
++  replayIdempotentConfirm(idempotencyKey: string, _payload?: Record<string, unknown>) {
++    const existing = this.u.payments.find((p) => p.idempotencyKey === idempotencyKey);
++    if (existing) {
++      return {
++        payment: paymentForAdmin(existing),
++        replayed: true,
++        message: 'Idempotent replay — same payment returned, no duplicate posted',
++      };
++    }
++    // If key unknown, create a demo payment once then subsequent calls return it
++    const id = `pay_idem_${Date.now()}`;
++    const pay: Payment = {
++      id,
++      customerId: 'cust_kasee',
++      type: 'W2W',
++      status: 'POSTED',
++      currency: 'USD',
++      amountMinor: 1000,
++      feeMinor: 10,
++      totalMinor: 1010,
++      sourceRef: 'wal_kasee_usd',
++      destRef: 'cust_amina',
++      journalId: null,
++      idempotencyKey,
++      createdAt: nowIso(),
++      notes: 'Idempotency lab first confirm',
++    };
++    this.u.payments.push(pay);
++    return {
++      payment: paymentForAdmin(pay),
++      replayed: false,
++      message: 'First confirm — payment posted',
++    };
++  }
++
++  /**
++   * DEM-08 remittance actions: CLEAR / RELEASE / REFUND / HOLD + partner recon stub.
++   */
++  remittanceAction(remittanceId: string, action: string) {
++    const rmt = this.u.remittances.find((r) => r.id === remittanceId);
++    if (!rmt) throw new Error(`Remittance not found: ${remittanceId}`);
++    const act = action.toUpperCase();
++
++    if (act === 'CLEAR' || act === 'RELEASE' || act === 'APPROVE') {
++      rmt.status = 'CLEARED';
++      const wallet =
++        (rmt.walletId && this.u.wallets.find((w) => w.id === rmt.walletId)) ||
++        this.u.wallets.find(
++          (w) => w.customerId === rmt.customerId && w.currency === rmt.receiveCurrency,
++        );
++      if (wallet) {
++        rmt.walletId = wallet.id;
++        wallet.availableMinor += rmt.receiveAmountMinor;
++        wallet.ledgerMinor += rmt.receiveAmountMinor;
++        this.u.journals.push({
++          id: `jnl_rmt_${rmt.id}`,
++          customerId: rmt.customerId,
++          walletId: wallet.id,
++          type: 'REMITTANCE',
++          direction: 'CREDIT',
++          currency: rmt.receiveCurrency,
++          amountMinor: rmt.receiveAmountMinor,
++          balanceAfterMinor: wallet.availableMinor,
++          refType: 'REMITTANCE',
++          refId: rmt.id,
++          narration: `Remittance cleared from ${rmt.partner}`,
++          postedAt: nowIso(),
++        });
++      }
++    } else if (act === 'REFUND') {
++      rmt.status = 'REFUNDED';
++    } else if (act === 'HOLD' || act === 'SCREEN') {
++      rmt.status = 'SCREENING_HIT';
++    } else if (act === 'PARTNER_RECON') {
++      return {
++        id: remittanceId,
++        status: rmt.status,
++        partnerRecon: {
++          partner: rmt.partner,
++          matched: rmt.status === 'CLEAR' || rmt.status === 'CLEARED',
++          stub: true,
++          message: 'Partner recon stub — offline demo only',
++        },
++      };
++    }
++
++    return { id: remittanceId, status: rmt.status, action: act };
++  }
++
++  /**
++   * DEM-09: AML confidential workflow — Investigate → Recommend → maker-checker.
++   */
++  advanceAmlCase(
++    caseId: string,
++    action: string,
++    opts?: { approverRole?: string; recommendation?: string },
++  ) {
++    const row = this.u.cases.find((c) => c.id === caseId);
++    if (!row) throw new Error(`Case not found: ${caseId}`);
++    const act = action.toUpperCase();
++    const steps = row.steps || ['ALERT', 'INVESTIGATION', 'RECOMMEND', 'MAKER_CHECKER'];
++    if (!row.steps) row.steps = steps;
++
++    if (act === 'INVESTIGATE') {
++      row.currentStep = 'INVESTIGATION';
++      row.status = 'INVESTIGATION';
++    } else if (act === 'RECOMMEND') {
++      row.currentStep = 'RECOMMEND';
++      row.status = 'PENDING_APPROVAL';
++      (row as Case & { recommendation?: string }).recommendation =
++        opts?.recommendation || 'ESCALATE';
++      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
++    } else if (act === 'APPROVE' || act === 'APPROVED') {
++      row.currentStep = 'MAKER_CHECKER';
++      row.status = 'APPROVED';
++      row.decidedAt = nowIso();
++      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
++      const apr = this.u.pendingApprovals.find(
++        (a) => a.type === 'AML_CASE' && a.targetId === caseId && a.status === 'PENDING',
++      );
++      if (apr) apr.status = 'APPROVED';
++    } else if (act === 'REJECT' || act === 'DENIED') {
++      row.currentStep = 'MAKER_CHECKER';
++      row.status = 'REJECTED';
++      row.decidedAt = nowIso();
++      (row as Case & { approverRole?: string }).approverRole = opts?.approverRole || 'ADMIN';
++      const apr = this.u.pendingApprovals.find(
++        (a) => a.type === 'AML_CASE' && a.targetId === caseId && a.status === 'PENDING',
++      );
++      if (apr) apr.status = 'REJECTED';
++    }
++
++    return {
++      id: caseId,
++      status: row.status,
++      currentStep: row.currentStep,
++      confidential: row.confidential,
++      approverRole: (row as Case & { approverRole?: string }).approverRole,
++    };
++  }
++
++  /**
++   * DEM-11: Run EOD writes snapshot on recon day (GL balanced, clears suspense demo).
++   */
++  runEod(businessDate?: string) {
++    const date = businessDate || this.u.reconDays[0]?.businessDate || new Date().toISOString().slice(0, 10);
++    let day = this.u.reconDays.find((r) => r.businessDate === date);
++    if (!day) {
++      day = {
++        id: `recon_${date}`,
++        businessDate: date,
++        status: 'OPEN',
++        matchedCount: 0,
++        exceptionCount: 0,
++        exceptions: [],
++        eodSnapshot: {},
++      };
++      this.u.reconDays.push(day);
++    }
++
++    const debit = this.u.journals
++      .filter((j) => j.direction === 'DEBIT')
++      .reduce((s, j) => s + j.amountMinor, 0);
++    const credit = this.u.journals
++      .filter((j) => j.direction === 'CREDIT')
++      .reduce((s, j) => s + j.amountMinor, 0);
++
++    day.eodSnapshot = {
++      runAt: nowIso(),
++      glBalanced: true,
++      suspenseMinor: 0,
++      currency: 'CDF',
++      notes: 'DEM-11 EOD run — offline demo snapshot',
++      journalDebitMinor: debit,
++      journalCreditMinor: credit,
++      bodReady: true,
++    };
++    day.status = day.exceptionCount > 0 ? 'EOD_COMPLETE_WITH_EXCEPTIONS' : 'EOD_COMPLETE';
++    day.matchedCount = Math.max(day.matchedCount, this.u.payments.length);
++
++    return {
++      businessDate: day.businessDate,
++      status: day.status,
++      eodSnapshot: day.eodSnapshot,
++    };
++  }
++
++  /**
++   * DEM-12: Build open-format export pack JSON.
++   */
++  buildExportPack() {
++    const pack = {
++      exportedAt: nowIso(),
++      format: 'yole-demo-export/v1',
++      filename: 'yole-demo-export.json',
++      honesty: this.getHonesty(),
++      customers: this.u.customers.map(({ password: _p, ...rest }) => rest),
++      wallets: this.u.wallets,
++      loans: this.u.loans,
++      loanSchedules: this.u.loanSchedules,
++      payments: this.u.payments,
++      journals: this.u.journals,
++      cases: this.u.cases,
++      remittances: this.u.remittances,
++      cards: this.u.cards,
++      cardAuths: this.u.cardAuths,
++      products: this.u.products,
++      feeLimits: this.u.feeLimits,
++      reconDays: this.u.reconDays,
++      notifications: this.u.notifications,
++      agents: this.u.agents.map(({ password: _p, ...rest }) => rest),
++      employers: this.u.employers,
++      employees: this.u.employees,
++    };
++    return pack;
++  }
+ }
+ 
+ let singleton: OfflineDemoStore | null = null;
+ 
+ export function getOfflineStore(): OfflineDemoStore {
+   if (!singleton) {
+diff --git a/apps/admin_web/lib/rbac.ts b/apps/admin_web/lib/rbac.ts
+index 934f817..0d7b41a 100644
+--- a/apps/admin_web/lib/rbac.ts
++++ b/apps/admin_web/lib/rbac.ts
+@@ -7,34 +7,55 @@ export type ModuleRoute =
+   | '/dashboard/agents'
+   | '/dashboard/payments'
+   | '/dashboard/cards'
+   | '/dashboard/payroll'
+   | '/dashboard/config'
+   | '/dashboard/recon'
+-  | '/dashboard/cases';
++  | '/dashboard/cases'
++  | '/dashboard/products'
++  | '/dashboard/approvals'
++  | '/dashboard/credit-exceptions'
++  | '/dashboard/idempotency'
++  | '/dashboard/remittance'
++  | '/dashboard/resilience'
++  | '/dashboard/export';
++
++const ALL_ADMIN: ModuleRoute[] = [
++  '/dashboard',
++  '/dashboard/customer360',
++  '/dashboard/kyc',
++  '/dashboard/agents',
++  '/dashboard/payments',
++  '/dashboard/cards',
++  '/dashboard/payroll',
++  '/dashboard/config',
++  '/dashboard/recon',
++  '/dashboard/cases',
++  '/dashboard/products',
++  '/dashboard/approvals',
++  '/dashboard/credit-exceptions',
++  '/dashboard/idempotency',
++  '/dashboard/remittance',
++  '/dashboard/resilience',
++  '/dashboard/export',
++];
+ 
+ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
+-  [StaffRole.ADMIN]: [
+-    '/dashboard',
+-    '/dashboard/customer360',
+-    '/dashboard/kyc',
+-    '/dashboard/agents',
+-    '/dashboard/payments',
+-    '/dashboard/cards',
+-    '/dashboard/payroll',
+-    '/dashboard/config',
+-    '/dashboard/recon',
+-    '/dashboard/cases',
+-  ],
++  [StaffRole.ADMIN]: ALL_ADMIN,
+   [StaffRole.OPS]: [
+     '/dashboard',
+     '/dashboard/kyc',
+     '/dashboard/agents',
+     '/dashboard/payments',
+     '/dashboard/recon',
+     '/dashboard/cases',
++    '/dashboard/approvals',
++    '/dashboard/credit-exceptions',
++    '/dashboard/idempotency',
++    '/dashboard/remittance',
++    '/dashboard/products',
+   ],
+   [StaffRole.SUPPORT]: [
+     '/dashboard',
+     '/dashboard/customer360',
+     '/dashboard/cases',
+   ],
+@@ -42,17 +63,24 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
+     '/dashboard',
+     '/dashboard/payments',
+     '/dashboard/cards',
+     '/dashboard/payroll',
+     '/dashboard/config',
+     '/dashboard/recon',
++    '/dashboard/products',
++    '/dashboard/approvals',
++    '/dashboard/credit-exceptions',
++    '/dashboard/remittance',
++    '/dashboard/export',
++    '/dashboard/resilience',
++    '/dashboard/idempotency',
+   ],
+ };
+ 
+ export function canAccessRoute(role: StaffRole, route: string): boolean {
+   const allowedRoutes = ROLE_PERMISSIONS[role];
+-  return allowedRoutes.some(r => route === r || route.startsWith(r + '/'));
++  return allowedRoutes.some((r) => route === r || route.startsWith(r + '/'));
+ }
+ 
+ export function getAuthorizedRoutes(role: StaffRole): ModuleRoute[] {
+   return ROLE_PERMISSIONS[role];
+ }

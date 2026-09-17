@@ -1,5 +1,9 @@
 # Yole Flutter + NestJS Core API Integration
 
+> **📚 For complete demo walkthroughs and feature documentation, see [README_APPS.md](./README_APPS.md)**
+
+This document covers Flutter-specific technical setup and API integration details.
+
 ## Auth Flow - Mock Core-API (Updated)
 
 **The customer Flutter app now authenticates against the mock NestJS core-api instead of the old Pesapal backend.**

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function Customer360Page() {
@@ -29,15 +28,7 @@ export default function Customer360Page() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <h1 className="text-3xl font-bold mb-6">Customer 360</h1>
-
+    <div>
       <form onSubmit={handleSearch} className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="flex gap-4">
           <input

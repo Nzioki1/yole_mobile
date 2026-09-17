@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function PaymentsSearchPage() {
@@ -34,15 +33,7 @@ export default function PaymentsSearchPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <h1 className="text-3xl font-bold mb-6">Payments Search</h1>
-
+    <div>
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

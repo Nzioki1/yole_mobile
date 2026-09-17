@@ -90,7 +90,7 @@ export default function EmployerDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8 flex items-center justify-center">
+      <div className="flex items-center justify-center py-8">
         <div>Loading...</div>
       </div>
     );
@@ -98,27 +98,20 @@ export default function EmployerDetailPage() {
 
   if (!employer) {
     return (
-      <div className="min-h-screen bg-gray-100 p-8">
-        <div className="mb-6">
-          <Link href="/dashboard/payroll" className="text-blue-600 hover:underline">
-            ← Back to Payroll
-          </Link>
-        </div>
+      <div>
         <div className="bg-white p-8 rounded-lg shadow text-center">
           <h2 className="text-xl font-bold mb-2">Employer Not Found</h2>
           <p className="text-gray-600">The employer ID {employerId} does not exist.</p>
+          <Link href="/dashboard/payroll" className="text-blue-600 hover:underline inline-block mt-4">
+            ← Back to Payroll
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard/payroll" className="text-blue-600 hover:underline">
-          ← Back to Payroll
-        </Link>
-      </div>
+    <div>
 
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="flex justify-between items-start">

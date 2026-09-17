@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function ConfigPage() {
@@ -30,15 +29,7 @@ export default function ConfigPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <h1 className="text-3xl font-bold mb-6">Fees & Limits Configuration</h1>
-
+    <div>
       {loading ? (
         <div className="text-center py-8">Loading...</div>
       ) : (

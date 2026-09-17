@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function ReconPage() {
@@ -29,15 +28,7 @@ export default function ReconPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <h1 className="text-3xl font-bold mb-6">Daily Reconciliation</h1>
-
+    <div>
       {/* Date Picker */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <label className="block text-sm font-medium mb-2">Select Date</label>

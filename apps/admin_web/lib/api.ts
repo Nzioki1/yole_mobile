@@ -136,6 +136,13 @@ export class AdminApiClient {
       body: JSON.stringify(data),
     });
   }
+
+  async updateCase(caseId: string, status: string) {
+    return this.request(`/v1/admin/cases/${caseId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  }
 }
 
 export const api = new AdminApiClient();

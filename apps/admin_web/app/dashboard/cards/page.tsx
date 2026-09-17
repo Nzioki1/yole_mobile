@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { api } from '@/lib/api';
 
 export default function CardsPage() {
@@ -31,15 +30,7 @@ export default function CardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="mb-6">
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
-          ← Back to Dashboard
-        </Link>
-      </div>
-
-      <h1 className="text-3xl font-bold mb-6">Virtual Cards Overview</h1>
-
+    <div>
       {/* Filters */}
       <div className="bg-white p-6 rounded-lg shadow mb-6">
         <div className="flex gap-4">

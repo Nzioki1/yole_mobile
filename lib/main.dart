@@ -7,6 +7,7 @@ import 'providers/global_locale_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
 import 'package:flutter/widgets.dart';
+import 'widgets/offline_demo_banner.dart';
 
 // Global navigator key for forcing navigation stack rebuild
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -102,7 +103,9 @@ class _YoleAppState extends ConsumerState<YoleApp> {
           child: child!,
         );
         // Wrap with lifecycle watcher to apply time-based theme at start/resume
-        return ThemeLifecycleWatcher(child: wrapped);
+        return OfflineDemoBanner(
+          child: ThemeLifecycleWatcher(child: wrapped),
+        );
       },
     );
   }

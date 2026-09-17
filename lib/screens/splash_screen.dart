@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/sparkles_core.dart';
 import '../providers/global_locale_provider.dart';
-import '../widgets/yole_logo.dart';
 
 /// ======================= API (1:1 with your React props) =======================
 /// - variant: 'dark' | 'light'
@@ -101,14 +100,22 @@ class SplashScreenFlutter extends ConsumerWidget {
                   // Top Section - Equal air space above logo (flex-1 min-h-[80px])
                   const Expanded(child: _MinHeightBox(minHeight: 80)),
 
-                  // Top Third - YOLE Logo/Title (motion.fade + slide)
+                  // Top Third - Poste Finance Logo/Title (motion.fade + slide)
                   _FadeSlideIn(
                     durationMs: 800,
                     beginOffset: const Offset(0, 30),
                     child: Center(
-                      child: YoleLogo(
-                        isDarkTheme: isDark,
-                        height: 80.0,
+                      child: Text(
+                        'Poste Finance',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 4.0,
+                          color: isDark 
+                              ? Colors.white.withOpacity(0.95)
+                              : const Color(0xFF1a1a1a),
+                        ),
                       ),
                     ),
                   ),

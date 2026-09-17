@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/yole_logo.dart';
 import '../providers/theme_provider.dart';
+import '../services/core_api_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
@@ -96,11 +96,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         const SizedBox(height: 32),
 
-                        // Prominent YOLE Logo - Much larger and dominant
-                        YoleLogo(
-                          isDarkTheme: isDark,
-                          height:
-                              80.0, // Increased from 48 to 80 for prominence
+                        // Prominent Poste Finance Logo - Much larger and dominant
+                        Text(
+                          'Poste Finance',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 48,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 3.0,
+                            color: theme.textTheme.titleLarge?.color,
+                          ),
                         ),
 
                         const SizedBox(height: 24),
@@ -130,6 +135,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
 
                         const SizedBox(height: 32),
+
+                        // Offline demo credentials hint
+                        if (CoreApiService.offlineDemo)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color:
+                                      theme.colorScheme.primary.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              'Offline demo — kasee.demo@postefinance.com / Password1!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          ),
 
                         // Error message display
                         if (authState.error != null) ...[

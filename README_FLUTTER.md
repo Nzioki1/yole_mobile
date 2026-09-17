@@ -210,7 +210,7 @@ flutter run -d <android-device-id> --dart-define=OFFLINE_DEMO=true
 
 Demo login (seeded customer `cust_kasee`):
 
-- Email: `kasee.demo@yole.com`
+- Email: `kasee.demo@postefinance.com`
 - Password: `Password1!`
 
 Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory session state; restart resets to seed.

@@ -84,17 +84,30 @@ export default function LoginPage() {
     }
   };
 
-  const quickLogin = (role: 'admin' | 'ops' | 'support' | 'finance') => {
+  const quickLogin = async (role: 'admin' | 'ops' | 'support' | 'finance') => {
     const credentials = {
-      admin: { email: 'admin@yole.com', password: 'Password1!' },
-      ops: { email: 'ops@yole.com', password: 'Password1!' },
-      support: { email: 'support@yole.com', password: 'Password1!' },
-      finance: { email: 'finance@yole.com', password: 'Password1!' },
+      admin: { email: 'admin@postefinance.com', password: 'Password1!' },
+      ops: { email: 'ops@postefinance.com', password: 'Password1!' },
+      support: { email: 'support@postefinance.com', password: 'Password1!' },
+      finance: { email: 'finance@postefinance.com', password: 'Password1!' },
     };
     const cred = credentials[role];
     setEmail(cred.email);
     setPassword(cred.password);
     setError('');
+    setLoading(true);
+    try {
+      const staff = getOfflineStore().authenticateStaff(cred.email, cred.password);
+      if (!staff) throw new Error('Invalid email or password');
+      authService.setToken(
+        mintDemoStaffToken({ id: staff.id, email: staff.email, role: staff.role }),
+      );
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const showQuickLogin = OFFLINE_DEMO || DEMO_SEED_ENABLED;
@@ -113,9 +126,13 @@ export default function LoginPage() {
         <div className="login-container">
           <div className="login-header">
             <div className="brand">
-              <div className="d-flex align-items-center">
-                <span className="logo"></span>
-                <b className="me-1">Poste Finance</b> Admin
+              <div className="d-flex align-items-center gap-2">
+                <img
+                  src="/assets/img/brand/poste-finance-logo-header.png"
+                  alt="Poste Finance"
+                  style={{ height: 36, width: 'auto' }}
+                />
+                <span className="ms-1">Admin</span>
               </div>
               <small>Poste Finance neo-bank operations console</small>
             </div>

@@ -44,7 +44,12 @@ export default function Header({ pageTitle }: HeaderProps) {
       <div className="navbar-header">
         <Link href="/dashboard" className="navbar-brand">
           <span className="navbar-logo"></span>
-          <b className="me-1">Poste Finance</b> Admin
+          <img
+            src="/assets/img/brand/poste-finance-logo-header.png"
+            alt="Poste Finance"
+            style={{ height: 22, width: 'auto', marginRight: 8 }}
+          />
+          <span>Admin</span>
         </Link>
         <button type="button" className="navbar-mobile-toggler" data-toggle="app-sidebar-mobile">
           <span className="icon-bar"></span>

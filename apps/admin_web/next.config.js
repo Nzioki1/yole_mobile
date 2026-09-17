@@ -1,9 +1,11 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Mac Color Admin next.config was not in the task-2 Mac copy set.
-  // Minimal config required so Next can transpile the workspace TS package.
   transpilePackages: ['demo_universe'],
   reactStrictMode: true,
+  // Monorepo: pin tracing root so Next does not pick ~/package-lock.json
+  outputFileTracingRoot: path.join(__dirname, '../..'),
 };
 
 module.exports = nextConfig;

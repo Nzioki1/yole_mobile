@@ -444,7 +444,7 @@ export class PaymentsService {
       MNO_OUT: 'Mobile Money Withdrawal',
       BANK_IN: 'Bank Deposit',
       BANK_OUT: 'Bank Withdrawal',
-      BILL_PAY: 'Bill Payment',
+      BILL: 'Bill Payment',
       AIRTIME: 'Airtime Purchase',
     };
     return labels[type] || 'Payment';

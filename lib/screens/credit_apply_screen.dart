@@ -81,8 +81,8 @@ class _CreditApplyScreenState extends State<CreditApplyScreen> {
       builder: (context) => PinConfirmSheet(
         title: 'Confirm Loan Application',
         subtitle: 'Enter your PIN to proceed',
-        onPinEntered: (pin) async {
-          return true; // PIN verified in the sheet
+        onPinEntered: (pin) {
+          Navigator.of(context).pop(true);
         },
       ),
     );

@@ -10,9 +10,10 @@ class PinConfirmSheet extends StatefulWidget {
   const PinConfirmSheet({
     super.key,
     required this.title,
-    required this.message,
+    String? message,
+    String? subtitle,
     required this.onPinEntered,
-  });
+  }) : message = message ?? subtitle ?? 'Enter your PIN';
 
   @override
   State<PinConfirmSheet> createState() => _PinConfirmSheetState();

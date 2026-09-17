@@ -120,8 +120,8 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
       builder: (context) => PinConfirmSheet(
         title: 'Confirm Remittance',
         subtitle: 'Enter your PIN to send money abroad',
-        onPinEntered: (pin) async {
-          return true; // PIN verified in the sheet
+        onPinEntered: (pin) {
+          Navigator.of(context).pop(true);
         },
       ),
     );

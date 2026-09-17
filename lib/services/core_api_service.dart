@@ -244,6 +244,8 @@ class CoreApiService {
   }
 
   /// Wallets: Get my wallets
+  Future<Map<String, dynamic>> getWallets() => getMyWallets();
+
   Future<Map<String, dynamic>> getMyWallets() async {
     final response = await _client.get(
       Uri.parse('$baseUrl/v1/wallets/me'),
@@ -285,10 +287,11 @@ class CoreApiService {
   /// Payments: Confirm with idempotency
   Future<Map<String, dynamic>> confirmPayment({
     required String paymentId,
+    String? idempotencyKey,
   }) async {
-    final idempotencyKey = const Uuid().v4();
+    final key = idempotencyKey ?? const Uuid().v4();
     final headers = _getHeaders();
-    headers['Idempotency-Key'] = idempotencyKey;
+    headers['Idempotency-Key'] = key;
 
     final response = await _client.post(
       Uri.parse('$baseUrl/v1/payments/confirm'),

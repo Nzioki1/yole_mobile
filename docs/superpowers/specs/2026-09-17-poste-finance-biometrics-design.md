@@ -132,7 +132,7 @@ With toggle enabled and fingerprint enrolled on Pixel 8:
   - `BiometricAuthService`: flag persistence, payload storage/retrieval
   - Enable/disable flows update storage correctly
 - **Widget tests:**
-  - Profile Settings: biometric button hidden when toggle disabled
+  - Profile Settings: toggle is disabled (with helper text) when no biometrics enrolled; reflects stored `biometric_enabled` when available
   - PinConfirmSheet: biometric button appears only when enabled + available
 - **Manual verification (Pixel 8):**
   - Enable toggle → enroll fingerprint → cold start unlocks

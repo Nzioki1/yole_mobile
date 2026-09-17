@@ -30,10 +30,12 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
 
     final amountMinor = quote['amountMinor'] as String;
     final feeMinor = quote['feeMinor'] as String;
+    final taxMinor = quote['taxMinor'] as String? ?? '0';
     final totalMinor = quote['totalMinor'] as String;
 
     final amount = (int.tryParse(amountMinor) ?? 0) / 100;
     final fee = (int.tryParse(feeMinor) ?? 0) / 100;
+    final tax = (int.tryParse(taxMinor) ?? 0) / 100;
     final total = (int.tryParse(totalMinor) ?? 0) / 100;
 
     return Scaffold(
@@ -111,6 +113,13 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
                           ? '\$${fee.toStringAsFixed(2)}'
                           : 'FC ${fee.toStringAsFixed(2)}',
                     ),
+                    if (tax > 0)
+                      _DetailRow(
+                        label: 'Tax',
+                        value: currency == 'USD'
+                            ? '\$${tax.toStringAsFixed(2)}'
+                            : 'FC ${tax.toStringAsFixed(2)}',
+                      ),
                     const Divider(height: 32),
                     _DetailRow(
                       label: 'Total',

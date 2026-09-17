@@ -95,6 +95,16 @@ class PaymentResultScreen extends StatelessWidget {
                 ),
               ],
               const Spacer(),
+              // Copy receipt button
+              OutlinedButton.icon(
+                onPressed: () => _copyReceipt(context, args),
+                icon: const Icon(Icons.copy, size: 20),
+                label: const Text('Copy Receipt'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 12),
               // Action buttons
               SizedBox(
                 width: double.infinity,
@@ -120,6 +130,72 @@ class PaymentResultScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _copyReceipt(BuildContext context, Map<String, dynamic> args) {
+    final success = args['success'] as bool? ?? false;
+    final paymentId = args['paymentId'] as String? ?? 'N/A';
+    final message = args['message'] as String? ?? '';
+    final payment = args['payment'] as Map<String, dynamic>?;
+    final timestamp = DateTime.now().toLocal().toString().split('.')[0];
+
+    // Build receipt text
+    final receiptLines = [
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+      '    YOLE PAYMENT RECEIPT',
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      'Status: ${success ? '✓ SUCCESS' : '✗ FAILED'}',
+      'Payment ID: $paymentId',
+      'Timestamp: $timestamp',
+      '',
+    ];
+
+    if (payment != null) {
+      final amountMinor = payment['amountMinor'];
+      final feeMinor = payment['feeMinor'];
+      final taxMinor = payment['taxMinor'];
+      final totalMinor = payment['totalMinor'];
+      final currency = payment['currency'];
+      
+      if (amountMinor != null) {
+        final amount = (int.tryParse(amountMinor.toString()) ?? 0) / 100;
+        receiptLines.add('Amount: ${currency == 'USD' ? '\$' : 'FC '}${amount.toStringAsFixed(2)}');
+      }
+      if (feeMinor != null) {
+        final fee = (int.tryParse(feeMinor.toString()) ?? 0) / 100;
+        receiptLines.add('Fee: ${currency == 'USD' ? '\$' : 'FC '}${fee.toStringAsFixed(2)}');
+      }
+      if (taxMinor != null && int.tryParse(taxMinor.toString()) != 0) {
+        final tax = (int.tryParse(taxMinor.toString()) ?? 0) / 100;
+        receiptLines.add('Tax: ${currency == 'USD' ? '\$' : 'FC '}${tax.toStringAsFixed(2)}');
+      }
+      if (totalMinor != null) {
+        final total = (int.tryParse(totalMinor.toString()) ?? 0) / 100;
+        receiptLines.add('Total: ${currency == 'USD' ? '\$' : 'FC '}${total.toStringAsFixed(2)}');
+      }
+    } else if (message.isNotEmpty) {
+      receiptLines.add(message);
+    }
+
+    receiptLines.addAll([
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+      'Thank you for using Yole!',
+      '━━━━━━━━━━━━━━━━━━━━━━━━',
+    ]);
+
+    final receipt = receiptLines.join('\n');
+
+    Clipboard.setData(ClipboardData(text: receipt));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Receipt copied to clipboard!'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
       ),
     );
   }

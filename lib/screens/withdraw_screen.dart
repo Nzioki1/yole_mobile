@@ -305,6 +305,7 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
   Widget _buildQuoteView() {
     final amountMinor = int.tryParse(_quote!['amountMinor'] ?? '0') ?? 0;
     final feeMinor = int.tryParse(_quote!['feeMinor'] ?? '0') ?? 0;
+    final taxMinor = int.tryParse(_quote!['taxMinor']?.toString() ?? '0') ?? 0;
     final totalMinor = int.tryParse(_quote!['totalMinor'] ?? '0') ?? 0;
 
     return Padding(
@@ -330,6 +331,8 @@ class _WithdrawScreenState extends ConsumerState<WithdrawScreen> {
                     _formatMinor(amountMinor, _selectedCurrency),
                   ),
                   _buildSummaryRow('Fee', _formatMinor(feeMinor, _selectedCurrency)),
+                  if (taxMinor > 0)
+                    _buildSummaryRow('Tax', _formatMinor(taxMinor, _selectedCurrency)),
                   const Divider(height: 24),
                   _buildSummaryRow(
                     'Total (from your wallet)',

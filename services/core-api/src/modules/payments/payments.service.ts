@@ -33,7 +33,10 @@ export class PaymentsService {
   async quote(input: QuoteInput) {
     // Calculate fee (simple flat fee for mock)
     const feeMinor = this.calculateFee(input.type, input.amountMinor);
-    const totalMinor = input.amountMinor + feeMinor;
+    // Calculate tax (mock 5% on fee, or 0 for inbound)
+    const isInbound = input.type === 'MNO_IN' || input.type === 'BANK_IN';
+    const taxMinor = isInbound ? 0n : BigInt(Math.floor(Number(feeMinor) * 0.05));
+    const totalMinor = input.amountMinor + feeMinor + taxMinor;
 
     // For W2W, find source and destination pockets
     let fromWalletPocketId: string | undefined;
@@ -108,10 +111,15 @@ export class PaymentsService {
       metadata: input.metadata || {},
     });
 
+    // Calculate tax for response (5% of fee for outbound, 0 for inbound)
+    const isInbound = payment.type === 'MNO_IN' || payment.type === 'BANK_IN';
+    const taxMinor = isInbound ? 0n : BigInt(Math.floor(Number(payment.feeMinor) * 0.05));
+
     return {
       paymentId: payment.id,
       amountMinor: payment.amountMinor.toString(),
       feeMinor: payment.feeMinor.toString(),
+      taxMinor: taxMinor.toString(),
       totalMinor: payment.totalMinor.toString(),
       currency: payment.currency,
       status: payment.status,

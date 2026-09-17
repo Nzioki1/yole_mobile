@@ -39,7 +39,20 @@ export class PaymentsService {
     let fromWalletPocketId: string | undefined;
     let toWalletPocketId: string | undefined;
 
-    if (input.type === 'W2W') {
+    // Handle inbound payments (MNO_IN, BANK_IN) - credit customer wallet
+    if (input.type === 'MNO_IN' || input.type === 'BANK_IN') {
+      const customerWallets = await this.walletStore.findWalletsByCustomerId(input.customerId);
+      if (customerWallets.length === 0) {
+        throw new Error('Customer has no wallet');
+      }
+      const customerPockets = await this.walletStore.findPocketsByWalletId(customerWallets[0].id);
+      const customerPocket = customerPockets.find((p) => p.currency === input.currency);
+      if (!customerPocket) {
+        throw new Error(`Customer has no ${input.currency} pocket`);
+      }
+      toWalletPocketId = customerPocket.id;
+      // Inbound payments have no fromWalletPocketId (external source)
+    } else if (input.type === 'W2W') {
       const toCustomerId = input.metadata?.toCustomerId;
       if (!toCustomerId) {
         throw new Error('W2W requires toCustomerId in metadata');
@@ -130,6 +143,96 @@ export class PaymentsService {
       let externalRef: string | undefined;
 
       switch (payment.type) {
+        case 'MNO_IN':
+          // Mock MNO inbound - instant success
+          externalRef = `MNO_IN_${Date.now()}`;
+          await this.ledgerService.postJournal({
+            idempotencyKey: `payment-${payment.id}`,
+            yoleReference: `PAY-${payment.id}`,
+            correlationId: payment.id,
+            actorType: 'customer',
+            actorId: payment.customerId,
+            currency: payment.currency,
+            postings: [
+              {
+                accountCode: 'MNO_SETTLEMENT',
+                direction: 'debit',
+                amountMinor: payment.amountMinor,
+                currency: payment.currency,
+              },
+              {
+                accountCode: 'CUST_WALLET',
+                direction: 'credit',
+                amountMinor: payment.amountMinor,
+                currency: payment.currency,
+                walletPocketId: payment.toWalletPocketId!,
+              },
+              {
+                accountCode: 'CUST_WALLET',
+                direction: 'debit',
+                amountMinor: payment.feeMinor,
+                currency: payment.currency,
+                walletPocketId: payment.toWalletPocketId!,
+              },
+              {
+                accountCode: 'FEE_REVENUE',
+                direction: 'credit',
+                amountMinor: payment.feeMinor,
+                currency: payment.currency,
+              },
+            ],
+          });
+          await this.paymentStore.update(payment.id, {
+            status: 'POSTED',
+            externalRef,
+          });
+          break;
+
+        case 'BANK_IN':
+          // Mock bank inbound - instant success
+          externalRef = `BANK_IN_${Date.now()}`;
+          await this.ledgerService.postJournal({
+            idempotencyKey: `payment-${payment.id}`,
+            yoleReference: `PAY-${payment.id}`,
+            correlationId: payment.id,
+            actorType: 'customer',
+            actorId: payment.customerId,
+            currency: payment.currency,
+            postings: [
+              {
+                accountCode: 'BANK_SETTLEMENT',
+                direction: 'debit',
+                amountMinor: payment.amountMinor,
+                currency: payment.currency,
+              },
+              {
+                accountCode: 'CUST_WALLET',
+                direction: 'credit',
+                amountMinor: payment.amountMinor,
+                currency: payment.currency,
+                walletPocketId: payment.toWalletPocketId!,
+              },
+              {
+                accountCode: 'CUST_WALLET',
+                direction: 'debit',
+                amountMinor: payment.feeMinor,
+                currency: payment.currency,
+                walletPocketId: payment.toWalletPocketId!,
+              },
+              {
+                accountCode: 'FEE_REVENUE',
+                direction: 'credit',
+                amountMinor: payment.feeMinor,
+                currency: payment.currency,
+              },
+            ],
+          });
+          await this.paymentStore.update(payment.id, {
+            status: 'POSTED',
+            externalRef,
+          });
+          break;
+
         case 'W2W':
           // Post journal for W2W
           const w2wResult = await this.ledgerService.postJournal({

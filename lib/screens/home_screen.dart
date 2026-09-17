@@ -151,7 +151,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         child: _WalletCard(wallet: wallet),
                       )),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+
+                // Add money button
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).pushNamed('/fund'),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Add Money'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
 
                 // Quick actions grid
                 Text(

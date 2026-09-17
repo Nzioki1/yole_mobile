@@ -29,6 +29,7 @@ import 'screens/payment_rail_picker_screen.dart';
 import 'screens/payment_form_screen.dart';
 import 'screens/payment_quote_screen.dart';
 import 'screens/payment_result_screen.dart';
+import 'screens/fund_wallet_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -133,6 +134,10 @@ class AppRouter {
 
       case '/fx':
         return MaterialPageRoute(builder: (_) => const FxScreen());
+
+      // Fund wallet (Add money)
+      case '/fund':
+        return MaterialPageRoute(builder: (_) => const FundWalletScreen());
 
       // Multi-rail payment flow
       case '/payment/picker':

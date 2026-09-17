@@ -1,10 +1,22 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/lib/auth';
+import { DEMO_SEED_ENABLED, mintDemoStaffToken } from '@/lib/demo-seed';
+import { OFFLINE_DEMO } from '@/lib/offline/flags';
+import { getOfflineStore } from '@/lib/offline/store';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+
+const LOGIN_BGS = [
+  '/assets/img/login-bg/login-bg-17.jpg',
+  '/assets/img/login-bg/login-bg-16.jpg',
+  '/assets/img/login-bg/login-bg-15.jpg',
+  '/assets/img/login-bg/login-bg-14.jpg',
+  '/assets/img/login-bg/login-bg-13.jpg',
+  '/assets/img/login-bg/login-bg-12.jpg',
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +24,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [activeBg, setActiveBg] = useState(LOGIN_BGS[0]);
+
+  useEffect(() => {
+    document.body.classList.add('bg-white');
+    return () => {
+      document.body.classList.remove('bg-white');
+    };
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -19,16 +39,39 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      if (OFFLINE_DEMO) {
+        const staff = getOfflineStore().authenticateStaff(email, password);
+        if (!staff) {
+          throw new Error('Invalid email or password');
+        }
+        authService.setToken(
+          mintDemoStaffToken({ id: staff.id, email: staff.email, role: staff.role }),
+        );
+        router.push('/dashboard');
+        return;
+      }
+
+      if (DEMO_SEED_ENABLED) {
+        const staff = getOfflineStore().authenticateStaff(email, password);
+        if (!staff) {
+          throw new Error('Invalid email or password');
+        }
+        authService.setToken(
+          mintDemoStaffToken({ id: staff.id, email: staff.email, role: staff.role }),
+        );
+        router.push('/dashboard');
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/v1/admin/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        throw new Error('Invalid credentials');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Invalid email or password');
       }
 
       const data = await response.json();
@@ -41,231 +84,185 @@ export default function LoginPage() {
     }
   };
 
-  const quickLogin = (role: string) => {
-    const credentials: Record<string, { email: string; password: string }> = {
+  const quickLogin = (role: 'admin' | 'ops' | 'support' | 'finance') => {
+    const credentials = {
       admin: { email: 'admin@yole.com', password: 'Password1!' },
       ops: { email: 'ops@yole.com', password: 'Password1!' },
       support: { email: 'support@yole.com', password: 'Password1!' },
       finance: { email: 'finance@yole.com', password: 'Password1!' },
     };
-    
     const cred = credentials[role];
-    if (cred) {
-      setEmail(cred.email);
-      setPassword(cred.password);
-    }
+    setEmail(cred.email);
+    setPassword(cred.password);
+    setError('');
   };
 
+  const showQuickLogin = OFFLINE_DEMO || DEMO_SEED_ENABLED;
+
   return (
-    <div className="login login-v2 fw-bold" style={{ minHeight: '100vh', display: 'flex' }}>
+    <>
+      <div className="login login-v2 fw-bold">
+        <div className="login-cover">
+          <div
+            className="login-cover-img"
+            style={{ backgroundImage: `url(${activeBg})` }}
+          ></div>
+          <div className="login-cover-bg"></div>
+        </div>
+
+        <div className="login-container">
+          <div className="login-header">
+            <div className="brand">
+              <div className="d-flex align-items-center">
+                <span className="logo"></span>
+                <b className="me-1">YOLE</b> Admin
+              </div>
+              <small>Poste Finance neo-bank operations console</small>
+            </div>
+            <div className="icon">
+              <i className="fa fa-lock"></i>
+            </div>
+          </div>
+
+          <div className="login-content">
+            <form onSubmit={handleSubmit}>
+              {error && (
+                <div className="alert alert-danger py-2 mb-3" role="alert">
+                  {error}
+                </div>
+              )}
+
+              {OFFLINE_DEMO && (
+                <div className="alert alert-info py-2 mb-3" role="status">
+                  Offline demo — no live API
+                </div>
+              )}
+
+              <div className="form-floating mb-20px">
+                <input
+                  type="email"
+                  className="form-control fs-13px h-45px"
+                  id="emailAddress"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="username"
+                  required
+                />
+                <label htmlFor="emailAddress" className="d-flex align-items-center fs-13px">
+                  Email Address
+                </label>
+              </div>
+
+              <div className="form-floating mb-20px">
+                <input
+                  type="password"
+                  className="form-control fs-13px h-45px"
+                  id="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                <label htmlFor="password" className="d-flex align-items-center fs-13px">
+                  Password
+                </label>
+              </div>
+
+              <div className="mb-20px">
+                <button
+                  type="submit"
+                  className="btn btn-theme d-block w-100 h-45px btn-lg"
+                  disabled={loading}
+                >
+                  {loading ? 'Signing in...' : 'Sign me in'}
+                </button>
+              </div>
+
+              {showQuickLogin && (
+                <div className="login-quick">
+                  <div className="mb-2 fw-semibold text-white">Quick demo login</div>
+                  <div className="d-flex flex-wrap gap-2">
+                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('admin')}>
+                      Admin
+                    </button>
+                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('ops')}>
+                      Ops
+                    </button>
+                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('support')}>
+                      Support
+                    </button>
+                    <button type="button" className="btn btn-sm btn-default" onClick={() => quickLogin('finance')}>
+                      Finance
+                    </button>
+                  </div>
+                  <div className="mt-2 small text-white-50">
+                    Password for all: <strong className="text-white">Password1!</strong>
+                  </div>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-bg-list clearfix">
+        {LOGIN_BGS.map((bg) => (
+          <div
+            key={bg}
+            className={`login-bg-list-item${activeBg === bg ? ' active' : ''}`}
+          >
+            <a
+              href="#/"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveBg(bg);
+              }}
+              style={{ backgroundImage: `url(${bg})` }}
+              className="login-bg-list-link"
+            ></a>
+          </div>
+        ))}
+      </div>
+
       <style jsx global>{`
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        /* Ensure Color Admin login-v2 form stays readable */
+        .login.login-v2 .login-content .form-control {
+          background: #fff !important;
+          color: #2d353c !important;
+          border: 1px solid rgba(255, 255, 255, 0.35) !important;
         }
-        .login-v2 {
-          display: flex;
-          align-items: stretch;
-          width: 100%;
+        .login.login-v2 .login-content .form-floating > label {
+          color: #5f6b76 !important;
         }
-        .login-cover {
-          flex: 1;
-          position: relative;
-          background: linear-gradient(135deg, #00acac 0%, #348fe2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .login.login-v2 .login-content .form-control:focus {
+          border-color: #00acac !important;
+          box-shadow: 0 0 0 0.2rem rgba(0, 172, 172, 0.25) !important;
         }
-        .login-cover-content {
-          text-align: center;
-          color: white;
-          padding: 3rem;
+        .login.login-v2 .brand,
+        .login.login-v2 .brand small,
+        .login.login-v2 .login-header .icon {
+          color: #fff !important;
         }
-        .login-container {
-          width: 500px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          padding: 3rem;
-          background: white;
+        .login.login-v2 .login-quick {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .login-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-        .brand {
-          font-size: 2rem;
-          font-weight: bold;
-          color: #00acac;
-          margin-bottom: 0.5rem;
-        }
-        .brand small {
-          display: block;
-          font-size: 0.875rem;
-          color: #6c757d;
-          font-weight: normal;
-          margin-top: 0.5rem;
-        }
-        .form-floating {
-          position: relative;
-          margin-bottom: 1.25rem;
-        }
-        .form-control {
-          width: 100%;
-          padding: 1rem 0.75rem;
-          font-size: 0.875rem;
-          border: 1px solid #dee2e6;
-          border-radius: 0.25rem;
-          transition: border-color 0.15s ease-in-out;
-        }
-        .form-control:focus {
-          outline: none;
-          border-color: #00acac;
-          box-shadow: 0 0 0 0.2rem rgba(0, 172, 172, 0.25);
-        }
-        .form-floating label {
-          position: absolute;
-          top: 0;
-          left: 0.75rem;
-          padding: 1rem 0;
-          pointer-events: none;
-          color: #6c757d;
-          font-size: 0.875rem;
-          transition: all 0.1s ease;
-        }
-        .btn-theme {
-          background: #00acac;
-          color: white;
-          border: none;
-          padding: 0.75rem;
-          font-size: 1rem;
+        .login.login-v2 .alert-danger {
+          background: #ffecec;
+          border: 1px solid #ffb3b0;
+          color: #9b1c1c;
           font-weight: 600;
-          border-radius: 0.25rem;
-          cursor: pointer;
-          transition: background 0.15s ease-in-out;
         }
-        .btn-theme:hover {
-          background: #009999;
-        }
-        .btn-theme:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-        .alert {
-          padding: 0.75rem 1rem;
-          margin-bottom: 1rem;
-          border-radius: 0.25rem;
-          background: #f8d7da;
-          color: #721c24;
-          border: 1px solid #f5c6cb;
-        }
-        .quick-login {
-          margin-top: 1.5rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid #dee2e6;
-        }
-        .quick-login-btn {
-          display: inline-block;
-          padding: 0.5rem 1rem;
-          margin: 0.25rem;
-          font-size: 0.875rem;
-          border: 1px solid #00acac;
-          color: #00acac;
-          border-radius: 0.25rem;
-          cursor: pointer;
-          background: white;
-          transition: all 0.15s;
-        }
-        .quick-login-btn:hover {
-          background: #00acac;
-          color: white;
+        .login.login-v2 .alert-info {
+          background: rgba(0, 172, 172, 0.15);
+          border: 1px solid rgba(0, 172, 172, 0.45);
+          color: #fff;
+          font-weight: 600;
         }
       `}</style>
-
-      <div className="login-cover">
-        <div className="login-cover-content">
-          <h1 style={{ fontSize: '3rem', marginBottom: '1rem' }}>YOLE</h1>
-          <p style={{ fontSize: '1.25rem', opacity: 0.9 }}>
-            Staff Admin Portal
-          </p>
-          <p style={{ marginTop: '2rem', opacity: 0.8 }}>
-            Secure access for authorized personnel
-          </p>
-        </div>
-      </div>
-
-      <div className="login-container">
-        <div className="login-header">
-          <div className="brand">
-            YOLE <span style={{ fontWeight: 'normal' }}>Admin</span>
-            <small>Staff Portal — Color Admin Teal</small>
-          </div>
-        </div>
-
-        <div className="login-content">
-          {error && (
-            <div className="alert">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-floating">
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <label>Email Address</label>
-            </div>
-
-            <div className="form-floating">
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <label>Password</label>
-            </div>
-
-            <div style={{ marginBottom: '1.25rem' }}>
-              <button
-                type="submit"
-                className="btn-theme"
-                style={{ width: '100%', height: '45px' }}
-                disabled={loading}
-              >
-                {loading ? 'Signing in...' : 'Sign me in'}
-              </button>
-            </div>
-          </form>
-
-          <div className="quick-login">
-            <p style={{ fontSize: '0.875rem', color: '#6c757d', marginBottom: '0.75rem' }}>
-              Quick login (dev):
-            </p>
-            <button onClick={() => quickLogin('admin')} className="quick-login-btn">
-              Admin
-            </button>
-            <button onClick={() => quickLogin('ops')} className="quick-login-btn">
-              Ops
-            </button>
-            <button onClick={() => quickLogin('support')} className="quick-login-btn">
-              Support
-            </button>
-            <button onClick={() => quickLogin('finance')} className="quick-login-btn">
-              Finance
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

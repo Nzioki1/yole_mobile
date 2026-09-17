@@ -6,11 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:offline": "vitest run lib/offline/store.test.ts"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.1",
+    "bootstrap-icons": "^1.13.1",
+    "demo_universe": "workspace:*",
     "jwt-decode": "^4.0.0",
-    "next": "14.0.0",
+    "next": "14.2.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-perfect-scrollbar": "^1.5.8",
@@ -20,11 +25,12 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
+    "autoprefixer": "^10.6.1",
     "eslint": "^8",
-    "eslint-config-next": "14.0.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5",
+    "vitest": "^2.1.0"
   }
 }

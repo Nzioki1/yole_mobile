@@ -26,7 +26,8 @@ export default function DashboardPage() {
     { title: 'Virtual Cards', link: '/dashboard/cards', icon: '💳' },
     { title: 'Fees & Limits', link: '/dashboard/config', icon: '⚙️' },
     { title: 'Payroll', link: '/dashboard/payroll', icon: '💼' },
-    { title: 'Recon & Cases', link: '/dashboard/recon', icon: '📊' },
+    { title: 'Reconciliation', link: '/dashboard/recon', icon: '📊' },
+    { title: 'Cases & Support', link: '/dashboard/cases', icon: '🎫' },
   ];
 
   return (

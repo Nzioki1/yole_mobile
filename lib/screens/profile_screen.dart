@@ -1918,65 +1918,16 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
   }
 
   Future<String?> _showPasswordDialog() async {
-    final controller = TextEditingController();
-    try {
-      return await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) {
-          return AlertDialog(
-            backgroundColor: widget.theme.cardTheme.color,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Enter login password',
-              style: widget.theme.textTheme.titleLarge,
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Use your account password (e.g. Password1!), not the transaction PIN (123456).',
-                    style: widget.theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: controller,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Login password',
-                      hintText: 'Password1!',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    autofocus: true,
-                    onSubmitted: (value) =>
-                        Navigator.pop(dialogContext, value),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () =>
-                    Navigator.pop(dialogContext, controller.text),
-                child: const Text('Confirm'),
-              ),
-            ],
-          );
-        },
-      );
-    } finally {
-      controller.dispose();
-    }
+    // Dialog owns its TextEditingController so it is disposed with the
+    // route — disposing in a finally after showDialog returns races the
+    // exit animation and red-screens (controller used after dispose).
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return _BiometricPasswordDialog(theme: widget.theme);
+      },
+    );
   }
 
   @override
@@ -2014,6 +1965,83 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
               ),
             )
           : null,
+    );
+  }
+}
+
+/// Owns [TextEditingController] for the biometric-enable password prompt.
+class _BiometricPasswordDialog extends StatefulWidget {
+  final ThemeData theme;
+
+  const _BiometricPasswordDialog({required this.theme});
+
+  @override
+  State<_BiometricPasswordDialog> createState() =>
+      _BiometricPasswordDialogState();
+}
+
+class _BiometricPasswordDialogState extends State<_BiometricPasswordDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: widget.theme.cardTheme.color,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Text(
+        'Enter login password',
+        style: widget.theme.textTheme.titleLarge,
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Use your account password (e.g. Password1!), not the transaction PIN (123456).',
+              style: widget.theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Login password',
+                hintText: 'Password1!',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              autofocus: true,
+              onSubmitted: (value) => Navigator.pop(context, value),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Confirm'),
+        ),
+      ],
     );
   }
 }

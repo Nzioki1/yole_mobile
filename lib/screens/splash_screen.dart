@@ -388,11 +388,11 @@ class _MinHeightBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, c) => ConstrainedBox(
-        constraints:
-            BoxConstraints(minHeight: minHeight, maxHeight: c.maxHeight),
-      ),
+    // Only minHeight — never couple to parent maxHeight (can be 0 during
+    // warm-up / overlay rebuilds and creates non-normalized constraints).
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: const SizedBox.expand(),
     );
   }
 }

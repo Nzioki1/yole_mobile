@@ -1,12 +1,14 @@
-# User Journey - YOLE Money Transfer App
+# User Journey - Poste Finance Money Transfer App
 
-This document maps the complete user experience flow for the YOLE money transfer application, from initial app launch through authenticated user flows. Each step mirrors the exact UX design and interactions.
+> **Poste Finance offline DEM-01…DEM-12:** see [`docs/demo/DEM-SCRIPT.md`](docs/demo/DEM-SCRIPT.md) for offline flags, personas, click paths, honesty banners, Reset demo, and the acceptance checklist. This file remains the legacy Pesapal UX journey and is not rewritten for the offline universe.
+
+This document maps the complete user experience flow for the Poste Finance money transfer application, from initial app launch through authenticated user flows. Each step mirrors the exact UX design and interactions.
 
 ---
 
 ## Step 1: Splash Screen (Default Entry Point)
 
-**User Goal:** Learn about YOLE and decide to create account or sign in  
+**User Goal:** Learn about Poste Finance and decide to create account or sign in  
 **App Icon Tap:** This is the first screen displayed when users tap the app icon
 
 ### Actions Available:
@@ -471,7 +473,7 @@ This document maps the complete user experience flow for the YOLE money transfer
 
 ### UI Notes:
 - Remove FX rate and arrival estimate entirely
-- Add subtle caption: "Fees provided by Yole Fees API" below rows
+- Add subtle caption: "Fees provided by Poste Finance Fees API" below rows
 - Three rows only: Amount, Fees, Total charged
 
 ### Analytics Events:
@@ -553,7 +555,7 @@ This document maps the complete user experience flow for the YOLE money transfer
 
 ### Actions Available:
 - **Status display** - Success/Pending/Failed based on payment result
-- **Transaction details** - Amount, Fees, Total charged, Recipient, YOLE Ref, PSP Txn ID
+- **Transaction details** - Amount, Fees, Total charged, Recipient, Poste Finance Ref, PSP Txn ID
 - **"Done" button** - Return to Home screen
 - **"Try again" button** - For failed transfers, return to Enter Details
 - **"Change method" button** - For failed transfers, return to Choose Payment Method
@@ -568,7 +570,7 @@ This document maps the complete user experience flow for the YOLE money transfer
 
 ### Success State:
 - Title: "Transfer scheduled"
-- Details shown: Amount, Fees, Total charged, Recipient, YOLE Ref, PSP Txn ID
+- Details shown: Amount, Fees, Total charged, Recipient, Poste Finance Ref, PSP Txn ID
 - No FX rate or ETA displayed
 
 ### Pending State:
@@ -739,4 +741,4 @@ Available throughout the app:
 
 ---
 
-This user journey document captures the complete UX flow with exact screen names, button labels, placeholders, and error messages as implemented in the YOLE money transfer application. Each step maintains the precise interaction patterns and visual feedback designed in the Figma prototype.
+This user journey document captures the complete UX flow with exact screen names, button labels, placeholders, and error messages as implemented in the Poste Finance money transfer application. Each step maintains the precise interaction patterns and visual feedback designed in the Figma prototype.

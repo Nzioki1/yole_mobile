@@ -23,23 +23,23 @@ class FavoritesController extends StateNotifier<List<FavoriteContact>> {
       : super(const [
           FavoriteContact(
             id: '1',
-            label: 'Marie',
-            initials: 'MK',
-            phones: ['+243123456789'],
+            label: 'Jean-Paul Kabila',
+            initials: 'JP',
+            phones: ['+243990123456'],
             countryCode: 'CD',
           ),
           FavoriteContact(
             id: '2',
-            label: 'Joseph',
-            initials: 'JM',
-            phones: ['+243987654321'],
+            label: 'Marie Tshala',
+            initials: 'MT',
+            phones: ['+243991234567'],
             countryCode: 'CD',
           ),
           FavoriteContact(
             id: '3',
-            label: 'Grace',
-            initials: 'GT',
-            phones: ['+243555666777'],
+            label: 'Amina Payroll',
+            initials: 'AP',
+            phones: ['+243990000002'],
             countryCode: 'CD',
           ),
         ]);

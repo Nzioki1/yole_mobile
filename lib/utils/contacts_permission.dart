@@ -21,8 +21,8 @@ Future<bool> ensureContactsPermission(BuildContext context) async {
 
     final isIOS = Platform.isIOS;
     final msg = isIOS
-        ? 'Contacts permission is turned off. Go to Settings > Yole Mobile > Contacts to enable it.'
-        : 'Contacts permission is turned off. Go to Settings > Apps > Yole Mobile > Permissions > Contacts.';
+        ? 'Contacts permission is turned off. Go to Settings > Poste Finance > Contacts to enable it.'
+        : 'Contacts permission is turned off. Go to Settings > Apps > Poste Finance > Permissions > Contacts.';
 
     showModalBottomSheet(
       context: context,

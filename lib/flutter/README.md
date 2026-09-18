@@ -1,4 +1,4 @@
-# YOLE Flutter App - Figma to Flutter Export
+# Poste Finance Flutter App - Figma to Flutter Export
 
 This directory contains production-ready Flutter .dart files converted from the original Figma design, maintaining pixel-perfect fidelity to the design specifications.
 
@@ -15,7 +15,7 @@ This directory contains production-ready Flutter .dart files converted from the 
 │   └── home_screen.dart        # Main dashboard
 ├── widgets/                    # Reusable UI components
 │   ├── gradient_button.dart    # Primary CTA buttons
-│   ├── yole_logo.dart         # YOLE brand logo component
+│   ├── yole_logo.dart         # Poste Finance brand logo component
 │   ├── sparkle_animation.dart  # Animated sparkles for dark theme
 │   ├── bottom_navigation.dart  # Tab navigation component
 │   └── status_chip.dart       # Transaction status indicators
@@ -87,7 +87,7 @@ WelcomeScreen(
 - **Purpose**: First screen when users tap app icon
 - **Features**: 
   - Hero image with gradient overlay
-  - YOLE logo and branding
+  - Poste Finance logo and branding
   - Primary "Get Started" CTA
   - Secondary "Sign In" link
   - Smooth entrance animations
@@ -96,7 +96,7 @@ WelcomeScreen(
 ### ✅ Splash Screen (`splash_screen.dart`)
 - **Purpose**: App loading/branding screen
 - **Features**:
-  - Large YOLE logo
+  - Large Poste Finance logo
   - Tagline text
   - Primary and secondary CTAs
   - Language selector
@@ -132,7 +132,7 @@ GradientButton(
 )
 ```
 
-### ✅ YOLE Logo (`yole_logo.dart`)
+### ✅ Poste Finance Logo (`yole_logo.dart`)
 ```dart
 YoleLogo(
   height: 64,

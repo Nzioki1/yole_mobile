@@ -1,0 +1,268 @@
+# Poste Finance Flutter + NestJS Core API Integration
+
+> **📚 For complete demo walkthroughs and feature documentation, see [README_APPS.md](./README_APPS.md)**
+
+This document covers Flutter-specific technical setup and API integration details.
+
+## Auth Flow - Mock Core-API (Updated)
+
+**The customer Flutter app now authenticates against the mock NestJS core-api instead of the old Pesapal backend.**
+
+### Architecture Changes
+
+- **Old:** `AuthService` → `YoleApiService` → `https://yolepesa.masterpiecefusion.com/api`
+- **New:** `CoreAuthService` → `CoreApiService` → `http://localhost:3000` (mock NestJS API)
+
+The new `CoreAuthService` implements the same `AuthServiceInterface` but calls the local mock backend for all auth operations.
+
+### Auth Endpoints
+
+- **Register:** `POST /v1/auth/register` - Returns `{customerId, accessToken, customer}`
+- **Login:** `POST /v1/auth/login` - Returns `{customerId, accessToken, customer}`
+- **JWT Storage:** Tokens stored via `flutter_secure_storage` and attached to all requests as `Authorization: Bearer <token>`
+
+### Verify Backend is Working
+
+```bash
+# Start backend
+cd services/core-api && pnpm dev
+
+# Test register
+curl -X POST http://localhost:3000/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@yole.com","password":"demo123","firstName":"Demo","lastName":"User"}'
+
+# Test login
+curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@yole.com","password":"demo123"}'
+```
+
+Both should return JSON with `customerId`, `accessToken`, and a `customer` object.
+
+## Prerequisites
+
+- Node.js 18+ and pnpm
+- Flutter 3.3+
+- Android Studio / Xcode for emulators
+
+## Running the Stack
+
+### 1. Start NestJS Core API (Backend)
+
+```bash
+# From repository root
+cd services/core-api
+pnpm install
+pnpm dev
+```
+
+API will run on `http://localhost:3000`
+
+### 2. Start Flutter App
+
+```bash
+# From repository root
+flutter pub get
+flutter run
+```
+
+#### API Base URL Configuration
+
+**Android Emulator (default):**
+```bash
+flutter run
+# Uses http://10.0.2.2:3000 automatically
+```
+
+**iOS Simulator:**
+```bash
+flutter run --dart-define=API_BASE_URL=http://localhost:3000
+```
+
+**Physical Device:**
+```bash
+# Find your computer's IP address first
+flutter run --dart-define=API_BASE_URL=http://192.168.1.X:3000
+```
+
+## Neo-Bank Home Hub
+
+The customer app home screen now features a modern neo-bank hub with:
+
+### Home After Login
+1. **Greeting & Profile:** Dynamic time-based greeting with real user name from auth storage
+2. **Wallet Cards:** CDF and USD balance cards fetched from `GET /v1/wallets/me` (pull-to-refresh enabled)
+3. **Quick Actions Grid:** 6-button grid for:
+   - **Pay / Send:** Multi-rail payment picker → choose rail → enter details → quote → confirm
+   - **Bills:** Direct bill payment form (BILL rail type)
+   - **Airtime:** Direct airtime purchase form (AIRTIME rail type)
+   - **KYC:** Existing KYC flow screens
+   - **Cards:** Virtual cards screen (`POST /v1/cards`, `GET /v1/cards`)
+   - **Credit:** Salary advance & loans (`GET /v1/credit/eligibility`, `POST /v1/credit/loans`)
+   - **FX:** Currency exchange (`GET /v1/fx/rates`, `POST /v1/fx/convert`)
+4. **Recent Activity:** Last 3 payments from `GET /v1/payments` (empty state if none)
+
+### Multi-Rail Payment Flow
+**Rails Supported:** W2W (wallet-to-wallet), MNO (mobile money out), Bank transfer, Bills, Airtime
+
+**Flow:**
+1. **Pick Rail:** User selects payment method from rail picker
+2. **Enter Details:** Form fields adapt to selected rail:
+   - W2W: recipient customer ID
+   - MNO/Airtime: phone number
+   - Bank: account number + bank code
+   - Bill: biller code + account number
+3. **Quote:** `POST /v1/payments/quote` returns amount, fee, total
+4. **Review:** User reviews payment details and total amount
+5. **Confirm:** `POST /v1/payments/confirm` with Idempotency-Key
+6. **Result:** Success/failure screen with payment ID or error
+
+All payments use JWT auth via CoreApiService against mock core-api (localhost:3000).
+
+### Navigation
+Bottom tabs remain unchanged: **Home | Activity | Favorites | Profile**
+
+All quick action screens reuse existing components and are wired to the mock core-api.
+
+## Features Wired to Core API
+
+### Authentication
+- **Register:** `POST /v1/auth/register` with email, password, firstName, lastName
+- **Login:** `POST /v1/auth/login` with email, password
+- **JWT Storage:** Secure storage with automatic Bearer token inclusion
+- **OTP:** `POST /v1/auth/otp/request` and `/verify` (if screens exist)
+
+### Wallets
+- **My Wallets:** `GET /v1/wallets/me` shows CDF and USD pocket balances
+- Home screen displays available balance from core-api
+
+### Payments
+- **Quote:** `POST /v1/payments/quote` with type (W2W, MNO_OUT, BILL, etc.)
+- **Confirm:** `POST /v1/payments/confirm` with `Idempotency-Key` UUID header
+- **List:** `GET /v1/payments` shows payment history
+- W2W (wallet-to-wallet) payment flow functional
+
+### KYC
+- **Submit:** `POST /v1/kyc/submissions` multipart (if UI supports)
+
+### New Features (Demo Screens)
+
+#### Credit & Loans
+- **Check Eligibility:** `GET /v1/credit/eligibility/:type`
+- **Request Loan:** `POST /v1/credit/loans` - instant wallet credit
+- Screen: `CreditScreen`
+
+#### Virtual Cards
+- **Issue Card:** `POST /v1/cards` linked to wallet pocket
+- **List Cards:** `GET /v1/cards` with status and limits
+- Screen: `CardsScreen`
+
+#### Currency Exchange (FX)
+- **Get Rates:** `GET /v1/fx/rates` - CDF/USD exchange rates
+- **Convert:** `POST /v1/fx/convert` - execute FX via ledger
+- Screen: `FxScreen`
+
+## Testing
+
+### Backend Tests (No Database Required)
+```bash
+cd services/core-api
+pnpm test        # Unit tests (14 pass)
+pnpm test:e2e    # E2E tests (9 pass)
+```
+
+All tests use in-memory stores - no Docker/Postgres needed.
+
+### Flutter Tests
+```bash
+flutter test
+# Unit tests for DTOs and API client mocks
+```
+
+## API Architecture
+
+- **In-Memory Stores:** Customer, Wallet, Ledger, Payment, KYC, Agent
+- **No Database:** All data stored in memory for Phase 1 mock
+- **Double-Entry Ledger:** All money movements via LedgerService
+- **Idempotency:** Payment confirmations use UUID-based idempotency keys
+
+## Troubleshooting
+
+**"Connection refused" on Android:**
+- Ensure API is running on `localhost:3000`
+- Android emulator uses `10.0.2.2` to reach host machine
+
+**"Connection refused" on iOS:**
+- Use `--dart-define=API_BASE_URL=http://localhost:3000`
+
+**Token expired:**
+- Re-login to get fresh JWT token
+- Tokens stored securely in flutter_secure_storage
+
+## Offline Poste Finance demo (Android)
+
+Run without core-api:
+
+```bash
+flutter run -d <android-device-id> --dart-define=OFFLINE_DEMO=true
+```
+
+Demo login (seeded customer `cust_kasee`):
+
+- Email: `jp.kabila@gmail.com`
+- Password: `Password1!`
+
+Wallets: CDF + USD with non-zero balances. History and pay flows use in-memory session state; restart resets to seed.
+
+### Offline demo verification checklist
+
+With `--dart-define=OFFLINE_DEMO=true` and core-api **stopped**:
+
+1. [ ] App title / splash / login show Poste Finance
+2. [ ] Login as `jp.kabila@gmail.com` / `Password1!` (transaction PIN `123456`)
+3. [ ] Home shows CDF + USD balances (not empty)
+4. [ ] Home recent / History shows seeded payments
+5. [ ] Pay/Send completes and updates balance + history this session
+6. [ ] Profile shows seeded customer
+7. [ ] Airplane mode does not break the above
+8. [ ] `apps/admin_web` unchanged in the PR diff
+
+## Biometric Testing (Pixel 8)
+
+### Prerequisites
+
+- Pixel 8 device with fingerprint enrolled (Settings > Security > Fingerprint)
+- Offline demo mode: `flutter run -d <device-id> --dart-define=OFFLINE_DEMO=true`
+
+### Verification Checklist
+
+With biometric enrolled and app running on Pixel 8:
+
+1. [ ] **Profile toggle appears**: Open Profile > Settings > Biometric Login toggle is visible
+2. [ ] **Enable flow**: Toggle ON prompts for fingerprint, then asks for password
+3. [ ] **Enable success**: After entering password, toggle stays ON and shows "Biometric login enabled" snackbar
+4. [ ] **Cold start unlock**: Kill app, restart — after splash logo, fingerprint prompt appears
+5. [ ] **Unlock success**: Authenticate with fingerprint → app navigates to Home screen (skips Login screen)
+6. [ ] **Transaction confirm**: Navigate to Pay/Send, initiate transaction, tap "Use Biometric" in PIN confirm sheet
+7. [ ] **Transaction success**: Authenticate with fingerprint → transaction confirms without typing PIN
+8. [ ] **Disable flow**: Profile > toggle OFF → biometric data cleared, no prompt needed
+9. [ ] **Logout clears data**: Log out → log back in → biometric toggle is OFF (data cleared)
+10. [ ] **No enrollment fallback**: Disable: Settings > remove all fingerprints → Profile > toggle is disabled with "No biometrics enrolled" subtitle
+11. [ ] **Cancel unlock**: Cold start → cancel fingerprint prompt → stay on splash screen (Get Started / Login buttons available)
+12. [ ] **Failed unlock**: Cold start → fail fingerprint (wrong finger 3x) → stay on splash screen
+
+### Offline Demo Credentials
+
+- Email: `kasee.demo@yole.com`
+- Password: `Password1!`
+- Transaction PIN: `123456` (auto-used with biometric)
+
+## Next Steps
+
+When ready for production:
+1. Swap in-memory stores for Prisma + PostgreSQL
+2. Add Redis for caching
+3. Configure proper CORS for Flutter web
+4. Add refresh token flow
+5. Implement proper error handling and retry logic

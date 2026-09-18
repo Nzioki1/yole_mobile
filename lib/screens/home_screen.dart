@@ -1,19 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../router_types.dart';
-import '../providers/favorites_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
+import '../services/core_api_service.dart';
 
-class HomeScreen extends ConsumerWidget {
+/// Neo-bank home hub with wallet cards and quick actions
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
-  /// Get time-based greeting
-  String _getTimeBasedGreeting(BuildContext context) {
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _api = CoreApiService();
+  bool _loadingWallets = false;
+  List<dynamic> _wallets = [];
+  List<dynamic> _recentPayments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _api.init();
+    _loadWallets();
+    _loadRecentPayments();
+  }
+
+  Future<void> _loadWallets() async {
+    setState(() => _loadingWallets = true);
+    try {
+      final response = await _api.getMyWallets();
+      final walletsList = response['wallets'] as List<dynamic>? ?? [];
+      
+      // Flatten pockets into per-currency display format
+      final displayWallets = <Map<String, dynamic>>[];
+      for (final wallet in walletsList) {
+        final walletId = wallet['id'] as String?;
+        final pockets = wallet['pockets'] as List<dynamic>? ?? [];
+        
+      for (final pocket in pockets) {
+        displayWallets.add({
+          'walletId': walletId,
+          'pocketId': pocket['id'],
+          'currency': pocket['currency'],
+          'availableMinor': pocket['availableMinor'],
+          'ledgerMinor': pocket['ledgerMinor'],
+          'blockedMinor': pocket['blockedMinor'],
+          'pendingOutMinor': pocket['pendingOutMinor'],
+          'pendingInMinor': pocket['pendingInMinor'],
+        });
+      }
+      }
+      
+      setState(() => _wallets = displayWallets);
+    } catch (e) {
+      debugPrint('Error loading wallets: $e');
+    } finally {
+      setState(() => _loadingWallets = false);
+    }
+  }
+
+  Future<void> _loadRecentPayments() async {
+    try {
+      final payments = await _api.listPayments();
+      setState(() => _recentPayments = payments.take(3).toList());
+    } catch (e) {
+      debugPrint('Error loading recent payments: $e');
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    await Future.wait([
+      _loadWallets(),
+      _loadRecentPayments(),
+    ]);
+  }
+
+  String _getTimeBasedGreeting() {
     final hour = DateTime.now().hour;
-    
-    // Get user's first name, default to "John" if not available
-    final firstName = 'John'; // TODO: Get from authProvider user object
+    final authState = ref.watch(authProvider);
+    final firstName = authState.user?.name ?? 'Guest';
     
     if (hour >= 5 && hour < 12) {
       return 'Good morning, $firstName 👋';
@@ -27,129 +94,161 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor:
-          theme.scaffoldBackgroundColor, // THEME: Dynamic background
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, c) => SingleChildScrollView(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: c.maxHeight),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _getTimeBasedGreeting(context),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: theme
-                                .colorScheme.onSurface, // THEME: Dynamic text
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => _showProfileOptions(context),
-                        child: const Hero(
-                          tag: 'profile-avatar',
-                          child: _Avatar(initials: 'JD'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Stats row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _StatCard(
-                          title: 'Transactions This Week',
-                          value: '0',
-                          icon: Icons.trending_up_rounded,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: _StatCard(
-                          title: 'Total Sent This Week',
-                          value: r'$0',
-                          icon: Icons.send_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Primary CTA
-                  _PrimaryCTA(label: l10n.sendMoney),
-                  const SizedBox(height: 24),
-
-                  // Favorites preview
-                  _FavoritesPreview(),
-                  const SizedBox(height: 24),
-
-                  // Recent transactions header
-                  Row(
-                    children: [
-                      Text(
-                        l10n.recentTransactions,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme
-                              .colorScheme.onSurface, // THEME: Dynamic text
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header with greeting, bell, and profile
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _getTimeBasedGreeting(),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 22,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const Spacer(),
+                    ),
+                    const SizedBox(width: 8),
+                    // Notifications bell
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pushNamed(RouteNames.notifications),
+                      icon: Icon(
+                        Icons.notifications_outlined,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _showProfileOptions(context),
+                      child: Hero(
+                        tag: 'profile-avatar',
+                        child: _Avatar(
+                          initials: _getInitials(authState.user?.name, authState.user?.surname),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Wallet cards
+                if (_loadingWallets)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else if (_wallets.isEmpty)
+                  _EmptyWalletCard()
+                else
+                  ..._wallets.map((wallet) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _WalletCard(wallet: wallet),
+                      )),
+
+                const SizedBox(height: 16),
+
+                // Add money and Withdraw buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pushNamed('/fund'),
+                        icon: const Icon(Icons.add_circle_outline, size: 20),
+                        label: const Text('Add Money'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pushNamed('/withdraw'),
+                        icon: const Icon(Icons.remove_circle_outline, size: 20),
+                        label: const Text('Withdraw'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Quick actions grid
+                Text(
+                  'Quick Actions',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _QuickActionsGrid(),
+
+                const SizedBox(height: 24),
+
+                // Recent activity
+                Row(
+                  children: [
+                    Text(
+                      'Recent Activity',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_recentPayments.isNotEmpty)
                       GestureDetector(
                         onTap: () => Navigator.of(context)
                             .pushNamed(RouteNames.transactions),
                         child: Text(
                           l10n.viewAll,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.primaryColor, // THEME: Primary color
+                            color: theme.primaryColor,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-                  // Sample items
-                  _TxListItem(
-                      name: 'Marie Kabila',
-                      amount: '-\$100.00',
-                      status: 'Delivered',
-                      statusColor: const Color(0xFF0C7A53),
-                      date: 'Jan 10'),
-                  const SizedBox(height: 10),
-                  _TxListItem(
-                      name: 'Joseph Mumba',
-                      amount: '-€50.00',
-                      status: 'Processing',
-                      statusColor: const Color(0xFF165BAA),
-                      date: 'Jan 10'),
-                  const SizedBox(height: 10),
-                  _TxListItem(
-                      name: 'Grace Tshisekedi',
-                      amount: '-\$200.00',
-                      status: 'Failed',
-                      statusColor: const Color(0xFF912D2D),
-                      date: 'Jan 9'),
-                ],
-              ),
+                if (_recentPayments.isEmpty)
+                  _EmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    message: 'No recent transactions',
+                  )
+                else
+                  ..._recentPayments.map((payment) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _PaymentItem(payment: payment),
+                      )),
+
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         ),
@@ -157,12 +256,19 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  String _getInitials(String? firstName, String? lastName) {
+    final first = firstName?.isNotEmpty == true ? firstName![0] : '';
+    final last = lastName?.isNotEmpty == true ? lastName![0] : '';
+    if (first.isEmpty && last.isEmpty) return 'G';
+    return (first + last).toUpperCase();
+  }
+
   void _showProfileOptions(BuildContext context) {
     final theme = Theme.of(context);
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: theme.cardTheme.color, // THEME: Dynamic background
+      backgroundColor: theme.cardTheme.color,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -171,13 +277,512 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// Profile Quick Menu
-class _ProfileQuickMenu extends StatelessWidget {
-  const _ProfileQuickMenu();
+// Wallet Card Widget
+class _WalletCard extends StatelessWidget {
+  const _WalletCard({required this.wallet});
+  final Map<String, dynamic> wallet;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currency = wallet['currency'] as String? ?? 'USD';
+    final availableMinor = int.tryParse(wallet['availableMinor']?.toString() ?? '0') ?? 0;
+    final blockedMinor = int.tryParse(wallet['blockedMinor']?.toString() ?? '0') ?? 0;
+    final pendingOutMinor = int.tryParse(wallet['pendingOutMinor']?.toString() ?? '0') ?? 0;
+    final pendingInMinor = int.tryParse(wallet['pendingInMinor']?.toString() ?? '0') ?? 0;
+    
+    final available = availableMinor / 100;
+    final blocked = blockedMinor / 100;
+    final pendingOut = pendingOutMinor / 100;
+    final pendingIn = pendingInMinor / 100;
+    final totalPending = pendingIn - pendingOut;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: currency == 'CDF'
+            ? const LinearGradient(
+                colors: [Color(0xFF00ACAC), Color(0xFF008A8A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFF008A8A), Color(0xFF00ACAC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Text(
+                '$currency Wallet',
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                currency == 'CDF' ? Icons.account_balance : Icons.attach_money,
+                color: Colors.white70,
+                size: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            currency == 'CDF' ? 'FC ${available.toStringAsFixed(2)}' : '\$${available.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Available Balance',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Pending balance row
+          if (totalPending != 0)
+            Row(
+              children: [
+                Icon(
+                  totalPending > 0 ? Icons.arrow_downward : Icons.arrow_upward,
+                  color: Colors.white60,
+                  size: 14,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Pending: ${currency == 'CDF' ? 'FC' : '\$'}${totalPending.abs().toStringAsFixed(2)} ${totalPending > 0 ? 'in' : 'out'}',
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          // Blocked balance row
+          if (blocked > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white60,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Blocked: ${currency == 'CDF' ? 'FC' : '\$'}${blocked.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.white60,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// Empty Wallet Card
+class _EmptyWalletCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 180,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? const Color(0xFF2B2F58)
+              : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.account_balance_wallet_outlined,
+              size: 48,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No wallet balance yet',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Quick Actions Grid
+class _QuickActionsGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 0.95,
+      children: [
+        _QuickActionButton(
+          icon: Icons.send_rounded,
+          label: 'Pay / Send',
+          color: const Color(0xFF00ACAC),
+          onTap: () => Navigator.of(context).pushNamed('/payment/picker'),
+        ),
+        _QuickActionButton(
+          icon: Icons.receipt_outlined,
+          label: 'Bills',
+          color: const Color(0xFF008A8A),
+          onTap: () => Navigator.of(context).pushNamed('/payment/bill'),
+        ),
+        _QuickActionButton(
+          icon: Icons.verified_user_outlined,
+          label: 'KYC',
+          color: const Color(0xFF0C7A53),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.kyc),
+        ),
+        _QuickActionButton(
+          icon: Icons.credit_card_rounded,
+          label: 'Cards',
+          color: const Color(0xFFE87C03),
+          onTap: () => Navigator.of(context).pushNamed('/cards'),
+        ),
+        _QuickActionButton(
+          icon: Icons.account_balance_outlined,
+          label: 'Credit',
+          color: const Color(0xFF165BAA),
+          onTap: () => Navigator.of(context).pushNamed('/credit'),
+        ),
+        _QuickActionButton(
+          icon: Icons.flight_takeoff_rounded,
+          label: 'Remittance',
+          color: const Color(0xFF7B1FA2),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.remittance),
+        ),
+        _QuickActionButton(
+          icon: Icons.currency_exchange_rounded,
+          label: 'FX',
+          color: const Color(0xFF912D2D),
+          onTap: () => Navigator.of(context).pushNamed('/fx'),
+        ),
+        _QuickActionButton(
+          icon: Icons.savings_outlined,
+          label: 'Savings',
+          color: const Color(0xFF00ACAC),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.savings),
+        ),
+        _QuickActionButton(
+          icon: Icons.health_and_safety_outlined,
+          label: 'Insurance',
+          color: const Color(0xFF008A8A),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.insurance),
+        ),
+        _QuickActionButton(
+          icon: Icons.pie_chart,
+          label: 'Budget',
+          color: const Color(0xFF0C7A53),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.budget),
+        ),
+      ],
+    );
+  }
+}
+
+// Quick Action Button
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Material(
+      color: theme.cardTheme.color,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.brightness == Brightness.dark
+                  ? const Color(0xFF2B2F58)
+                  : const Color(0xFFE5E7EB),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: theme.colorScheme.onSurface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Recent Payment Item
+class _PaymentItem extends StatelessWidget {
+  const _PaymentItem({required this.payment});
+  final Map<String, dynamic> payment;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final amountMinor = payment['amountMinor'] as String? ?? '0';
+    final amount = (int.tryParse(amountMinor) ?? 0) / 100;
+    final currency = payment['currency'] as String? ?? 'USD';
+    final status = payment['status'] as String? ?? 'PENDING';
+    final type = payment['type'] as String? ?? 'UNKNOWN';
+    final paymentId = payment['id'] as String?;
+
+    final statusColor = status == 'POSTED'
+        ? const Color(0xFF0C7A53)
+        : status == 'FAILED'
+            ? const Color(0xFF912D2D)
+            : const Color(0xFF165BAA);
+
+    return InkWell(
+      onTap: paymentId != null
+          ? () => Navigator.of(context).pushNamed(
+                RouteNames.transactionDetail,
+                arguments: {'paymentId': paymentId},
+              )
+          : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? const Color(0xFF2B2F58)
+              : const Color(0xFFE5E7EB),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 44,
+            width: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusColor.withOpacity(0.1),
+            ),
+            child: Icon(
+              _getIconForType(type),
+              color: statusColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getLabelForType(type),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  status,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '-$currency ${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return Icons.swap_horiz_rounded;
+      case 'MNO_OUT':
+        return Icons.phone_android_rounded;
+      case 'BANK_OUT':
+        return Icons.account_balance_rounded;
+      case 'BILL':
+        return Icons.receipt_outlined;
+      default:
+        return Icons.send_rounded;
+    }
+  }
+
+  String _getLabelForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return 'Wallet Transfer';
+      case 'MNO_OUT':
+        return 'Mobile Money';
+      case 'BANK_OUT':
+        return 'Bank Transfer';
+      case 'BILL':
+        return 'Bill Payment';
+      default:
+        return 'Payment';
+    }
+  }
+}
+
+// Empty State Widget
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.icon, required this.message});
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(40),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              size: 48,
+              color: theme.colorScheme.onSurface.withOpacity(0.3),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Profile Avatar Widget
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.initials});
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      width: 36,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(colors: [Color(0xFF00ACAC), Color(0xFF008A8A)]),
+      ),
+      child: Text(
+        initials,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+// Profile Quick Menu (reused from old home)
+class _ProfileQuickMenu extends ConsumerWidget {
+  const _ProfileQuickMenu();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final userEmail = authState.user?.email ?? 'guest@postefinance.com';
+    final userName = '${authState.user?.name ?? 'Guest'} ${authState.user?.surname ?? ''}';
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -188,36 +793,33 @@ class _ProfileQuickMenu extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface
-                  .withOpacity(0.2), // THEME: Dynamic
+              color: theme.colorScheme.onSurface.withOpacity(0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 20),
-
-          // User info
           Row(
             children: [
-              const _Avatar(initials: 'JD'),
+              _Avatar(
+                initials: _getInitials(authState.user?.name, authState.user?.surname),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'John Doe',
+                      userName,
                       style: TextStyle(
-                        color:
-                            theme.colorScheme.onSurface, // THEME: Dynamic text
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
                     ),
                     Text(
-                      'john.doe@email.com',
+                      userEmail,
                       style: TextStyle(
-                        color: theme.colorScheme.onSurface
-                            .withOpacity(0.7), // THEME: Dynamic
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -227,8 +829,6 @@ class _ProfileQuickMenu extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-
-          // Quick actions
           _ProfileOption(
             icon: Icons.person_outline_rounded,
             title: 'View Full Profile',
@@ -237,36 +837,13 @@ class _ProfileQuickMenu extends StatelessWidget {
               Navigator.of(context).pushNamed(RouteNames.profile);
             },
           ),
-          _ProfileOption(
-            icon: Icons.settings_outlined,
-            title: 'Settings',
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          _ProfileOption(
-            icon: Icons.security_outlined,
-            title: 'Security',
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          _ProfileOption(
-            icon: Icons.help_outline_rounded,
-            title: 'Help & Support',
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
           const SizedBox(height: 16),
-
-          // Logout button
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () {
                 Navigator.pop(context);
-                _showLogoutConfirmation(context);
+                _showLogoutConfirmation(context, ref);
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.red,
@@ -285,18 +862,27 @@ class _ProfileQuickMenu extends StatelessWidget {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
+  String _getInitials(String? firstName, String? lastName) {
+    final first = firstName?.isNotEmpty == true ? firstName![0] : '';
+    final last = lastName?.isNotEmpty == true ? lastName![0] : '';
+    if (first.isEmpty && last.isEmpty) return 'G';
+    return (first + last).toUpperCase();
+  }
+
+  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: theme.cardTheme.color, // THEME: Dynamic background
+        backgroundColor: theme.cardTheme.color,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Log Out',
           style: TextStyle(
-              color: theme.colorScheme.onSurface, fontWeight: FontWeight.w700),
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: Text(
           'Are you sure you want to log out?',
@@ -305,14 +891,24 @@ class _ProfileQuickMenu extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel',
-                style: TextStyle(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7))),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await _performLogout(context);
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/login',
+                  (route) => false,
+                );
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Log Out'),
@@ -320,24 +916,6 @@ class _ProfileQuickMenu extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// Perform logout and navigate to login screen - optimized for speed
-  Future<void> _performLogout(BuildContext context) async {
-    // Get the provider container from the global navigator key
-    final container = ProviderScope.containerOf(context);
-
-    // Clear state immediately for fast response
-    container.read(authProvider.notifier).logout();
-
-    // Navigate immediately without waiting for async operations
-    if (context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false, // Remove all previous routes
-      );
-    }
   }
 }
 
@@ -359,355 +937,13 @@ class _ProfileOption extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7)),
       title: Text(title, style: TextStyle(color: theme.colorScheme.onSurface)),
-      trailing: Icon(Icons.arrow_forward_ios_rounded,
-          size: 16, color: theme.colorScheme.onSurface.withOpacity(0.3)),
+      trailing: Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 16,
+        color: theme.colorScheme.onSurface.withOpacity(0.3),
+      ),
       onTap: onTap,
       contentPadding: EdgeInsets.zero,
-    );
-  }
-}
-
-// ——— Widgets used on Home ———
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.initials});
-  final String initials;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      width: 36,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient:
-            LinearGradient(colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
-      ),
-      child: Text(
-        initials,
-        style: const TextStyle(
-            color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard(
-      {required this.title, required this.value, required this.icon});
-  final String title;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      height: 130,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color, // THEME: Dynamic card background
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: theme.colorScheme.onSurface.withOpacity(0.7)),
-              const Spacer(),
-              Icon(Icons.north_east_rounded,
-                  color: theme.colorScheme.onSurface.withOpacity(0.3),
-                  size: 16),
-            ],
-          ),
-          Text(
-            value,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 26,
-                fontWeight: FontWeight.w800),
-          ),
-          Text(
-            title,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PrimaryCTA extends StatelessWidget {
-  const _PrimaryCTA({required this.label});
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFF4DA3FF), Color(0xFF7B4DFF)]),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 20,
-                offset: const Offset(0, 10)),
-          ],
-        ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: () => Navigator.of(context)
-                .pushNamed(RouteNames.sendMoneyEnterDetails),
-            borderRadius: BorderRadius.circular(18),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.send_rounded, color: Colors.white),
-                const SizedBox(width: 10),
-                Text(label,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FavoritesPreview extends ConsumerWidget {
-  const _FavoritesPreview();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final items = ref.watch(favoritesProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Favorites',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () =>
-                  Navigator.of(context).pushNamed(RouteNames.favorites),
-              child: Text(
-                'Manage',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.primaryColor,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (items.isEmpty)
-          Text('No favorites yet',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.6)))
-        else
-          SizedBox(
-            height: 84,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, i) {
-                final c = items[i];
-                return _FavoritePill(
-                  initials: c.initials,
-                  label: c.label,
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(RouteNames.favorites),
-                );
-              },
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _FavoritePill extends StatelessWidget {
-  const _FavoritePill(
-      {required this.initials, required this.label, required this.onTap});
-  final String initials;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.cardTheme.color,
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 36,
-                width: 36,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                      colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
-                ),
-                child: Text(initials,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(width: 10),
-              Text(label,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w700)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TxListItem extends StatelessWidget {
-  const _TxListItem({
-    required this.name,
-    required this.amount,
-    required this.status,
-    required this.statusColor,
-    required this.date,
-  });
-
-  final String name;
-  final String amount;
-  final String status;
-  final Color statusColor;
-  final String date;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
-        ),
-      ),
-      child: Row(
-        children: [
-          // avatar
-          Container(
-            height: 44,
-            width: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                  colors: [Color(0xFF7B4DFF), Color(0xFF4DA3FF)]),
-            ),
-            child: Text(
-              name
-                  .split(' ')
-                  .map((p) => p.isNotEmpty ? p[0] : '')
-                  .take(2)
-                  .join()
-                  .toUpperCase(),
-              style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w800),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // name + date
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.access_time,
-                        size: 14,
-                        color: theme.colorScheme.onSurface.withOpacity(0.5)),
-                    const SizedBox(width: 6),
-                    Text(date,
-                        style: TextStyle(
-                            color:
-                                theme.colorScheme.onSurface.withOpacity(0.6))),
-                  ],
-                )
-              ],
-            ),
-          ),
-          // amount + badge
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(amount,
-                  style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w800)),
-              const SizedBox(height: 6),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(.15),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: statusColor.withOpacity(.6)),
-                ),
-                child: Text(status,
-                    style: TextStyle(
-                        color: statusColor, fontWeight: FontWeight.w700)),
-              ),
-            ],
-          )
-        ],
-      ),
     );
   }
 }

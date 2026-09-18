@@ -45,7 +45,7 @@ class ApiValidator {
   final http.Client _client = http.Client();
 
   // Test data
-  final String testEmail = 'test@yole.com';
+  final String testEmail = 'test@postefinance.com';
   final String testPassword = 'Test';
   final String testPhoneCode = '+254';
   final String testPhone = '0700000000';

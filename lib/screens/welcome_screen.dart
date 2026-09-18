@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../router_types.dart'; // for RouteNames
 import '../l10n/app_localizations.dart';
-import '../widgets/yole_logo.dart';
-import '../providers/theme_provider.dart';
 
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
@@ -14,8 +12,6 @@ class WelcomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final themeState = ref.watch(themeProvider);
-    final isDark = themeState.isDarkMode;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -128,10 +124,16 @@ class WelcomeScreen extends ConsumerWidget {
 
                         const SizedBox(height: 32),
 
-                        // --- YOLE Logo ---
-                        YoleLogo(
-                          isDarkTheme: isDark,
-                          height: 48.0,
+                        // --- Poste Finance Logo ---
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.65,
+                          ),
+                          child: Image.asset(
+                            'assets/brand/poste-finance-logo.png',
+                            height: 40,
+                            fit: BoxFit.contain,
+                          ),
                         ),
 
                         const SizedBox(height: 24),

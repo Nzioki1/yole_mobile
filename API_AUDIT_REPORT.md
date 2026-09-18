@@ -3,7 +3,7 @@ Generated: $(date)
 
 ## Executive Summary
 
-This audit identifies which screens in the YOLE mobile application are connected to the backend API and which are using mock/simulated data. The goal is to ensure all user actions that should persist data are successfully posting information to the API.
+This audit identifies which screens in the Poste Finance mobile application are connected to the backend API and which are using mock/simulated data. The goal is to ensure all user actions that should persist data are successfully posting information to the API.
 
 ---
 

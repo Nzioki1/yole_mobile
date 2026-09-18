@@ -23,8 +23,8 @@ class GradientButton extends StatelessWidget {
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
     colors: [
-      Color(0xFF3E8BFF), // brand blue
-      Color(0xFF7B4DFF), // brand purple
+      Color(0xFF00ACAC), // brand teal
+      Color(0xFF008A8A), // darker teal
     ],
   );
 

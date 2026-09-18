@@ -75,7 +75,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
       key: ValueKey(currentLocale
           .languageCode), // Force complete rebuild on locale change
       navigatorKey: navigatorKey, // Global navigator key for stack rebuild
-      title: 'Yole',
+      title: 'Poste Finance',
       debugShowCheckedModeBanner: false,
       locale: currentLocale,
       localizationsDelegates: const [
@@ -111,10 +111,10 @@ class _YoleAppState extends ConsumerState<YoleApp> {
     return ThemeData(
       brightness: Brightness.light,
       scaffoldBackgroundColor: const Color(0xFFF7F8FC),
-      primaryColor: const Color(0xFF4DA3FF),
+      primaryColor: const Color(0xFF00ACAC),
       colorScheme: const ColorScheme.light(
-        primary: Color(0xFF4DA3FF),
-        secondary: Color(0xFF7B4DFF),
+        primary: Color(0xFF00ACAC),
+        secondary: Color(0xFF008A8A),
         surface: Colors.white,
         background: Color(0xFFF7F8FC),
         onSurface: Colors.black,
@@ -167,10 +167,10 @@ class _YoleAppState extends ConsumerState<YoleApp> {
     return ThemeData(
       brightness: Brightness.dark,
       scaffoldBackgroundColor: const Color(0xFF0E1230),
-      primaryColor: const Color(0xFF4DA3FF),
+      primaryColor: const Color(0xFF00ACAC),
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF4DA3FF),
-        secondary: Color(0xFF7B4DFF),
+        primary: Color(0xFF00ACAC),
+        secondary: Color(0xFF008A8A),
         surface: Color(0xFF11163A),
         background: Color(0xFF0E1230),
         onSurface: Colors.white,

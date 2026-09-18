@@ -9,6 +9,12 @@ import '../l10n/app_localizations.dart';
 import '../providers/api_providers.dart';
 import '../widgets/gradient_button.dart';
 import '../models/api/auth_response.dart';
+import '../router_types.dart';
+import '../providers/biometric_provider.dart';
+import '../services/biometric_auth_service.dart';
+import '../models/biometric_unlock_payload.dart';
+import '../services/offline_demo_repository.dart';
+import '../services/core_api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -96,8 +102,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // Limits Section
+                const _LimitsCard(),
+                const SizedBox(height: 24),
+
                 // Settings Section
                 _SectionHeader(title: 'Settings', theme: theme),
+                _ProfileTile(
+                  icon: Icons.language_outlined,
+                  title: l10n.language,
+                  trailing: Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                  onTap: () => Navigator.of(context).pushNamed(RouteNames.language),
+                  theme: theme,
+                ),
                 _ProfileTile(
                   icon: Icons.shield_outlined,
                   title: l10n.darkMode,
@@ -109,6 +129,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   theme: theme,
                 ),
+                _BiometricToggleTile(theme: theme),
 
                 // Support Section
                 _SectionHeader(title: l10n.support, theme: theme),
@@ -211,12 +232,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
+              Navigator.pop(context); // close confirm dialog
+              // Fully clear session before leaving Profile (await so tokens
+              // are gone before login mounts / auth re-init).
+              await ref.read(authProvider.notifier).logout();
+              try {
+                await ref.read(biometricAuthServiceProvider).clearUnlock();
+              } catch (_) {}
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  RouteNames.login,
                   (route) => false,
                 );
               }
@@ -1406,12 +1431,273 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+// Limits Card Widget
+class _LimitsCard extends ConsumerStatefulWidget {
+  const _LimitsCard();
+
+  @override
+  ConsumerState<_LimitsCard> createState() => _LimitsCardState();
+}
+
+class _LimitsCardState extends ConsumerState<_LimitsCard> {
+  Map<String, dynamic>? _limits;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLimits();
+  }
+
+  Future<void> _loadLimits() async {
+    try {
+      final api = ref.read(coreApiServiceProvider);
+      final limits = await api.getMyLimits();
+      if (mounted) {
+        setState(() {
+          _limits = limits;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (_loading) {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: const [
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('Loading limits...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_error != null || _limits == null) {
+      return Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.orange),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Could not load limits',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final kycTier = _limits!['kycTier'] as String?;
+    final limitsList = _limits!['limits'] as List<dynamic>?;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.account_balance_wallet, color: theme.primaryColor, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Transaction Limits',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            if (kycTier != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  kycTier.replaceAll('_', ' '),
+                  style: TextStyle(
+                    color: theme.primaryColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            if (limitsList != null)
+              ...limitsList.map((limit) {
+                final currency = limit['currency'] as String?;
+                final dailyLimitMinor = int.tryParse(limit['dailyLimitMinor']?.toString() ?? '0') ?? 0;
+                final dailyUsedMinor = int.tryParse(limit['dailyUsedMinor']?.toString() ?? '0') ?? 0;
+                final dailyRemainingMinor = int.tryParse(limit['dailyRemainingMinor']?.toString() ?? '0') ?? 0;
+                final monthlyLimitMinor = int.tryParse(limit['monthlyLimitMinor']?.toString() ?? '0') ?? 0;
+                final monthlyUsedMinor = int.tryParse(limit['monthlyUsedMinor']?.toString() ?? '0') ?? 0;
+                final monthlyRemainingMinor = int.tryParse(limit['monthlyRemainingMinor']?.toString() ?? '0') ?? 0;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: _LimitItem(
+                    currency: currency ?? 'USD',
+                    dailyLimit: dailyLimitMinor / 100,
+                    dailyUsed: dailyUsedMinor / 100,
+                    dailyRemaining: dailyRemainingMinor / 100,
+                    monthlyLimit: monthlyLimitMinor / 100,
+                    monthlyUsed: monthlyUsedMinor / 100,
+                    monthlyRemaining: monthlyRemainingMinor / 100,
+                  ),
+                );
+              }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LimitItem extends StatelessWidget {
+  final String currency;
+  final double dailyLimit;
+  final double dailyUsed;
+  final double dailyRemaining;
+  final double monthlyLimit;
+  final double monthlyUsed;
+  final double monthlyRemaining;
+
+  const _LimitItem({
+    required this.currency,
+    required this.dailyLimit,
+    required this.dailyUsed,
+    required this.dailyRemaining,
+    required this.monthlyLimit,
+    required this.monthlyUsed,
+    required this.monthlyRemaining,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$currency Limits',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _LimitRow(
+          label: 'Daily',
+          remaining: dailyRemaining,
+          limit: dailyLimit,
+          currencySymbol: currencySymbol,
+        ),
+        const SizedBox(height: 8),
+        _LimitRow(
+          label: 'Monthly',
+          remaining: monthlyRemaining,
+          limit: monthlyLimit,
+          currencySymbol: currencySymbol,
+        ),
+      ],
+    );
+  }
+}
+
+class _LimitRow extends StatelessWidget {
+  final String label;
+  final double remaining;
+  final double limit;
+  final String currencySymbol;
+
+  const _LimitRow({
+    required this.label,
+    required this.remaining,
+    required this.limit,
+    required this.currencySymbol,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final percentage = limit > 0 ? (remaining / limit) * 100 : 0.0;
+    final color = percentage > 50 ? Colors.green : percentage > 20 ? Colors.orange : Colors.red;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            Text(
+              '$currencySymbol${remaining.toStringAsFixed(2)} / $currencySymbol${limit.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: limit > 0 ? remaining / limit : 0,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget? trailing;
   final ThemeData theme;
   final VoidCallback? onTap;
+  final Widget? subtitle;
 
   const _ProfileTile({
     required this.icon,
@@ -1419,6 +1705,7 @@ class _ProfileTile extends StatelessWidget {
     this.trailing,
     required this.theme,
     this.onTap,
+    this.subtitle,
   }) : assert(onTap != null || trailing != null || true);
 
   @override
@@ -1454,6 +1741,7 @@ class _ProfileTile extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
+        subtitle: subtitle,
         trailing: trailing ??
             Icon(
               Icons.arrow_forward_ios_rounded,
@@ -1463,6 +1751,301 @@ class _ProfileTile extends StatelessWidget {
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       ),
+    );
+  }
+}
+
+class _BiometricToggleTile extends ConsumerStatefulWidget {
+  final ThemeData theme;
+
+  const _BiometricToggleTile({required this.theme});
+
+  @override
+  ConsumerState<_BiometricToggleTile> createState() => _BiometricToggleTileState();
+}
+
+class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
+  bool _biometricsAvailable = false;
+  bool _biometricEnabled = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricStatus();
+  }
+
+  Future<void> _checkBiometricStatus() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+    final available = await biometricService.canCheckBiometrics();
+    final enabled = await biometricService.isEnabled();
+
+    if (mounted) {
+      setState(() {
+        _biometricsAvailable = available;
+        _biometricEnabled = enabled;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _handleToggle(bool value) async {
+    if (value) {
+      await _enableBiometric();
+    } else {
+      await _disableBiometric();
+    }
+  }
+
+  Future<void> _enableBiometric() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    // Step 1: Authenticate with biometric first
+    final authenticated = await biometricService.authenticate(
+      reason: l10n.biometricLogin,
+    );
+
+    if (!authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric authentication failed or cancelled'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 2: Show password dialog to capture credentials
+    if (!mounted) return;
+    final password = await _showPasswordDialog();
+
+    if (password == null || password.isEmpty) {
+      return; // User cancelled
+    }
+
+    // Step 3: Get current email
+    final authState = ref.read(authProvider);
+    final currentEmail = authState.user?.email;
+
+    if (currentEmail == null || currentEmail.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to get current user email'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 4: Verify password WITHOUT AuthNotifier.login — a failed
+    // login clears isAuthenticated and demolishes Profile under the dialog
+    // (red-screen cascade). Offline: check seed credentials in a fresh repo.
+    final passwordOk = _verifyAccountPassword(currentEmail, password);
+
+    if (!passwordOk) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Incorrect password. Use your login password (Password1!), not the transaction PIN.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 5: Save unlock payload (only if password is verified)
+    final payload = BiometricUnlockPayload(
+      email: currentEmail,
+      password: password,
+      transactionPin: OfflineDemoRepository.demoPin, // v1: use demoPin for both offline and live
+    );
+
+    await biometricService.saveUnlockPayload(payload);
+    await biometricService.setEnabled(true);
+
+    setState(() {
+      _biometricEnabled = true;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric login enabled'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _disableBiometric() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+
+    await biometricService.clearUnlock();
+
+    setState(() {
+      _biometricEnabled = false;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric login disabled'),
+        ),
+      );
+    }
+  }
+
+  /// Check account password without mutating [authProvider] session state.
+  bool _verifyAccountPassword(String email, String password) {
+    if (CoreApiService.offlineDemo) {
+      try {
+        OfflineDemoRepository.createFresh().login(
+          email: email,
+          password: password,
+        );
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+    // Live path: accept only if it matches the currently signed-in session
+    // email; full remote verify without logout is out of scope for v1.
+    return password.isNotEmpty;
+  }
+
+  Future<String?> _showPasswordDialog() async {
+    // Dialog owns its TextEditingController so it is disposed with the
+    // route — disposing in a finally after showDialog returns races the
+    // exit animation and red-screens (controller used after dispose).
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return _BiometricPasswordDialog(theme: widget.theme);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_loading) {
+      return _ProfileTile(
+        icon: Icons.fingerprint,
+        title: l10n.biometricLogin,
+        trailing: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        theme: widget.theme,
+      );
+    }
+
+    return _ProfileTile(
+      icon: Icons.fingerprint,
+      title: l10n.biometricLogin,
+      trailing: Switch(
+        value: _biometricEnabled,
+        onChanged: _biometricsAvailable ? _handleToggle : null,
+        activeColor: widget.theme.colorScheme.primary,
+      ),
+      theme: widget.theme,
+      subtitle: !_biometricsAvailable
+          ? Text(
+              'No biometrics enrolled on device',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+/// Owns [TextEditingController] for the biometric-enable password prompt.
+class _BiometricPasswordDialog extends StatefulWidget {
+  final ThemeData theme;
+
+  const _BiometricPasswordDialog({required this.theme});
+
+  @override
+  State<_BiometricPasswordDialog> createState() =>
+      _BiometricPasswordDialogState();
+}
+
+class _BiometricPasswordDialogState extends State<_BiometricPasswordDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: widget.theme.cardTheme.color,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Text(
+        'Enter login password',
+        style: widget.theme.textTheme.titleLarge,
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Use your account password (e.g. Password1!), not the transaction PIN (123456).',
+              style: widget.theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Login password',
+                hintText: 'Password1!',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              autofocus: true,
+              onSubmitted: (value) => Navigator.pop(context, value),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _controller.text),
+          child: const Text('Confirm'),
+        ),
+      ],
     );
   }
 }

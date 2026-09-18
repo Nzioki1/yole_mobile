@@ -22,6 +22,29 @@ import 'screens/send_money_review_screen.dart';
 // import 'screens/send_money_payment_screen.dart'; // REMOVED - redundant payment selection screen
 import 'screens/send_money_checkout_screen.dart';
 import 'screens/send_money_result_screen.dart';
+import 'screens/cards_screen.dart';
+import 'screens/card_issue_screen.dart';
+import 'screens/card_detail_screen.dart';
+import 'screens/credit_screen.dart';
+import 'screens/credit_apply_screen.dart';
+import 'screens/credit_loan_detail_screen.dart';
+import 'screens/remittance_screen.dart';
+import 'screens/fx_screen.dart';
+import 'screens/payment_rail_picker_screen.dart';
+import 'screens/payment_form_screen.dart';
+import 'screens/payment_quote_screen.dart';
+import 'screens/payment_result_screen.dart';
+import 'screens/fund_wallet_screen.dart';
+import 'screens/withdraw_screen.dart';
+import 'screens/language_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/transaction_detail_screen.dart';
+import 'screens/savings_screen.dart';
+import 'screens/savings_create_goal_screen.dart';
+import 'screens/savings_goal_detail_screen.dart';
+import 'screens/insurance_screen.dart';
+import 'screens/activate_policy_screen.dart';
+import 'screens/budget_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -117,15 +140,197 @@ class AppRouter {
       case RouteNames.sendMoneyResult:
         return MaterialPageRoute(builder: (_) => const SendMoneyResultScreen());
 
-      // Optional futures
-      case RouteNames.language:
+      // Neo-bank features
+      case '/cards':
+        return MaterialPageRoute(builder: (_) => const CardsScreen());
+
+      case '/credit':
+        return MaterialPageRoute(builder: (_) => const CreditScreen());
+
+      case '/fx':
+        return MaterialPageRoute(builder: (_) => const FxScreen());
+
+      // Fund wallet (Add money)
+      case '/fund':
+        return MaterialPageRoute(builder: (_) => const FundWalletScreen());
+
+      // Withdraw (cash out)
+      case '/withdraw':
+        return MaterialPageRoute(builder: (_) => const WithdrawScreen());
+
+      // Multi-rail payment flow
+      case '/payment/picker':
+        return MaterialPageRoute(builder: (_) => const PaymentRailPickerScreen());
+
+      case '/payment/w2w':
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar:
-                AppBar(title: Text(AppLocalizations.of(context)!.comingSoon)),
-            body: Center(child: Text('${settings.name} not implemented yet')),
+          builder: (_) => PaymentFormScreen(
+            railType: 'W2W',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
           ),
         );
+
+      case '/payment/mno':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentFormScreen(
+            railType: 'MNO_OUT',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
+        );
+
+      case '/payment/bank':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentFormScreen(
+            railType: 'BANK_OUT',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
+        );
+
+      case '/payment/bill':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentFormScreen(
+            railType: 'BILL',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
+        );
+
+      case '/payment/airtime':
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PaymentFormScreen(
+            railType: 'AIRTIME',
+            prefillDestination: args?['destination'] as String?,
+            prefillNote: args?['note'] as String?,
+          ),
+        );
+
+      case '/payment/quote':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentQuoteScreen(),
+          settings: settings,
+        );
+
+      case '/payment/result':
+        return MaterialPageRoute(
+          builder: (_) => const PaymentResultScreen(),
+          settings: settings,
+        );
+
+      // Optional futures
+      case RouteNames.language:
+        return MaterialPageRoute(builder: (_) => const LanguageScreen());
+
+      case RouteNames.notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+
+      case RouteNames.transactionDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final paymentId = args?['paymentId'] as String?;
+        if (paymentId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Payment ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => TransactionDetailScreen(paymentId: paymentId),
+        );
+
+      case RouteNames.creditApply:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final type = args?['type'] as String?;
+        if (type == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Credit type required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CreditApplyScreen(type: type),
+        );
+
+      case RouteNames.creditDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final loanId = args?['loanId'] as String?;
+        if (loanId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Loan ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CreditLoanDetailScreen(loanId: loanId),
+        );
+
+      case RouteNames.cardIssue:
+        return MaterialPageRoute(builder: (_) => const CardIssueScreen());
+
+      case RouteNames.cardDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final cardId = args?['cardId'] as String?;
+        if (cardId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Card ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => CardDetailScreen(cardId: cardId),
+        );
+
+      case RouteNames.remittance:
+        return MaterialPageRoute(builder: (_) => const RemittanceScreen());
+
+      // Poste Finance Products
+      case RouteNames.savings:
+        return MaterialPageRoute(builder: (_) => const SavingsScreen());
+
+      case RouteNames.savingsCreateGoal:
+        return MaterialPageRoute(
+            builder: (_) => const SavingsCreateGoalScreen());
+
+      case RouteNames.savingsGoalDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final goalId = args?['goalId'] as String?;
+        if (goalId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Goal ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => SavingsGoalDetailScreen(goalId: goalId),
+        );
+
+      case RouteNames.insurance:
+        return MaterialPageRoute(builder: (_) => const InsuranceScreen());
+
+      case RouteNames.insuranceActivate:
+        return MaterialPageRoute(
+          builder: (_) => const ActivatePolicyScreen(),
+          settings: settings,
+        );
+
+      case RouteNames.budget:
+        return MaterialPageRoute(builder: (_) => const BudgetScreen());
 
       // Fallback
       default:

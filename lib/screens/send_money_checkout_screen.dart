@@ -8,6 +8,7 @@ import '../services/pesapal_service.dart';
 import '../models/transaction_request_model.dart';
 import '../utils/payment_validator.dart';
 import '../providers/api_providers.dart';
+import '../services/core_api_service.dart';
 
 class SendMoneyCheckoutScreen extends ConsumerStatefulWidget {
   const SendMoneyCheckoutScreen({super.key});
@@ -164,6 +165,9 @@ class _SendMoneyCheckoutScreenState
 
     print('Mobile money payment successful');
 
+    // Collect insurance premiums after success
+    await _collectPremiums(args, sendMoneyState.response!.transactionId);
+
     // Navigate directly to result screen
     if (mounted) {
       Navigator.pushReplacementNamed(
@@ -177,6 +181,44 @@ class _SendMoneyCheckoutScreenState
           'paymentMethod': 'mobile_money',
         },
       );
+    }
+  }
+
+  Future<void> _collectPremiums(Map<String, dynamic> args, String transactionId) async {
+    try {
+      final premiumLineItems = args['premiumLineItems'] as List<Map<String, dynamic>>?;
+      if (premiumLineItems == null || premiumLineItems.isEmpty) {
+        print('No premiums to collect');
+        return;
+      }
+
+      final amount = args['amount'] as double;
+      final currency = args['currency'] as String;
+      
+      // Calculate principal for premium collection (same logic as preview)
+      final int principalMinor;
+      if (currency == 'CDF') {
+        // If sending CDF, use amount directly in CDF minor
+        principalMinor = (amount * 100).round();
+      } else {
+        // If sending USD, convert to CDF at 2750 rate for premium calculation
+        principalMinor = (amount * 2750 * 100).round();
+      }
+
+      final api = CoreApiService();
+      await api.init();
+      
+      final collected = await api.collectInsurancePremiums(
+        customerId: 'cust_kasee',
+        rail: 'SEND',
+        principalMinor: principalMinor,
+        parentTransactionId: transactionId,
+      );
+
+      print('Insurance premiums collected: ${collected.length} entries');
+    } catch (e) {
+      print('Failed to collect premiums: $e');
+      // Don't fail the entire transaction if premium collection fails
     }
   }
 
@@ -204,7 +246,7 @@ class _SendMoneyCheckoutScreenState
       final sendMoneyState = ref.read(sendMoneyProvider);
       if (sendMoneyState.response == null) {
         print('❌ PRE-STEP FAILED: YOLE transaction creation returned null');
-        throw Exception('Failed to create YOLE transaction');
+        throw Exception('Failed to create Poste Finance transaction');
       }
 
       print('✅ PRE-STEP SUCCESS: YOLE transaction created');
@@ -234,6 +276,9 @@ class _SendMoneyCheckoutScreenState
       print('Merchant Reference: ${orderResponse.merchantReference}');
       print('Redirect URL: ${orderResponse.redirectUrl}');
       print('═══════════════════════════════════════════════\n');
+
+      // Collect insurance premiums after success
+      await _collectPremiums(args, sendMoneyState.response!.transactionId);
 
       // Step 3: Navigate to result (no WebView)
       if (mounted) {

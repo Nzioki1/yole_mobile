@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
-import '../widgets/yole_logo.dart';
 import '../providers/theme_provider.dart';
+import '../services/core_api_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
@@ -26,6 +26,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _pwdCtrl = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (CoreApiService.offlineDemo) {
+      _emailCtrl.text = 'jp.kabila@gmail.com';
+      _pwdCtrl.text = 'Password1!';
+    }
+  }
 
   @override
   void dispose() {
@@ -96,11 +105,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         const SizedBox(height: 32),
 
-                        // Prominent YOLE Logo - Much larger and dominant
-                        YoleLogo(
-                          isDarkTheme: isDark,
-                          height:
-                              80.0, // Increased from 48 to 80 for prominence
+                        // Prominent Poste Finance Logo - Much larger and dominant
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.65,
+                          ),
+                          child: Image.asset(
+                            'assets/brand/poste-finance-logo.png',
+                            height: 44,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Role chip — distinguishes from Agent app
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00ACAC).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF00ACAC).withOpacity(0.4),
+                            ),
+                          ),
+                          child: const Text(
+                            'Customer',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF00ACAC),
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: 24),

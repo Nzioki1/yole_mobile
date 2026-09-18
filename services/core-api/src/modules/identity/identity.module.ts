@@ -1,0 +1,34 @@
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { IdentityService } from './identity.service';
+import { AuthController } from './auth.controller';
+import { JwtStrategy } from './jwt.strategy';
+import { OtpService } from './otp.service';
+import { ConsoleOtpSender } from './otp.port';
+import { CustomersModule } from '../customers/customers.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+
+@Module({
+  imports: [
+    CustomersModule,
+    NotificationsModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+      signOptions: { expiresIn: '7d' },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [
+    IdentityService,
+    JwtStrategy,
+    OtpService,
+    {
+      provide: 'OTP_SENDER',
+      useClass: ConsoleOtpSender,
+    },
+  ],
+  exports: [IdentityService],
+})
+export class IdentityModule {}

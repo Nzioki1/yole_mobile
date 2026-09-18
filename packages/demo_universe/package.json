@@ -1,0 +1,19 @@
+{
+  "name": "demo_universe",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./ts/index.ts",
+  "types": "./ts/index.ts",
+  "exports": {
+    ".": "./ts/index.ts",
+    "./data/universe.json": "./data/universe.json"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}

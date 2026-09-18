@@ -185,4 +185,35 @@ class StorageService {
   Future<void> clearProfileOverrides() async {
     await _storage.delete(key: _profileOverridesKey);
   }
+
+  // Biometric storage keys
+  static const String _biometricEnabledKey = 'biometric_enabled';
+  static const String _biometricUnlockPayloadKey = 'biometric_unlock_payload';
+
+  /// Get biometric enabled flag
+  Future<bool> getBiometricEnabled() async {
+    final value = await _storage.read(key: _biometricEnabledKey);
+    return value == 'true';
+  }
+
+  /// Set biometric enabled flag
+  Future<void> setBiometricEnabled(bool enabled) async {
+    await _storage.write(key: _biometricEnabledKey, value: enabled.toString());
+  }
+
+  /// Get biometric unlock payload JSON
+  Future<String?> getBiometricUnlockPayload() async {
+    return await _storage.read(key: _biometricUnlockPayloadKey);
+  }
+
+  /// Save biometric unlock payload JSON
+  Future<void> saveBiometricUnlockPayload(String jsonPayload) async {
+    await _storage.write(key: _biometricUnlockPayloadKey, value: jsonPayload);
+  }
+
+  /// Clear all biometric data (on logout or disable)
+  Future<void> clearBiometricData() async {
+    await _storage.delete(key: _biometricEnabledKey);
+    await _storage.delete(key: _biometricUnlockPayloadKey);
+  }
 }

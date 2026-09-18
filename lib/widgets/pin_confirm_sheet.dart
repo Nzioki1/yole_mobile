@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/biometric_provider.dart';
 
 /// PIN Confirm Bottom Sheet - Used to verify transaction PIN
 class PinConfirmSheet extends StatefulWidget {
@@ -82,21 +84,72 @@ class _PinConfirmSheetState extends State<PinConfirmSheet> {
     widget.onPinEntered(pin);
   }
 
-  void _useBiometric() {
-    // Mock biometric success
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Biometric authentication (mock)'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 1),
-      ),
-    );
-    // Auto-fill with mock PIN for demo
-    Future.delayed(const Duration(milliseconds: 500), () {
+  Future<void> _useBiometric() async {
+    final container = ProviderContainer();
+    final biometricService = container.read(biometricAuthServiceProvider);
+
+    final enabled = await biometricService.isEnabled();
+    final available = await biometricService.canCheckBiometrics();
+
+    if (!enabled || !available) {
       if (mounted) {
-        widget.onPinEntered('1234');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric not available'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    });
+      container.dispose();
+      return;
+    }
+
+    final authenticated = await biometricService.authenticate(
+      reason: 'Confirm transaction',
+    );
+
+    if (!authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Biometric authentication failed'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      container.dispose();
+      return;
+    }
+
+    final payload = await biometricService.getUnlockPayload();
+    container.dispose();
+
+    if (payload == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No biometric credentials stored'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (mounted) {
+      widget.onPinEntered(payload.transactionPin);
+    }
+  }
+
+  Future<bool> _shouldShowBiometricButton() async {
+    final container = ProviderContainer();
+    final biometricService = container.read(biometricAuthServiceProvider);
+
+    final enabled = await biometricService.isEnabled();
+    final available = await biometricService.canCheckBiometrics();
+
+    container.dispose();
+    return enabled && available;
   }
 
   @override
@@ -197,17 +250,30 @@ class _PinConfirmSheetState extends State<PinConfirmSheet> {
 
           const SizedBox(height: 24),
 
-          // Biometric button (mock)
-          OutlinedButton.icon(
-            onPressed: _useBiometric,
-            icon: const Icon(Icons.fingerprint, size: 28),
-            label: const Text('Use Biometric'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
+          // Biometric button (conditional)
+          FutureBuilder<bool>(
+            future: _shouldShowBiometricButton(),
+            builder: (context, snapshot) {
+              final showButton = snapshot.data ?? false;
+              if (!showButton) {
+                return const SizedBox.shrink();
+              }
 
-          const SizedBox(height: 16),
+              return Column(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _useBiometric,
+                    icon: const Icon(Icons.fingerprint, size: 28),
+                    label: const Text('Use Biometric'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          ),
 
           // Confirm button
           ElevatedButton(

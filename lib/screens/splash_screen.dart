@@ -22,6 +22,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  static const _logoAnimationDuration = Duration(milliseconds: 900);
   bool _biometricAttempted = false;
 
   @override
@@ -38,8 +39,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (_biometricAttempted) return;
     _biometricAttempted = true;
 
-    // Wait for logo animation to complete (~900ms)
-    await Future.delayed(const Duration(milliseconds: 900));
+    // Wait for logo animation to complete
+    await Future.delayed(_logoAnimationDuration);
 
     if (!mounted) return;
 
@@ -59,7 +60,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     );
 
     if (!authenticated) {
-      // Authentication failed or cancelled, stay on splash
+      // Authentication failed or cancelled
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric unlock failed. Please log in.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
       return;
     }
 
@@ -68,7 +77,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // Load unlock payload
     final payload = await biometricService.getUnlockPayload();
     if (payload == null) {
-      // No payload stored (shouldn't happen), stay on splash
+      // No payload stored (shouldn't happen)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric unlock failed. Please log in.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
       return;
     }
 
@@ -79,8 +96,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (success && mounted) {
       // Login successful, navigate to home
       Navigator.pushReplacementNamed(context, '/home');
+    } else if (mounted) {
+      // On login failure, show error and stay on splash
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric unlock failed. Please log in.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
-    // On login failure, stay on splash (user can tap Login button)
   }
 
   @override

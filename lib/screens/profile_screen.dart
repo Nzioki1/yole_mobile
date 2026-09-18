@@ -1821,7 +1821,7 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
       return; // User cancelled
     }
 
-    // Step 3: Verify password by attempting login (non-destructive check)
+    // Step 3: Get current email
     final authState = ref.read(authProvider);
     final currentEmail = authState.user?.email;
 
@@ -1837,7 +1837,22 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
       return;
     }
 
-    // Step 4: Save unlock payload
+    // Step 4: Verify password by calling login
+    final loginSuccess = await ref.read(authProvider.notifier).login(currentEmail, password);
+
+    if (!loginSuccess) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Incorrect password. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 5: Save unlock payload (only if password is verified)
     final payload = BiometricUnlockPayload(
       email: currentEmail,
       password: password,

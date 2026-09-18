@@ -11,15 +11,15 @@ void main() {
     test('getBiometricEnabled returns false by default', () async {
       // This test requires mocking FlutterSecureStorage.
       // In practice, test via BiometricAuthService with injected test storage.
-      expect(true, isTrue); // Placeholder — extend with mock if needed
+      // TODO: Add mock implementation
     });
 
     test('setBiometricEnabled persists value', () async {
-      expect(true, isTrue); // Placeholder — extend with mock if needed
+      // TODO: Add mock implementation
     });
 
     test('clearBiometricData removes all keys', () async {
-      expect(true, isTrue); // Placeholder — extend with mock if needed
+      // TODO: Add mock implementation
     });
   });
 }

@@ -466,6 +466,26 @@ export class AdminApiClient {
     };
   }
 
+  async listAmlBanList() {
+    if (OFFLINE_DEMO) return this.store().listAmlBanList();
+    throw new Error('listAmlBanList is only available in offline demo');
+  }
+
+  async addAmlBanEntry(data: Parameters<ReturnType<typeof getOfflineStore>['addAmlBanEntry']>[0]) {
+    if (OFFLINE_DEMO) return this.store().addAmlBanEntry(data);
+    throw new Error('addAmlBanEntry is only available in offline demo');
+  }
+
+  async liftAmlBanEntry(id: string) {
+    if (OFFLINE_DEMO) return this.store().liftAmlBanEntry(id);
+    throw new Error('liftAmlBanEntry is only available in offline demo');
+  }
+
+  async listCustomers() {
+    if (OFFLINE_DEMO) return this.store().listCustomers();
+    throw new Error('listCustomers is only available in offline demo');
+  }
+
 }
 
 export const api = new AdminApiClient();

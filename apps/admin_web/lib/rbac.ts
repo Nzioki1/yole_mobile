@@ -18,7 +18,9 @@ export type ModuleRoute =
   | '/dashboard/remittance'
   | '/dashboard/resilience'
   | '/dashboard/export'
-  | '/dashboard/users';
+  | '/dashboard/users'
+  | '/dashboard/aml-ban-list'
+  | '/dashboard/customers';
 
 const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard',
@@ -39,12 +41,15 @@ const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard/resilience',
   '/dashboard/export',
   '/dashboard/users',
+  '/dashboard/aml-ban-list',
+  '/dashboard/customers',
 ];
 
 export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
   [StaffRole.ADMIN]: ALL_ADMIN,
   [StaffRole.OPS]: [
     '/dashboard',
+    '/dashboard/customer360',
     '/dashboard/kyc',
     '/dashboard/agents',
     '/dashboard/payments',
@@ -55,14 +60,24 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
     '/dashboard/idempotency',
     '/dashboard/remittance',
     '/dashboard/products',
+    '/dashboard/users',
+    '/dashboard/aml-ban-list',
+    '/dashboard/customers',
   ],
   [StaffRole.SUPPORT]: [
     '/dashboard',
     '/dashboard/customer360',
     '/dashboard/cases',
+    '/dashboard/kyc',
+    '/dashboard/agents',
+    '/dashboard/remittance',
+    '/dashboard/users',
+    '/dashboard/aml-ban-list',
+    '/dashboard/customers',
   ],
   [StaffRole.FINANCE]: [
     '/dashboard',
+    '/dashboard/customer360',
     '/dashboard/payments',
     '/dashboard/cards',
     '/dashboard/payroll',
@@ -75,6 +90,9 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
     '/dashboard/export',
     '/dashboard/resilience',
     '/dashboard/idempotency',
+    '/dashboard/users',
+    '/dashboard/aml-ban-list',
+    '/dashboard/customers',
   ],
 };
 

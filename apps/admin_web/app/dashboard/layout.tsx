@@ -25,6 +25,8 @@ const pageTitles: Record<string, string> = {
   '/dashboard/remittance': 'Remittance',
   '/dashboard/resilience': 'Resilience',
   '/dashboard/export': 'Export / Reports',
+  '/dashboard/customers': 'Customers',
+  '/dashboard/aml-ban-list': 'AML Ban List',
 };
 
 export default function DashboardLayout({

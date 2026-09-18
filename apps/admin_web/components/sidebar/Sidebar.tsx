@@ -17,6 +17,7 @@ const NAV: NavGroup[] = [
   {
     title: 'Customers',
     items: [
+      { name: 'Customers', href: '/dashboard/customers', icon: 'fa fa-address-book' },
       { name: 'Customer 360', href: '/dashboard/customer360', icon: 'fa fa-user' },
       { name: 'KYC Queue', href: '/dashboard/kyc', icon: 'fa fa-id-card' },
       { name: 'Agents', href: '/dashboard/agents', icon: 'fa fa-users' },
@@ -45,6 +46,7 @@ const NAV: NavGroup[] = [
     items: [
       { name: 'Reconciliation', href: '/dashboard/recon', icon: 'fa fa-balance-scale' },
       { name: 'Cases', href: '/dashboard/cases', icon: 'fa fa-ticket' },
+      { name: 'AML ban list', href: '/dashboard/aml-ban-list', icon: 'fa fa-ban' },
       { name: 'Resilience (demo)', href: '/dashboard/resilience', icon: 'fa fa-server' },
       { name: 'Export pack', href: '/dashboard/export', icon: 'fa fa-download' },
     ],

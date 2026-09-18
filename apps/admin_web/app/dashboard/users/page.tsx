@@ -59,6 +59,7 @@ export default function UsersPage() {
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
+    if (!isAdmin) return;
     try {
       await api.createStaff(formData);
       setShowForm(false);
@@ -109,7 +110,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      {showForm && (
+      {isAdmin && showForm && (
         <Panel>
           <PanelHeader>Create staff</PanelHeader>
           <PanelBody>

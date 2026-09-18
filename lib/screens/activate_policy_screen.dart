@@ -22,6 +22,9 @@ class _ActivatePolicyScreenState extends State<ActivatePolicyScreen> {
   FixedSchedule _fixedSchedule = FixedSchedule.MONTHLY;
   DeductFrom _deductFrom = DeductFrom.BOTH;
   bool _loading = false;
+  bool _initialized = false;
+  bool _isEditMode = false;
+  Map<String, dynamic>? _existingPolicy;
 
   @override
   void initState() {
@@ -32,22 +35,65 @@ class _ActivatePolicyScreenState extends State<ActivatePolicyScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    
+    if (_initialized) return;
+    _initialized = true;
+
+    _initializeForm();
+  }
+
+  Future<void> _initializeForm() async {
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final productId = args['productId'] as String;
     _product = kInsuranceProducts.firstWhere((p) => p.id == productId);
 
-    // Pre-populate with defaults
-    _premiumMode = _product.defaults.premiumMode;
-    _fixedSchedule = _product.defaults.fixedSchedule ?? FixedSchedule.MONTHLY;
-    _deductFrom = _product.defaults.deductFrom;
+    // Fetch customer's policies to check if this product is already active
+    final policies = await _api.getInsurancePolicies('cust_kasee');
+    final existingPolicy = policies.firstWhere(
+      (p) => p['productId'] == productId && p['active'] == true,
+      orElse: () => <String, dynamic>{},
+    );
 
-    if (_premiumMode == PremiumMode.PERCENT) {
-      final bps = _product.defaults.percentBps ?? 0;
-      _amountController.text = (bps / 100).toStringAsFixed(1);
+    if (existingPolicy.isNotEmpty) {
+      // Edit mode: prefill from existing policy
+      _isEditMode = true;
+      _existingPolicy = existingPolicy;
+      
+      final mode = existingPolicy['premiumMode'] as String;
+      _premiumMode = PremiumMode.values.firstWhere((e) => e.name == mode);
+      
+      if (_premiumMode == PremiumMode.PERCENT) {
+        final bps = existingPolicy['percentBps'] as int;
+        _amountController.text = (bps / 100).toStringAsFixed(1);
+      } else {
+        final minor = existingPolicy['fixedMinor'] as int;
+        _amountController.text = (minor / 100).toStringAsFixed(0);
+        
+        final schedule = existingPolicy['fixedSchedule'] as String;
+        _fixedSchedule = FixedSchedule.values.firstWhere((e) => e.name == schedule);
+      }
+      
+      final deductFrom = existingPolicy['deductFrom'] as String;
+      _deductFrom = DeductFrom.values.firstWhere((e) => e.name == deductFrom);
     } else {
-      final minor = _product.defaults.fixedMinor ?? 0;
-      _amountController.text = (minor / 100).toStringAsFixed(0);
+      // Activate mode: prefill from product defaults
+      _isEditMode = false;
+      _premiumMode = _product.defaults.premiumMode;
+      _fixedSchedule = _product.defaults.fixedSchedule ?? FixedSchedule.MONTHLY;
+      _deductFrom = _product.defaults.deductFrom;
+
+      if (_premiumMode == PremiumMode.PERCENT) {
+        final bps = _product.defaults.percentBps ?? 0;
+        _amountController.text = (bps / 100).toStringAsFixed(1);
+      } else {
+        final minor = _product.defaults.fixedMinor ?? 0;
+        _amountController.text = (minor / 100).toStringAsFixed(0);
+      }
+    }
+
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -100,10 +146,11 @@ class _ActivatePolicyScreenState extends State<ActivatePolicyScreen> {
       );
 
       if (mounted) {
+        final action = _isEditMode ? 'updated' : 'activated';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Insurance ${_product.nameFr} activated successfully. Your coverage is effective immediately.',
+              'Insurance ${_product.nameFr} $action successfully. Your coverage is effective immediately.',
             ),
             backgroundColor: Colors.green,
           ),
@@ -114,7 +161,7 @@ class _ActivatePolicyScreenState extends State<ActivatePolicyScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to activate: $e'),
+            content: Text('Failed to ${_isEditMode ? 'update' : 'activate'}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -130,9 +177,22 @@ class _ActivatePolicyScreenState extends State<ActivatePolicyScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Show loading until initialization completes
+    if (!_initialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Loading...'),
+          centerTitle: true,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final titleAction = _isEditMode ? 'Edit' : 'Activate';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Activate ${_product.nameFr}'),
+        title: Text('$titleAction ${_product.nameFr}'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

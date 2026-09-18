@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/sparkles_core.dart';
 import '../providers/global_locale_provider.dart';
+import '../providers/biometric_provider.dart';
+import '../providers/auth_provider.dart';
 
 /// ======================= API (1:1 with your React props) =======================
 /// - variant: 'dark' | 'light'
@@ -12,11 +14,77 @@ import '../providers/global_locale_provider.dart';
 enum SplashVariant { dark, light }
 
 /// Public wrapper expected by routers: `const SplashScreen()`
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _biometricAttempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Schedule biometric unlock attempt after frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _attemptBiometricUnlock();
+    });
+  }
+
+  Future<void> _attemptBiometricUnlock() async {
+    // Guard: only run once per mount
+    if (_biometricAttempted) return;
+    _biometricAttempted = true;
+
+    // Wait for logo animation to complete (~900ms)
+    await Future.delayed(const Duration(milliseconds: 900));
+
+    if (!mounted) return;
+
+    final biometricService = ref.read(biometricAuthServiceProvider);
+
+    // Check if biometric is enabled and available
+    final enabled = await biometricService.isEnabled();
+    final available = await biometricService.canCheckBiometrics();
+
+    if (!enabled || !available) {
+      return; // Biometric not enabled or available, stay on splash
+    }
+
+    // Attempt biometric authentication
+    final authenticated = await biometricService.authenticate(
+      reason: 'Unlock Poste Finance',
+    );
+
+    if (!authenticated) {
+      // Authentication failed or cancelled, stay on splash
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Load unlock payload
+    final payload = await biometricService.getUnlockPayload();
+    if (payload == null) {
+      // No payload stored (shouldn't happen), stay on splash
+      return;
+    }
+
+    // Attempt login with stored credentials
+    final authNotifier = ref.read(authProvider.notifier);
+    final success = await authNotifier.login(payload.email, payload.password);
+
+    if (success && mounted) {
+      // Login successful, navigate to home
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+    // On login failure, stay on splash (user can tap Login button)
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentLocale = ref.watch(currentLocaleProvider);
     final localeService = ref.watch(globalLocaleServiceProvider);

@@ -1339,14 +1339,14 @@ class OfflineDemoRepository {
       final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
       final pi = policies.indexWhere((p) => p['id'] == policyId);
       if (pi >= 0) {
-        policies[pi] = {
+        policies[pi] = Map<String, dynamic>.from({
           ...policies[pi],
           'premiumMode': premiumMode,
           'fixedSchedule': fixedSchedule,
           'fixedMinor': fixedMinor,
           'percentBps': percentBps,
           'deductFrom': deductFrom,
-        };
+        });
         customer['insurancePolicies'] = policies;
         customers[ci] = customer;
         _writeList('customers', customers);
@@ -1364,10 +1364,10 @@ class OfflineDemoRepository {
       final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
       final pi = policies.indexWhere((p) => p['id'] == policyId);
       if (pi >= 0) {
-        policies[pi] = {
+        policies[pi] = Map<String, dynamic>.from({
           ...policies[pi],
           'active': false,
-        };
+        });
         customer['insurancePolicies'] = policies;
         customers[ci] = customer;
         _writeList('customers', customers);
@@ -1464,10 +1464,10 @@ class OfflineDemoRepository {
           policy.fixedSchedule == FixedSchedule.MONTHLY) {
         final pi = policies.indexWhere((p) => p['id'] == policy.id);
         if (pi >= 0) {
-          policies[pi] = {
+          policies[pi] = Map<String, dynamic>.from({
             ...policies[pi],
             'lastMonthlyCollectedYm': currentYm,
-          };
+          });
         }
       }
 

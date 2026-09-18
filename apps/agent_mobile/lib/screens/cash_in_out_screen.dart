@@ -81,6 +81,27 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
         currency: _currency,
       );
 
+      // Check insufficient float for cash-in
+      String? errorMsg;
+      if (_isCashIn) {
+        final floatBalances = _repo.getFloatBalances();
+        final pockets = floatBalances['pockets'] as List<dynamic>;
+        final agentPocket = pockets.firstWhere(
+          (p) => p['currency'] == _currency,
+          orElse: () => <String, dynamic>{'availableMinor': '0'},
+        );
+        final availableMinor = int.parse(agentPocket['availableMinor']?.toString() ?? '0');
+        final available = availableMinor / 100;
+
+        if (availableMinor < amountMinor) {
+          errorMsg = 'Insufficient float. Available: $symbol${available.toStringAsFixed(2)}. Requested: $symbol${amount.toStringAsFixed(2)}.';
+        }
+      }
+
+      if (errorMsg == null && !(limitsCheck['withinLimits'] as bool)) {
+        errorMsg = limitsCheck['reason'] as String?;
+      }
+
       setState(() {
         _feePreview = {
           'amount': amount,
@@ -92,9 +113,7 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
           'customerDebited': _isCashIn ? 0 : amount + fee,
           'agentFloatChange': _isCashIn ? -amount : amount,
         };
-        _limitsError = limitsCheck['withinLimits'] as bool
-            ? null
-            : limitsCheck['reason'] as String?;
+        _limitsError = errorMsg;
       });
     } catch (e) {
       setState(() {

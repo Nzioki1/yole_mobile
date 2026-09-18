@@ -164,11 +164,29 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
             );
 
       if (mounted) {
+        // Fetch updated balances
+        final customerWallet = _repo.getWallet(
+          customerId: _selectedCustomer!['id'],
+          currency: _currency,
+        );
+        final agentFloat = _repo.getFloatBalances();
+
         final amount = double.parse(_amountController.text);
+        final feeMinor = int.parse(result['feeMinor']?.toString() ?? '0');
+        final fee = feeMinor / 100;
         final currencySymbol = _currency == 'CDF' ? 'FC' : '\$';
+        final timestamp = DateTime.now().toUtc().toIso8601String();
+
+        final customerBalanceAfter = int.parse(customerWallet['availableMinor']?.toString() ?? '0') / 100;
         
+        // Get agent float for current currency
+        final pockets = agentFloat['pockets'] as List<dynamic>;
+        final agentPocket = pockets.firstWhere((p) => p['currency'] == _currency);
+        final agentFloatAfter = int.parse(agentPocket['availableMinor']?.toString() ?? '0') / 100;
+
         showDialog(
           context: context,
+          barrierDismissible: false,
           builder: (context) => AlertDialog(
             title: Row(
               children: [
@@ -178,37 +196,63 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                   size: 28,
                 ),
                 const SizedBox(width: 8),
-                Text('${_isCashIn ? "Cash-In" : "Cash-Out"} Complete'),
+                Expanded(
+                  child: Text('${_isCashIn ? "Cash-In" : "Cash-Out"} Complete'),
+                ),
               ],
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Amount: $currencySymbol${amount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text('Customer: ${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
-                const Divider(),
-                Text(
-                  'Journal: ${result['journalId']}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(
-                  'Status: ${result['status']}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'RECEIPT',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const Divider(thickness: 2),
+                  const SizedBox(height: 8),
+                  _buildReceiptRow('Customer', '${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
+                  _buildReceiptRow('Phone', _selectedCustomer!['phoneE164'] ?? 'N/A'),
+                  const Divider(),
+                  _buildReceiptRow('Amount', '$currencySymbol${amount.toStringAsFixed(2)}', bold: true),
+                  _buildReceiptRow('Transaction Fee', '$currencySymbol${fee.toStringAsFixed(2)}'),
+                  if (_isCashIn)
+                    _buildReceiptRow('Customer Credited', '$currencySymbol${amount.toStringAsFixed(2)}', highlight: true)
+                  else
+                    _buildReceiptRow('Customer Debited', '$currencySymbol${(amount + fee).toStringAsFixed(2)}', highlight: true),
+                  const Divider(),
+                  _buildReceiptRow('Customer Balance After', '$currencySymbol${customerBalanceAfter.toStringAsFixed(2)}'),
+                  _buildReceiptRow('Agent Float After', '$currencySymbol${agentFloatAfter.toStringAsFixed(2)}'),
+                  const Divider(),
+                  _buildReceiptRow('Journal ID', result['journalId'], small: true),
+                  _buildReceiptRow('Timestamp', timestamp, small: true),
+                  _buildReceiptRow('Status', result['status'], small: true),
+                ],
+              ),
             ),
             actions: [
-              TextButton(
+              TextButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Feature coming soon')),
+                  );
+                },
+                icon: const Icon(Icons.share, size: 18),
+                label: const Text('Share Receipt'),
+              ),
+              ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
                   Navigator.pop(context);
+                  // Refresh usage after successful transaction
+                  _loadTodayUsage();
                 },
-                child: const Text('OK'),
+                child: const Text('Done'),
               ),
             ],
           ),
@@ -465,6 +509,39 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                 : percentage > 50
                     ? Colors.orange
                     : Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiptRow(String label, String value, {bool bold = false, bool highlight = false, bool small = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: small ? 10 : 14,
+                color: small ? Colors.grey : Colors.black87,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: small ? 10 : 14,
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+                color: highlight ? Colors.green.shade700 : (small ? Colors.grey : Colors.black),
+              ),
+              textAlign: TextAlign.right,
+            ),
           ),
         ],
       ),

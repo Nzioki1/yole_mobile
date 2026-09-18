@@ -16,6 +16,8 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController(text: 'Password1!');
+  final _idNumberController = TextEditingController();
+  String? _idType;
   bool _loading = false;
 
   @override
@@ -35,10 +37,17 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
         password: _passwordController.text,
         phoneE164: _phoneController.text.isNotEmpty ? _phoneController.text : null,
         email: _emailController.text.isNotEmpty ? _emailController.text : null,
+        idNumber: _idNumberController.text.isNotEmpty ? _idNumberController.text : null,
+        idType: _idType,
       );
 
       if (mounted) {
         final customerId = result['customerId'] as String? ?? 'N/A';
+        final wallets = result['wallets'] as List<dynamic>? ?? [];
+        final cdfWalletId = wallets.isNotEmpty ? wallets[0] as String? : null;
+        final usdWalletId = wallets.length > 1 ? wallets[1] as String? : null;
+        final kycStatus = result['kycStatus'] as String? ?? 'PENDING';
+        
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -80,13 +89,29 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
                   'Name: ${_firstNameController.text} ${_lastNameController.text}',
                   style: const TextStyle(fontSize: 14),
                 ),
-                if (result['walletId'] != null) ...[
+                if (cdfWalletId != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'Wallet: ${result['walletId']}',
+                    'CDF Wallet: $cdfWalletId (FC 0.00)',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
+                if (usdWalletId != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'USD Wallet: $usdWalletId (\$0.00)',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+                const SizedBox(height: 4),
+                Text(
+                  'KYC Status: $kycStatus',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: kycStatus == 'PENDING_REVIEW' ? Colors.orange : Colors.grey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -154,6 +179,25 @@ class _EnrollCustomerScreenState extends State<EnrollCustomerScreen> {
               decoration: const InputDecoration(labelText: 'Password *'),
               obscureText: true,
               validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _idNumberController,
+              decoration: const InputDecoration(labelText: 'ID Number (Optional)'),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _idType,
+              decoration: const InputDecoration(labelText: 'ID Type (Optional)'),
+              items: const [
+                DropdownMenuItem(value: 'NATIONAL_ID', child: Text('National ID')),
+                DropdownMenuItem(value: 'PASSPORT', child: Text('Passport')),
+                DropdownMenuItem(value: 'DRIVERS_LICENSE', child: Text('Driver\'s License')),
+              ],
+              onChanged: (v) {
+                setState(() => _idType = v);
+              },
             ),
             const SizedBox(height: 24),
             ElevatedButton(

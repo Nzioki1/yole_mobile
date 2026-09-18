@@ -264,5 +264,106 @@ void main() {
         );
       });
     });
+
+    group('customer enrollment', () {
+      setUp(() {
+        repo = OfflineAgentRepository.createFresh();
+        repo.setAgentId('agent-001');
+      });
+
+      test('enrollCustomer() with email creates customer and 2 wallets (CDF + USD)', () {
+        final result = repo.enrollCustomer(
+          firstName: 'Test',
+          lastName: 'Customer',
+          password: 'Password1!',
+          email: 'test@example.com',
+        );
+
+        expect(result['customerId'], isNotNull);
+        expect(result['wallets'], hasLength(2));
+        expect(result['wallets'][0], contains('_cdf'));
+        expect(result['wallets'][1], contains('_usd'));
+        expect(result['status'], 'ACTIVE');
+      });
+
+      test('enrollCustomer() with duplicate email throws exception', () {
+        repo.enrollCustomer(
+          firstName: 'First',
+          lastName: 'Customer',
+          password: 'Password1!',
+          email: 'duplicate@example.com',
+        );
+
+        expect(
+          () => repo.enrollCustomer(
+            firstName: 'Second',
+            lastName: 'Customer',
+            password: 'Password1!',
+            email: 'duplicate@example.com',
+          ),
+          throwsA(
+            predicate((e) => e.toString().contains('email already registered')),
+          ),
+        );
+      });
+
+      test('enrollCustomer() with ID creates KYC record with status PENDING_REVIEW', () {
+        final result = repo.enrollCustomer(
+          firstName: 'Test',
+          lastName: 'Customer',
+          password: 'Password1!',
+          idNumber: '123456789',
+          idType: 'NATIONAL_ID',
+        );
+
+        expect(result['kycStatus'], 'PENDING_REVIEW');
+        
+        // Verify KYC record was created
+        final kycs = repo._list('kycs');
+        final kycRecord = kycs.firstWhere(
+          (k) => k['customerId'] == result['customerId'],
+          orElse: () => <String, dynamic>{},
+        );
+        
+        expect(kycRecord['id'], isNotNull);
+        expect(kycRecord['idNumber'], '123456789');
+        expect(kycRecord['idType'], 'NATIONAL_ID');
+        expect(kycRecord['status'], 'PENDING_REVIEW');
+        expect(kycRecord['submittedAt'], isNotNull);
+      });
+
+      test('enrollCustomer() without ID has status PENDING (no KYC record)', () {
+        final result = repo.enrollCustomer(
+          firstName: 'Test',
+          lastName: 'Customer',
+          password: 'Password1!',
+        );
+
+        expect(result['kycStatus'], 'PENDING');
+        
+        // Verify no KYC record was created
+        final kycs = repo._list('kycs');
+        final hasKycRecord = kycs.any(
+          (k) => k['customerId'] == result['customerId'],
+        );
+        
+        expect(hasKycRecord, false);
+      });
+
+      test('enrollCustomer() sets enrolledByAgentId to current agent', () {
+        final result = repo.enrollCustomer(
+          firstName: 'Test',
+          lastName: 'Customer',
+          password: 'Password1!',
+        );
+
+        final customers = repo._list('customers');
+        final customer = customers.firstWhere(
+          (c) => c['id'] == result['customerId'],
+        );
+        
+        expect(customer['enrolledByAgentId'], 'agent-001');
+      });
+    });
   });
 }

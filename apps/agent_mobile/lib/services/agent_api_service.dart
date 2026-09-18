@@ -145,6 +145,8 @@ class AgentApiService {
     required String password,
     String? phoneE164,
     String? email,
+    String? idNumber,
+    String? idType,
   }) async {
     if (offlineDemo) {
       if (_agentId == null) throw Exception('Not logged in');
@@ -155,6 +157,8 @@ class AgentApiService {
         password: password,
         phoneE164: phoneE164,
         email: email,
+        idNumber: idNumber,
+        idType: idType,
       );
     }
     final response = await _client.post(
@@ -166,6 +170,8 @@ class AgentApiService {
         'password': password,
         if (phoneE164 != null) 'phoneE164': phoneE164,
         if (email != null) 'email': email,
+        if (idNumber != null) 'idNumber': idNumber,
+        if (idType != null) 'idType': idType,
       }),
     );
 

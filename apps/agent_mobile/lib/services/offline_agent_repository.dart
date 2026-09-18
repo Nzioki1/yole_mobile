@@ -422,6 +422,8 @@ class OfflineAgentRepository {
     required String password,
     String? phoneE164,
     String? email,
+    String? idNumber,
+    String? idType,
   }) {
     _requireAgent();
     if (email != null && email.isNotEmpty) {
@@ -435,6 +437,11 @@ class OfflineAgentRepository {
 
     final id = _nextId('cust');
     final now = DateTime.now().toUtc().toIso8601String();
+    
+    // Determine KYC status: PENDING_REVIEW if ID provided, otherwise PENDING
+    final hasIdInfo = idNumber != null && idNumber.isNotEmpty && idType != null;
+    final kycStatus = hasIdInfo ? 'PENDING_REVIEW' : 'PENDING';
+    
     final customer = <String, dynamic>{
       'id': id,
       'email': email,
@@ -444,7 +451,7 @@ class OfflineAgentRepository {
       'phoneE164': phoneE164,
       'segment': 'OPEN',
       'status': 'ACTIVE',
-      'kycStatus': 'PENDING',
+      'kycStatus': kycStatus,
       'enrolledByAgentId': _currentAgentId,
       'createdAt': now,
     };
@@ -473,12 +480,27 @@ class OfflineAgentRepository {
     });
     _writeList('wallets', wallets);
 
+    // Create KYC record if ID information provided
+    if (hasIdInfo) {
+      final kycId = _nextId('kyc');
+      final kycs = _list('kycs');
+      kycs.add({
+        'id': kycId,
+        'customerId': id,
+        'idNumber': idNumber,
+        'idType': idType,
+        'status': 'PENDING_REVIEW',
+        'submittedAt': now,
+      });
+      _writeList('kycs', kycs);
+    }
+
     return {
       'customerId': id,
       'walletId': cdfWalletId,
       'wallets': [cdfWalletId, usdWalletId],
       'status': 'ACTIVE',
-      'kycStatus': 'PENDING',
+      'kycStatus': kycStatus,
     };
   }
 

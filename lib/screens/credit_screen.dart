@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
 import '../router_types.dart';
 
+String _formatMinorAmount(Object? amount) {
+  final amountStr = amount?.toString() ?? '0';
+  final num parsed = num.tryParse(amountStr) ?? 0;
+  return (parsed / 100).toStringAsFixed(2);
+}
+
+
 class CreditScreen extends StatefulWidget {
   const CreditScreen({super.key});
 
@@ -243,7 +250,7 @@ class _CreditProductCard extends StatelessWidget {
               if (maxAmount != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Max Amount: ${_formatAmount(maxAmount.toString())} ${eligibility?['currency'] ?? 'USD'}',
+                  'Max Amount: ${_formatMinorAmount(maxAmount)} ${eligibility?['currency'] ?? 'USD'}',
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -339,7 +346,7 @@ class _LoanCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$currency ${_formatAmount(principal)}',
+                      '$currency ${_formatMinorAmount(principal)}',
                       style: theme.textTheme.bodyLarge,
                     ),
                     if (disbursedAt != null) ...[

@@ -9,44 +9,89 @@ class AgentLoginScreen extends StatefulWidget {
 }
 
 class _AgentLoginScreenState extends State<AgentLoginScreen> {
-  final _agentIdController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _api = AgentApiService();
   bool _loading = false;
+  bool _showCustomerBanner = false;
 
   @override
   void initState() {
     super.initState();
     _api.init().then((_) {
-      // If already logged in, go to home
-      _agentIdController.text = 'agent_1'; // Default for demo
+      // Autofill agent credentials for demo
+      _emailController.text = 'agent001@postefinance-agents.cd';
+      _passwordController.text = 'Password1!';
     });
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool get _isFormValid {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    
+    // Basic email validation
+    final emailValid = email.isNotEmpty && email.contains('@');
+    
+    // Password min 8 chars
+    final passwordValid = password.length >= 8;
+    
+    return emailValid && passwordValid;
+  }
+
+  void _dismissCustomerBanner() {
+    setState(() => _showCustomerBanner = false);
+  }
+
   Future<void> _login() async {
-    if (_agentIdController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter Agent ID')),
-      );
+    if (!_isFormValid) {
       return;
     }
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _showCustomerBanner = false;
+    });
+    
     try {
-      // Verify agent exists
-      await _api.getAgentInfo(_agentIdController.text);
-      await _api.setAgentId(_agentIdController.text);
+      await _api.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
       
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
-        );
+        final errorMsg = e.toString();
+        
+        // Check for customer email exception
+        if (errorMsg.contains('CUSTOMER_EMAIL')) {
+          setState(() => _showCustomerBanner = true);
+          // Auto-dismiss after 10 seconds
+          Future.delayed(const Duration(seconds: 10), () {
+            if (mounted) {
+              setState(() => _showCustomerBanner = false);
+            }
+          });
+        } else {
+          // Show other errors as snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${e.toString().replaceAll('Exception: ', '')}')),
+          );
+        }
       }
     } finally {
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -68,24 +113,68 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              TextField(
-                controller: _agentIdController,
-                decoration: const InputDecoration(
-                  labelText: 'Agent ID',
-                  hintText: 'agent_1',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.badge),
+              
+              // Customer banner (dismissible)
+              if (_showCustomerBanner)
+                Card(
+                  color: Colors.orange.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber, color: Colors.orange.shade700),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Customer accounts must use Yole customer app. Download from app store.',
+                            style: TextStyle(
+                              color: Colors.orange.shade900,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: _dismissCustomerBanner,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
+              if (_showCustomerBanner) const SizedBox(height: 16),
+              
+              // Email field
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Note: Agents are created by admin. Use agent_1 for demo.\n'
-                'Agent auth uses X-Agent-Id header.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              
+              // Password field
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _isFormValid ? _login() : null,
               ),
               const SizedBox(height: 24),
+              
+              // Login button
               ElevatedButton(
-                onPressed: _loading ? null : _login,
+                onPressed: (_loading || !_isFormValid) ? null : _login,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),

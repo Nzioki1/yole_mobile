@@ -128,19 +128,6 @@ const String kUniverseJson = r'''
       "createdAt": "2026-07-01T09:00:00Z"
     },
     {
-      "id": "cust_jp_kabila",
-      "email": "jkabila@example.cd",
-      "password": "Password1!",
-      "phoneE164": "+243990123456",
-      "firstName": "Jean-Paul",
-      "lastName": "Kabila",
-      "segment": "RETAIL",
-      "status": "ACTIVE",
-      "kycStatus": "APPROVED",
-      "enrolledByAgentId": "agent-001",
-      "createdAt": "2026-08-15T10:30:00Z"
-    },
-    {
       "id": "cust_marie_tshala",
       "email": "mtshala@example.cd",
       "password": "Password1!",
@@ -152,6 +139,32 @@ const String kUniverseJson = r'''
       "kycStatus": "PENDING_REVIEW",
       "enrolledByAgentId": "agent-001",
       "createdAt": "2026-09-10T14:20:00Z"
+    },
+    {
+      "id": "cust_pierre_lumbu",
+      "email": "plumbu@example.cd",
+      "password": "Password1!",
+      "phoneE164": "+243991234568",
+      "firstName": "Pierre",
+      "lastName": "Lumbu",
+      "segment": "OPEN",
+      "status": "ACTIVE",
+      "kycStatus": "APPROVED",
+      "enrolledByAgentId": "agent-001",
+      "createdAt": "2026-09-05T10:00:00Z"
+    },
+    {
+      "id": "cust_julie_nkandu",
+      "email": "jnkandu@example.cd",
+      "password": "Password1!",
+      "phoneE164": "+243991234569",
+      "firstName": "Julie",
+      "lastName": "Nkandu",
+      "segment": "OPEN",
+      "status": "ACTIVE",
+      "kycStatus": "APPROVED",
+      "enrolledByAgentId": "agent-002",
+      "createdAt": "2026-09-08T11:30:00Z"
     }
   ],
   "wallets": [
@@ -189,24 +202,6 @@ const String kUniverseJson = r'''
       "availableMinor": 42000,
       "ledgerMinor": 42000,
       "blockedMinor": 5000,
-      "pendingMinor": 0
-    },
-    {
-      "id": "wal_jp_usd",
-      "customerId": "cust_jp_kabila",
-      "currency": "USD",
-      "availableMinor": 125000,
-      "ledgerMinor": 125000,
-      "blockedMinor": 0,
-      "pendingMinor": 0
-    },
-    {
-      "id": "wal_jp_cdf",
-      "customerId": "cust_jp_kabila",
-      "currency": "CDF",
-      "availableMinor": 15000000,
-      "ledgerMinor": 15000000,
-      "blockedMinor": 0,
       "pendingMinor": 0
     }
   ],
@@ -268,6 +263,102 @@ const String kUniverseJson = r'''
       "eligibleAdvanceMaxCdfMinor": 36000000,
       "status": "ACTIVE",
       "hiredAt": "2024-03-01"
+    },
+    {
+      "id": "emp_row_poste_002",
+      "employerId": "emp_poste",
+      "customerId": null,
+      "employeeNumber": "PD-10043",
+      "jobTitle": "Teller Supervisor",
+      "grossSalaryCdfMinor": 95000000,
+      "netSalaryCdfMinor": 80000000,
+      "eligibleAdvanceMaxCdfMinor": 40000000,
+      "status": "ACTIVE",
+      "hiredAt": "2024-01-15"
+    },
+    {
+      "id": "emp_row_poste_003",
+      "employerId": "emp_poste",
+      "customerId": null,
+      "employeeNumber": "PD-10044",
+      "jobTitle": "Customer Service Rep",
+      "grossSalaryCdfMinor": 65000000,
+      "netSalaryCdfMinor": 55000000,
+      "eligibleAdvanceMaxCdfMinor": 27500000,
+      "status": "ACTIVE",
+      "hiredAt": "2025-05-10"
+    },
+    {
+      "id": "emp_row_poste_004",
+      "employerId": "emp_poste",
+      "customerId": null,
+      "employeeNumber": "PD-10045",
+      "jobTitle": "Compliance Officer",
+      "grossSalaryCdfMinor": 120000000,
+      "netSalaryCdfMinor": 100000000,
+      "eligibleAdvanceMaxCdfMinor": 50000000,
+      "status": "ACTIVE",
+      "hiredAt": "2023-08-20"
+    },
+    {
+      "id": "emp_row_poste_005",
+      "employerId": "emp_poste",
+      "customerId": null,
+      "employeeNumber": "PD-10046",
+      "jobTitle": "Marketing Coordinator",
+      "grossSalaryCdfMinor": 70000000,
+      "netSalaryCdfMinor": 59000000,
+      "eligibleAdvanceMaxCdfMinor": 29500000,
+      "status": "ACTIVE",
+      "hiredAt": "2025-02-01"
+    },
+    {
+      "id": "emp_row_poste_006",
+      "employerId": "emp_poste",
+      "customerId": null,
+      "employeeNumber": "PD-10047",
+      "jobTitle": "IT Support Specialist",
+      "grossSalaryCdfMinor": 75000000,
+      "netSalaryCdfMinor": 63000000,
+      "eligibleAdvanceMaxCdfMinor": 31500000,
+      "status": "ACTIVE",
+      "hiredAt": "2024-11-15"
+    },
+    {
+      "id": "emp_row_congo_001",
+      "employerId": "emp_congo_mining",
+      "customerId": null,
+      "employeeNumber": "CM-5501",
+      "jobTitle": "Mine Operations Manager",
+      "grossSalaryCdfMinor": 180000000,
+      "netSalaryCdfMinor": 150000000,
+      "eligibleAdvanceMaxCdfMinor": 75000000,
+      "status": "ACTIVE",
+      "hiredAt": "2023-06-01"
+    },
+    {
+      "id": "emp_row_congo_002",
+      "employerId": "emp_congo_mining",
+      "customerId": null,
+      "employeeNumber": "CM-5502",
+      "jobTitle": "Safety Engineer",
+      "grossSalaryCdfMinor": 110000000,
+      "netSalaryCdfMinor": 92000000,
+      "eligibleAdvanceMaxCdfMinor": 46000000,
+      "status": "ACTIVE",
+      "hiredAt": "2024-03-15"
+    },
+    {
+      "id": "emp_row_congo_003",
+      "employerId": "emp_congo_mining",
+      "customerId": null,
+      "employeeNumber": "CM-5503",
+      "jobTitle": "Equipment Operator",
+      "grossSalaryCdfMinor": 85000000,
+      "netSalaryCdfMinor": 72000000,
+      "eligibleAdvanceMaxCdfMinor": 36000000,
+      "status": "ACTIVE",
+      "hiredAt": "2025-01-20"
     }
   ],
   "salaryHistory": [
@@ -296,6 +387,60 @@ const String kUniverseJson = r'''
       "period": "2026-08",
       "grossCdfMinor": 85000000,
       "netCdfMinor": 72000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_poste_002_2026_08",
+      "employeeId": "emp_row_poste_002",
+      "customerId": null,
+      "period": "2026-08",
+      "grossCdfMinor": 95000000,
+      "netCdfMinor": 80000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_poste_003_2026_08",
+      "employeeId": "emp_row_poste_003",
+      "customerId": null,
+      "period": "2026-08",
+      "grossCdfMinor": 65000000,
+      "netCdfMinor": 55000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_poste_004_2026_07",
+      "employeeId": "emp_row_poste_004",
+      "customerId": null,
+      "period": "2026-07",
+      "grossCdfMinor": 120000000,
+      "netCdfMinor": 100000000,
+      "paidAt": "2026-07-28T10:00:00Z"
+    },
+    {
+      "id": "sal_poste_004_2026_08",
+      "employeeId": "emp_row_poste_004",
+      "customerId": null,
+      "period": "2026-08",
+      "grossCdfMinor": 120000000,
+      "netCdfMinor": 100000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_congo_001_2026_08",
+      "employeeId": "emp_row_congo_001",
+      "customerId": null,
+      "period": "2026-08",
+      "grossCdfMinor": 180000000,
+      "netCdfMinor": 150000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_congo_002_2026_08",
+      "employeeId": "emp_row_congo_002",
+      "customerId": null,
+      "period": "2026-08",
+      "grossCdfMinor": 110000000,
+      "netCdfMinor": 92000000,
       "paidAt": "2026-08-28T10:00:00Z"
     }
   ],
@@ -396,7 +541,7 @@ const String kUniverseJson = r'''
       "feeMinor": 50,
       "totalMinor": 5050,
       "sourceRef": "wal_kasee_usd",
-      "destRef": "cust_jp_kabila",
+      "destRef": "cust_amina",
       "journalId": "jnl_kasee_w2w_001",
       "idempotencyKey": "idem_w2w_kasee_001",
       "createdAt": "2026-09-16T10:30:00Z"
@@ -535,6 +680,45 @@ const String kUniverseJson = r'''
       "exceptionReason": "Amount exceeds auto-approval threshold",
       "thresholdMinor": 3000000,
       "createdAt": "2026-09-16T11:20:00Z"
+    },
+    {
+      "id": "loan_marie_exception_001",
+      "customerId": "cust_marie_tshala",
+      "employerId": null,
+      "productId": "prod_nano_loan",
+      "status": "PENDING_EXCEPTION",
+      "principalMinor": 4500000,
+      "currency": "CDF",
+      "scheduleId": null,
+      "exceptionReason": "KYC pending review - manual approval required",
+      "thresholdMinor": 3000000,
+      "createdAt": "2026-09-16T14:30:00Z"
+    },
+    {
+      "id": "loan_pierre_exception_001",
+      "customerId": "cust_pierre_lumbu",
+      "employerId": null,
+      "productId": "prod_nano_loan",
+      "status": "PENDING_EXCEPTION",
+      "principalMinor": 3500000,
+      "currency": "CDF",
+      "scheduleId": null,
+      "exceptionReason": "First-time borrower - credit history review needed",
+      "thresholdMinor": 3000000,
+      "createdAt": "2026-09-17T09:15:00Z"
+    },
+    {
+      "id": "loan_julie_exception_001",
+      "customerId": "cust_julie_nkandu",
+      "employerId": null,
+      "productId": "prod_nano_loan",
+      "status": "PENDING_EXCEPTION",
+      "principalMinor": 5500000,
+      "currency": "CDF",
+      "scheduleId": null,
+      "exceptionReason": "Amount significantly above threshold - senior approval needed",
+      "thresholdMinor": 3000000,
+      "createdAt": "2026-09-17T15:45:00Z"
     }
   ],
   "cards": [
@@ -744,6 +928,33 @@ const String kUniverseJson = r'''
       "makerStaffId": "staff_ops",
       "status": "PENDING",
       "createdAt": "2026-09-16T11:25:00Z"
+    },
+    {
+      "id": "apr_loan_exception_002",
+      "type": "CREDIT_EXCEPTION",
+      "targetId": "loan_marie_exception_001",
+      "summary": "Approve nano loan for Marie Tshala - KYC pending review",
+      "makerStaffId": "staff_ops",
+      "status": "PENDING",
+      "createdAt": "2026-09-16T14:35:00Z"
+    },
+    {
+      "id": "apr_loan_exception_003",
+      "type": "CREDIT_EXCEPTION",
+      "targetId": "loan_pierre_exception_001",
+      "summary": "Approve nano loan for Pierre Lumbu - first-time borrower",
+      "makerStaffId": "staff_ops",
+      "status": "PENDING",
+      "createdAt": "2026-09-17T09:20:00Z"
+    },
+    {
+      "id": "apr_loan_exception_004",
+      "type": "CREDIT_EXCEPTION",
+      "targetId": "loan_julie_exception_001",
+      "summary": "Approve nano loan for Julie Nkandu - above threshold amount",
+      "makerStaffId": "staff_ops",
+      "status": "PENDING",
+      "createdAt": "2026-09-17T15:50:00Z"
     },
     {
       "id": "apr_aml_case_001",
@@ -956,4 +1167,6 @@ const String kUniverseJson = r'''
     }
   ]
 }
+
 ''';
+

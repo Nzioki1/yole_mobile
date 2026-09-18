@@ -20,24 +20,43 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
   bool _isCashIn = true;
   bool _loading = false;
   Map<String, dynamic>? _feePreview;
+  Map<String, dynamic>? _todayUsage;
+  String? _limitsError;
 
   @override
   void initState() {
     super.initState();
     _api.init();
     _amountController.addListener(_calculateFeePreview);
+    _loadTodayUsage();
+  }
+
+  Future<void> _loadTodayUsage() async {
+    try {
+      final usage = _repo.getTodayUsage();
+      setState(() => _todayUsage = usage);
+    } catch (e) {
+      // Agent not logged in yet, will retry on execute
+      debugPrint('Failed to load today usage: $e');
+    }
   }
 
   void _calculateFeePreview() {
     final amountText = _amountController.text.trim();
     if (amountText.isEmpty || _selectedCustomer == null) {
-      setState(() => _feePreview = null);
+      setState(() {
+        _feePreview = null;
+        _limitsError = null;
+      });
       return;
     }
 
     final amount = double.tryParse(amountText);
     if (amount == null || amount <= 0) {
-      setState(() => _feePreview = null);
+      setState(() {
+        _feePreview = null;
+        _limitsError = null;
+      });
       return;
     }
 
@@ -55,6 +74,12 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
       final fee = feeMinor / 100;
       final symbol = _currency == 'CDF' ? 'FC' : '\$';
 
+      // Check limits
+      final limitsCheck = _repo.isWithinLimits(
+        amountMinor: amountMinor,
+        currency: _currency,
+      );
+
       setState(() {
         _feePreview = {
           'amount': amount,
@@ -66,9 +91,15 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
           'customerDebited': _isCashIn ? 0 : amount + fee,
           'agentFloatChange': _isCashIn ? -amount : amount,
         };
+        _limitsError = limitsCheck['withinLimits'] as bool
+            ? null
+            : limitsCheck['reason'] as String?;
       });
     } catch (e) {
-      setState(() => _feePreview = null);
+      setState(() {
+        _feePreview = null;
+        _limitsError = null;
+      });
     }
   }
 
@@ -86,6 +117,16 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
         const SnackBar(
           content: Text('Please look up a customer first'),
           backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (_limitsError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_limitsError!),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
         ),
       );
       return;
@@ -222,6 +263,48 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
               enabled: _selectedCustomer != null,
             ),
+            if (_todayUsage != null) ...[
+              const SizedBox(height: 16),
+              Card(
+                color: Colors.grey.shade100,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Daily Limits',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildLimitsRow(
+                        'CDF Daily',
+                        _todayUsage!['totalCdfMinor'] as int,
+                        _todayUsage!['dailyLimitCdfMinor'] as int,
+                        'FC',
+                      ),
+                      _buildLimitsRow(
+                        'USD Daily',
+                        _todayUsage!['totalUsdMinor'] as int,
+                        _todayUsage!['dailyLimitUsdMinor'] as int,
+                        '\$',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Per-txn max: FC ${(_todayUsage!['perTxnLimitCdfMinor'] as int / 100).toStringAsFixed(2)} / \$${(_todayUsage!['perTxnLimitUsdMinor'] as int / 100).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             if (_feePreview != null) ...[
               const SizedBox(height: 16),
               Card(
@@ -269,6 +352,30 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                 ),
               ),
             ],
+            if (_limitsError != null) ...[
+              const SizedBox(height: 16),
+              Card(
+                color: Colors.red.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _limitsError!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loading ? null : _execute,
@@ -308,6 +415,41 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
               color: highlight ? Colors.green.shade700 : null,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLimitsRow(String label, int used, int limit, String symbol) {
+    final usedAmount = used / 100;
+    final limitAmount = limit / 100;
+    final percentage = limit > 0 ? (used / limit * 100) : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label),
+              Text(
+                '$symbol${usedAmount.toStringAsFixed(2)} / $symbol${limitAmount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: percentage / 100,
+            backgroundColor: Colors.grey.shade300,
+            color: percentage > 80
+                ? Colors.red
+                : percentage > 50
+                    ? Colors.orange
+                    : Colors.green,
           ),
         ],
       ),

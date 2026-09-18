@@ -18,11 +18,11 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _api.init().then((_) {
-      // Autofill agent credentials for demo
-      _emailController.text = 'agent001@postefinance-agents.cd';
-      _passwordController.text = 'Password1!';
-    });
+    // Autofill immediately so Login enables on first frame (controllers alone
+    // do not rebuild; setState after async init left the button disabled).
+    _emailController.text = 'agent001@postefinance-agents.cd';
+    _passwordController.text = 'Password1!';
+    _api.init();
   }
 
   @override

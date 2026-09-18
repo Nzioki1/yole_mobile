@@ -24,7 +24,7 @@ export default function ProductsPage() {
     minFeeMinor: '',
     maxFeeMinor: '',
     currency: 'USD',
-    effectiveFrom: new Date().toISOString().slice(0, 10),
+    effectiveFrom: '',
   });
 
   const [limitForm, setLimitForm] = useState({
@@ -32,8 +32,14 @@ export default function ProductsPage() {
     currency: 'USD',
     dailyLimitMinor: '',
     monthlyLimitMinor: '',
-    effectiveFrom: new Date().toISOString().slice(0, 10),
+    effectiveFrom: '',
   });
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    setFeeForm((f) => (f.effectiveFrom ? f : { ...f, effectiveFrom: today }));
+    setLimitForm((f) => (f.effectiveFrom ? f : { ...f, effectiveFrom: today }));
+  }, []);
 
   useEffect(() => {
     loadData();

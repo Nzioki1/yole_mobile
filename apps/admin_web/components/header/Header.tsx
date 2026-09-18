@@ -14,7 +14,9 @@ interface HeaderProps {
 
 export default function Header({ pageTitle }: HeaderProps) {
   const router = useRouter();
-  const currentUser = authService.getCurrentUser();
+  // Auth from localStorage must wait until after mount — otherwise SSR text
+  // ("Staff") mismatches the client (logged-in email) and React hydrates badly.
+  const [currentUser, setCurrentUser] = useState<ReturnType<typeof authService.getCurrentUser>>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -28,6 +30,10 @@ export default function Header({ pageTitle }: HeaderProps) {
     authService.logout();
     router.push('/login');
   };
+
+  useEffect(() => {
+    setCurrentUser(authService.getCurrentUser());
+  }, []);
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {

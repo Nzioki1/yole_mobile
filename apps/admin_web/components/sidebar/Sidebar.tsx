@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { authService } from '@/lib/auth';
 import { getAuthorizedRoutes } from '@/lib/rbac';
@@ -59,7 +60,14 @@ const NAV: NavGroup[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const user = authService.getCurrentUser();
+  // Defer localStorage auth until mount so SSR and first client paint match
+  // (empty nav / "Staff"), then fill in role-gated links after hydrate.
+  const [user, setUser] = useState<ReturnType<typeof authService.getCurrentUser>>(null);
+
+  useEffect(() => {
+    setUser(authService.getCurrentUser());
+  }, []);
+
   const authorizedRoutes = user ? getAuthorizedRoutes(user.role) : [];
 
   const canAccess = (href: string) =>

@@ -139,3 +139,16 @@
 **Commit message:** `feat(admin): allow all staff roles to view Users list`  
 **Files changed:** 2 (users page + DEM-SCRIPT.md)  
 **Lines changed:** +36 insertions, -19 deletions
+
+---
+
+## Fix Applied (Post-Review)
+
+**Issue:** Create form conditional was `{showForm && (` instead of `{isAdmin && showForm && (`  
+**Risk:** Non-ADMIN could potentially see form if `showForm` state got set inappropriately
+
+**Changes:**
+- Updated form conditional to `{isAdmin && showForm && (`
+- Added early guard in `handleCreate`: `if (!isAdmin) return;`
+
+**Commit:** `fix(admin): gate Users create form with isAdmin`

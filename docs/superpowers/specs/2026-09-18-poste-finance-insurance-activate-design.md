@@ -107,10 +107,14 @@ All premiums are denominated and collected in **CDF** (Congolese Franc) only. US
 
 ### 3.1 Navigation
 
-**Insurance tab** in main bottom navigation (already stubbed in savings sprint), containing two sub-tabs:
+**Entry point:** Home screen quick-action tile labeled "Insurance" navigates to `/insurance` route (already stubbed in savings sprint).
+
+**Insurance screen** contains two tabs:
 
 - **Products**: Browse and activate insurance products
 - **My Policies**: View active policies and manage subscriptions
+
+**Note:** Bottom navigation remains unchanged. Insurance is a secondary feature accessed from Home, not a top-level tab.
 
 ### 3.2 Products Tab
 
@@ -118,53 +122,53 @@ All premiums are denominated and collected in **CDF** (Congolese Franc) only. US
 
 **Each card displays:**
 - Product icon (illustrative)
-- Product name (French primary, e.g., "Santé hospitalisation")
+- Product name (French, e.g., "Santé hospitalisation")
 - Subtitle (English, e.g., "Health Hospitalization")
-- Brief description (1-2 sentences explaining coverage)
-- Illustrative claim cap (e.g., "Couverture jusqu'à 500 000 CDF")
+- Brief description in French (1-2 sentences explaining coverage)
+- Illustrative claim cap in French (e.g., "Couverture jusqu'à 500 000 CDF")
 - Status badge: **Inactive** (gray) or **Active** (green)
 - Action button:
-  - **"Activer"** (Activate) if inactive
-  - **"Modifier"** (Edit) if active
+  - **"Activate"** (English) if inactive
+  - **"Edit"** (English) if active
 
 **Interaction:**
-Tapping "Activer" or "Modifier" navigates to the Activate/Edit form.
+Tapping "Activate" or "Edit" navigates to the Activate/Edit form.
 
 ### 3.3 Activate / Edit Policy Form
 
-**Screen title:**
-- "Activer [Product Name]" (when activating)
-- "Modifier [Product Name]" (when editing)
+**Screen title (English):**
+- "Activate [Product Name in French]" (when activating)
+- "Edit [Product Name in French]" (when editing)
 
-**Form fields:**
+**Form fields (labels in English):**
 
-1. **Type de prime** (Premium Type)
-   - Radio buttons: `Pourcentage` | `Montant fixe`
+1. **Premium Type**
+   - Radio buttons: `Percentage` | `Fixed amount`
    - Default per product (see section 4.5)
 
-2. **If FIXED selected: Fréquence** (Schedule)
-   - Radio buttons: `Par transaction` | `Mensuel`
+2. **If FIXED selected: Schedule**
+   - Radio buttons: `Per transaction` | `Monthly`
    - Default per product
 
-3. **Montant / Pourcentage**
-   - If FIXED: Currency input (CDF, integer, e.g., "2 500 CDF")
-   - If PERCENT: Percentage input (decimal, e.g., "0,3%" or "1,0%")
+3. **Amount / Percentage**
+   - If FIXED: Currency input (CDF, integer, e.g., "2,500 CDF")
+   - If PERCENT: Percentage input (decimal, e.g., "0.3%" or "1.0%")
    - Default per product
 
-4. **Déduire sur** (Deduct From)
-   - Radio buttons: `Paiements de factures` | `Envois d'argent` | `Les deux`
+4. **Deduct from**
+   - Radio buttons: `Bills` | `Send money` | `Both`
    - Default per product
 
-5. **PIN de confirmation**
+5. **Confirm PIN**
    - 6-digit PIN input
    - Validation: must match hardcoded offline demo PIN `123456`
 
-**Actions:**
-- **"Annuler"** (Cancel): Dismiss form, no changes
-- **"Confirmer"** (Confirm): Validate PIN, save policy, show success toast, navigate back to Products tab
+**Actions (English):**
+- **"Cancel"**: Dismiss form, no changes
+- **"Confirm"**: Validate PIN, save policy, show success toast, navigate back to Products tab
 
-**Success message:**
-"Assurance [Product Name] activée avec succès. Votre couverture est effective immédiatement."
+**Success message (English):**
+"Insurance [Product Name in French] activated successfully. Your coverage is effective immediately."
 
 **Edit behavior:**
 When editing an existing active policy, the form pre-populates with current values. Confirming updates the policy in place. Only one active policy per product is allowed; re-activation overwrites the previous configuration.
@@ -173,58 +177,58 @@ When editing an existing active policy, the form pre-populates with current valu
 
 **Layout:** Vertical list of active policies (empty state if none active).
 
-**Each policy card displays:**
+**Each policy card displays (English labels, French product name):**
 - Product name (French)
-- Premium summary:
-  - FIXED PER_TXN: "1 000 CDF par transaction"
-  - FIXED MONTHLY: "2 500 CDF par mois"
-  - PERCENT: "0,3% du montant de la transaction"
-- Deduction rail: "Sur paiements de factures" | "Sur envois d'argent" | "Sur paiements et envois"
-- Activation date: "Activé le [DD/MM/YYYY]"
-- Action buttons:
-  - **"Désactiver"** (Deactivate)
-  - **"Faire une réclamation"** (File a Claim) — disabled, shows Coming Soon dialog
+- Premium summary (English):
+  - FIXED PER_TXN: "1,000 CDF per transaction"
+  - FIXED MONTHLY: "2,500 CDF per month"
+  - PERCENT: "0.3% of transaction amount"
+- Deduction rail (English): "On bills" | "On send money" | "On bills and send money"
+- Activation date (English): "Activated on [DD/MM/YYYY]"
+- Action buttons (English):
+  - **"Deactivate"**
+  - **"File a Claim"** — disabled, shows Coming Soon dialog
 
 **Deactivate interaction:**
-1. User taps "Désactiver"
-2. Confirmation dialog: "Êtes-vous sûr de vouloir désactiver [Product Name]?"
+1. User taps "Deactivate"
+2. Confirmation dialog (English): "Are you sure you want to deactivate [Product Name in French]?"
 3. If confirmed, policy is marked inactive, card removed from list, success toast shown
 4. Policy reappears as "Inactive" on Products tab
 
 **File a Claim interaction:**
-Tapping shows a dialog:
-- Title: "Réclamations à venir"
-- Body: "La fonctionnalité de réclamation sera disponible dans une prochaine version."
-- Button: "D'accord"
+Tapping shows a dialog (English):
+- Title: "Coming Soon"
+- Body: "Claims filing will be available in a future update."
+- Button: "OK"
 
 ### 3.5 Pay Bill Confirmation Screen (Enhanced)
 
-**Location:** After user enters bill amount and taps "Continuer," before PIN entry.
+**Location:** In the existing Pay Bill flow, on the confirmation screen before PIN entry.
 
-**Premium display:**
+**Premium display (English labels):**
 If one or more active policies match (product is active AND deductFrom is BILL or BOTH):
-- Original bill amount shown as "Montant de la facture: [amount] CDF"
-- Below that, a new section: **"Primes d'assurance"**
+- Original bill amount shown as "Bill amount: [amount] CDF"
+- Below that, a new section: **"Insurance premiums"**
 - Each matching policy appears as a line item:
   - Product name (French)
   - Premium amount: "+ [premium] CDF"
-- Subtotal: "Total des primes: [sum of premiums] CDF"
-- **Grand total** (bold): "Montant total à débiter: [bill amount + total premiums] CDF"
+- Subtotal: "Total premiums: [sum of premiums] CDF"
+- **Grand total** (bold): "Total to debit: [bill amount + total premiums] CDF"
 
 **Example:**
 ```
-Montant de la facture: 50 000 CDF
+Bill amount: 50,000 CDF
 
-Primes d'assurance:
-  Santé hospitalisation       + 2 500 CDF
-  Accident                    + 1 000 CDF
-  Total des primes:             3 500 CDF
+Insurance premiums:
+  Santé hospitalisation       + 2,500 CDF
+  Accident                    + 1,000 CDF
+  Total premiums:               3,500 CDF
 
-Montant total à débiter:      53 500 CDF
+Total to debit:              53,500 CDF
 ```
 
 **Validation:**
-Before showing PIN entry, system checks if wallet balance ≥ grand total. If insufficient, show error: "Solde insuffisant pour couvrir le montant et les primes d'assurance."
+Before showing PIN entry, system checks if wallet balance ≥ grand total. If insufficient, show error (English): "Insufficient balance to cover amount and insurance premiums."
 
 **After PIN success:**
 - Debit wallet by grand total
@@ -235,11 +239,11 @@ Before showing PIN entry, system checks if wallet balance ≥ grand total. If in
 
 ### 3.6 Send Money Confirmation Screen (Enhanced)
 
-**Location:** In P2P send flow, after user enters recipient and amount, before PIN entry.
+**Location:** In the existing P2P Send Money flow, on the confirmation screen before PIN entry.
 
-**Premium display logic:** Identical to Pay Bill, except:
+**Premium display logic (English labels):** Identical to Pay Bill, except:
 - Matches policies where deductFrom is SEND or BOTH
-- Label: "Montant à envoyer: [amount] CDF" instead of "Montant de la facture"
+- Label: "Amount to send: [amount] CDF" instead of "Bill amount"
 
 **Validation, debit, and journal logic:** Same as Pay Bill.
 
@@ -537,7 +541,7 @@ Add `insurancePolicies` array to customer objects:
 
 **Catalog constants:**
 
-Define static product catalog in `lib/core/constants/insurance_products.dart`:
+Define static product catalog as a constant (suggested location: `lib/constants/insurance_products.dart` or similar, following existing app patterns):
 
 ```dart
 const List<InsuranceProduct> kInsuranceProducts = [
@@ -599,32 +603,31 @@ class CoreApiService {
 
 ### 6.3 Flutter UI Layer
 
-**File structure:**
+**File structure guidance:**
+
+Follow existing YOLE app patterns. Likely locations:
 
 ```
 lib/
-  features/
-    insurance/
-      screens/
-        insurance_screen.dart           # Tabbed parent (Products | My Policies)
-        products_tab.dart               # Product catalog list
-        policies_tab.dart               # Active policies list
-        activate_policy_screen.dart     # Activation/edit form
-      widgets/
-        product_card.dart               # Product catalog card
-        policy_card.dart                # Active policy summary card
-        premium_line_item.dart          # Premium breakdown line on confirm
-      models/
-        insurance_product.dart
-        insurance_policy.dart
-        premium_line_item.dart
-      providers/
-        insurance_provider.dart         # State management (Riverpod or Provider)
+  screens/
+    insurance_screen.dart           # Tabbed parent (Products | My Policies)
+    activate_policy_screen.dart     # Activation/edit form
+    # (or similar flat structure matching existing screens)
+  widgets/
+    product_card.dart               # Product catalog card (if reusable)
+    policy_card.dart                # Active policy summary card (if reusable)
+    premium_summary_widget.dart     # Premium breakdown component for payment confirms
+  models/
+    insurance_product.dart
+    insurance_policy.dart
+  # (adapt to existing folder conventions)
 ```
+
+**Implementer:** Inspect existing screen and widget organization (e.g., `lib/screens/`, `lib/widgets/`) and match that structure. Do not create a nested `features/` folder unless the app already uses that pattern.
 
 **State management:**
 
-Use existing pattern (Riverpod or Provider). Example:
+Use existing pattern (likely Riverpod or Provider). Example:
 
 ```dart
 final insuranceProductsProvider = FutureProvider<List<InsuranceProduct>>((ref) async {
@@ -644,13 +647,13 @@ final insurancePoliciesProvider = FutureProvider.family<List<InsurancePolicy>, S
 
 #### Pay Bill Flow
 
-**Current screen:** `lib/features/payments/screens/pay_bill_confirm_screen.dart` (example path)
+**Implementer:** Locate the existing Pay Bill confirmation screen (likely under `lib/screens/` or similar; may be named `payment_form_screen.dart` or related to bill payments).
 
 **Enhancement:**
 
-Before showing confirm screen:
+Before showing PIN entry:
 1. Call `previewInsurancePremiums(rail: BILL, principalMinor: billAmount)`
-2. Display premium line items
+2. Display premium line items (use a reusable `PremiumSummaryWidget` or inline)
 3. Calculate grand total
 4. Check wallet balance ≥ grand total
 5. If insufficient, show error and block PIN entry
@@ -662,11 +665,11 @@ After PIN success:
 
 #### Send Money Flow (P2P only)
 
-**Current screen:** `lib/features/send_money/screens/send_confirm_screen.dart` (example path)
+**Implementer:** Locate the existing P2P Send Money confirmation screen (likely under `lib/screens/`; inspect the send money flow to find the confirmation step before PIN).
 
 **Enhancement:** Same logic as Pay Bill, but:
 - Use `rail: SEND`
-- Label adjustments ("Montant à envoyer" instead of "Montant de la facture")
+- Label adjustments (e.g., "Amount to send" instead of "Bill amount")
 
 **Out of scope:** Remittance and FX send flows remain unchanged. Only domestic P2P send integrates premiums.
 
@@ -707,9 +710,9 @@ Each collected premium generates a separate journal entry:
 ### 7.1 Existing Features
 
 **Savings Sprint Integration:**
-- Savings sprint delivered Insurance tab stub with "Coming Soon" placeholder
+- Savings sprint delivered Insurance quick-action tile on Home screen and `/insurance` route stub with "Coming Soon" placeholder
 - This sprint **replaces** the stub with full insurance implementation
-- No changes needed to savings feature or bottom navigation structure
+- No changes needed to savings feature, Home screen, or bottom navigation structure
 
 **Wallet & Payments:**
 - Wallet balance checks integrated into payment confirmation flows
@@ -796,37 +799,37 @@ The following are explicitly **out of scope** for this sprint:
 The feature is considered complete when all of the following are verified:
 
 ### AC1: Product Catalog Display
-- [ ] Insurance tab shows "Products" and "My Policies" sub-tabs
+- [ ] Insurance screen (accessed from Home quick-action tile) shows "Products" and "My Policies" tabs
 - [ ] Products tab displays all five insurance products (Santé, Décès, Accident, Protection crédit, Téléphone)
-- [ ] Each product card shows: name (FR), subtitle (EN), description, claim cap, status badge, and action button
-- [ ] Inactive products show "Activer" button; active products show "Modifier" button
+- [ ] Each product card shows: name (FR), subtitle (EN), description (FR), claim cap (FR), status badge, and action button (EN)
+- [ ] Inactive products show "Activate" button; active products show "Edit" button
 
 ### AC2: Policy Activation Flow
-- [ ] Tapping "Activer" opens activation form with correct product name in title
-- [ ] Form allows selection of:
-  - Premium type: Pourcentage or Montant fixe
-  - If Fixed: Fréquence (Par transaction or Mensuel)
+- [ ] Tapping "Activate" opens activation form with correct product name (French) in English title
+- [ ] Form allows selection of (English labels):
+  - Premium type: Percentage or Fixed amount
+  - If Fixed: Schedule (Per transaction or Monthly)
   - Amount (CDF input) or Percentage (% input)
-  - Deduct from: Paiements de factures, Envois d'argent, or Les deux
+  - Deduct from: Bills, Send money, or Both
 - [ ] Form pre-populates with product-specific default values
 - [ ] PIN field validates input (must be `123456` for offline demo)
-- [ ] Incorrect PIN shows error; correct PIN activates policy, shows success toast, navigates back to Products tab
-- [ ] After activation, product status badge changes to "Active" and button changes to "Modifier"
+- [ ] Incorrect PIN shows error (English); correct PIN activates policy, shows success toast (English), navigates back to Products tab
+- [ ] After activation, product status badge changes to "Active" and button changes to "Edit"
 - [ ] Policy appears in "My Policies" tab
 
 ### AC3: Policy Management
 - [ ] "My Policies" tab lists all active policies
-- [ ] Each policy card shows: product name, premium summary, deduction rail, activation date
-- [ ] "Désactiver" button shows confirmation dialog; confirming deactivates policy and removes it from list
-- [ ] "Faire une réclamation" button shows Coming Soon dialog with appropriate message
+- [ ] Each policy card shows (English labels): product name (French), premium summary, deduction rail, activation date
+- [ ] "Deactivate" button shows confirmation dialog (English); confirming deactivates policy and removes it from list
+- [ ] "File a Claim" button shows Coming Soon dialog (English) with appropriate message
 
 ### AC4: Pay Bill Premium Deduction
-- [ ] Pay Bill flow: after entering bill amount and tapping "Continuer," confirmation screen shows:
+- [ ] Pay Bill flow: on confirmation screen before PIN entry, display (English labels):
   - Bill amount
-  - "Primes d'assurance" section with each matching policy as a line item (product name + premium amount)
+  - "Insurance premiums" section with each matching policy as a line item (product name in French + premium amount)
   - Total premiums subtotal
   - Grand total (bill amount + total premiums)
-- [ ] If wallet balance < grand total, show insufficient balance error and block PIN entry
+- [ ] If wallet balance < grand total, show insufficient balance error (English) and block PIN entry
 - [ ] If balance sufficient, PIN entry proceeds
 - [ ] After correct PIN:
   - Wallet debited by grand total
@@ -860,14 +863,15 @@ The feature is considered complete when all of the following are verified:
 - [ ] Other four products start inactive
 
 ### AC9: Edit Policy
-- [ ] Tapping "Modifier" on active product opens activation form pre-populated with current policy values
+- [ ] Tapping "Edit" on active product opens activation form pre-populated with current policy values
 - [ ] Editing and confirming updates policy in place (same policy ID)
 - [ ] Only one active policy per product allowed (re-activation overwrites previous config)
 
-### AC10: French/English Localization
-- [ ] All UI labels, product names, descriptions, buttons, and messages display in French (primary)
-- [ ] Subtitles and some technical terms display in English (secondary)
-- [ ] Text matches approved copy in section 3 and 4
+### AC10: English/French Localization
+- [ ] UI chrome (labels, buttons, messages, navigation) displays in English
+- [ ] Product names, descriptions, and claim caps display in French (catalog content)
+- [ ] Product subtitles display in English for clarity
+- [ ] Text matches approved copy in sections 3 and 4
 
 ---
 
@@ -925,8 +929,8 @@ The feature is considered complete when all of the following are verified:
 
 **Mitigation:**
 - Design explicitly documents Protection crédit as 1.0% of transaction amount (not loan-specific) for this sprint
-- Backend schema includes `linkedLoanId` field (nullable) for future loan-attachment feature
 - UI description for Protection crédit is generic: "Rembourse votre prêt en cas de décès, d'invalidité ou de perte d'emploi" (does not specify calculation method)
+- Future sprint will extend schema and logic for loan-specific attachment
 
 ---
 
@@ -935,7 +939,7 @@ The feature is considered complete when all of the following are verified:
 ### 11.1 Savings Sprint
 
 **Delivered:**
-- Bottom navigation with Insurance tab
+- Home screen Insurance quick-action tile and `/insurance` route
 - Insurance screen stub showing "Coming Soon" message
 - Architecture foundation: OfflineDemoRepository, CoreApiService offline branches, universe.json data structure
 
@@ -946,7 +950,7 @@ The feature is considered complete when all of the following are verified:
 
 **No Breaking Changes:**
 - Savings feature remains unaffected
-- Bottom navigation structure unchanged
+- Home screen and bottom navigation structure unchanged
 - Wallet balance and transaction flows extended, not replaced
 
 ### 11.2 Payment Flows
@@ -1007,7 +1011,6 @@ The feature is considered complete when all of the following are verified:
 **Design Status:** Approved for implementation  
 **Approved By:** Product Owner, Engineering Lead  
 **Implementation Sprint:** Current  
-**Target Demo Date:** [TBD based on sprint planning]
 
 ---
 

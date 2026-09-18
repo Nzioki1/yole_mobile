@@ -76,11 +76,14 @@ export default function CreditExceptionsPage() {
                       <td className="font-monospace small">{l.id}</td>
                       <td>
                         <Link href={`/dashboard/customer360?customerId=${l.customerId}`}>
-                          {l.customerId}
+                          <div className="fw-medium">{l.customerName || l.customerId}</div>
+                          <div className="detail-label">{l.customerId}</div>
                         </Link>
                       </td>
                       <td>
-                        {l.currency} {(Number(l.principalMinor) / 100).toLocaleString()}
+                        {l.currency === 'CDF'
+                          ? `FC ${Number(l.principalMinor).toLocaleString()}`
+                          : `$${(Number(l.principalMinor) / 100).toFixed(2)}`}
                       </td>
                       <td>{l.exceptionReason || '—'}</td>
                       <td>

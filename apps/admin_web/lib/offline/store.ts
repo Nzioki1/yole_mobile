@@ -666,10 +666,18 @@ export class OfflineDemoStore {
   }
 
   listCreditExceptions() {
-    return this.u.loans.filter((l) =>
-      ['PENDING_EXCEPTION', 'EXCEPTION', 'REJECTED_EXCEPTION'].includes(l.status) ||
-      l.status === 'PENDING_EXCEPTION',
-    );
+    return this.u.loans
+      .filter((l) =>
+        ['PENDING_EXCEPTION', 'EXCEPTION', 'REJECTED_EXCEPTION'].includes(l.status) ||
+        l.status === 'PENDING_EXCEPTION',
+      )
+      .map((l) => {
+        const customer = this.u.customers.find((c) => c.id === l.customerId);
+        const customerName = customer
+          ? `${customer.firstName} ${customer.lastName}`.trim()
+          : 'Unknown Customer';
+        return { ...l, customerName };
+      });
   }
 
   listLoans(customerId?: string) {

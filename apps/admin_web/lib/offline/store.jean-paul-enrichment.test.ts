@@ -24,6 +24,9 @@ describe('Jean-Paul demo enrichment seed', () => {
     const list = store.listCreditExceptions();
     expect(list.length).toBeGreaterThanOrEqual(4);
     expect(list.some((l) => l.customerId === 'cust_kasee' && l.status === 'PENDING_EXCEPTION')).toBe(true);
+    const jpLoan = list.find((l) => l.customerId === 'cust_kasee');
+    expect(jpLoan).toBeTruthy();
+    expect(jpLoan!.customerName).toContain('Jean-Paul');
   });
 
   test('listEmployers projects employees with displayName and import aliases', () => {

@@ -128,6 +128,52 @@ class OfflineAgentRepository {
     return agent;
   }
 
+  /// Find agent by email (helper for email-based login routing).
+  Map<String, dynamic>? _findAgentByEmail(String email) {
+    final normalized = email.trim().toLowerCase();
+    for (final a in _list('agents')) {
+      final agentEmail = a['email'] as String?;
+      if (agentEmail?.toLowerCase() == normalized) {
+        return a;
+      }
+    }
+    return null;
+  }
+
+  /// Login by email and password (Phase 2).
+  /// Throws specific exceptions for routing/error handling:
+  /// - 'CUSTOMER_EMAIL' if email is not agent domain
+  /// - 'Invalid password' if password mismatch
+  /// - 'Agent not found' if email unknown
+  Map<String, dynamic> loginByEmail({
+    required String email,
+    required String password,
+  }) {
+    final normalized = email.trim().toLowerCase();
+    
+    // Check if email matches agent domain pattern
+    if (!normalized.endsWith('@postefinance-agents.cd')) {
+      // Customer email or other domain
+      throw Exception('CUSTOMER_EMAIL');
+    }
+
+    // Find agent by email
+    final agent = _findAgentByEmail(email);
+    if (agent == null) {
+      throw Exception('Agent not found');
+    }
+
+    // Validate password
+    final storedPassword = agent['password'] as String?;
+    if (storedPassword != password) {
+      throw Exception('Invalid password');
+    }
+
+    // Success: set session and return agent info
+    _currentAgentId = agent['id'] as String;
+    return Map<String, dynamic>.from(agent);
+  }
+
   void setAgentId(String agentId) {
     if (_findAgent(agentId) == null) {
       throw Exception('Get agent info failed: agent not found');

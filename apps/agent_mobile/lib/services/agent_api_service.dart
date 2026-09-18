@@ -70,6 +70,28 @@ class AgentApiService {
     return headers;
   }
 
+  /// Email-based login with password validation (Phase 2).
+  /// Routes agent vs customer emails, validates password.
+  /// On success, sets agent session and returns agent info.
+  /// Throws:
+  /// - Exception('CUSTOMER_EMAIL') for customer emails
+  /// - Exception('Invalid password') for wrong password
+  /// - Exception('Agent not found') for unknown email
+  Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    if (offlineDemo) {
+      final agent = _offline.loginByEmail(email: email, password: password);
+      _agentId = agent['id'] as String;
+      await _storage.write(key: 'agent_id', value: _agentId);
+      return agent;
+    }
+
+    // Online mode: implement backend login endpoint when available
+    throw UnimplementedError('Online agent login not yet implemented');
+  }
+
   /// Get agent info (need to add endpoint to backend)
   Future<Map<String, dynamic>> getAgentInfo(String agentId) async {
     if (offlineDemo) {

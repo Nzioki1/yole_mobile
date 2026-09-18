@@ -78,7 +78,18 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Poste Finance Agent'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/brand/poste-finance-mark.png',
+              height: 28,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 8),
+            const Text('Agent'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

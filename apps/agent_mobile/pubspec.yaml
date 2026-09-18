@@ -27,3 +27,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/brand/poste-finance-logo.png
+    - assets/brand/poste-finance-logo-light.png
+    - assets/brand/poste-finance-mark.png
+    - assets/brand/poste-finance-logo-header.png
+

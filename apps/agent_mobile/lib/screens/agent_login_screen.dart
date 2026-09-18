@@ -18,8 +18,7 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Autofill immediately so Login enables on first frame (controllers alone
-    // do not rebuild; setState after async init left the button disabled).
+    // Autofill immediately so Login enables on first frame.
     _emailController.text = 'agent001@postefinance-agents.cd';
     _passwordController.text = 'Password1!';
     _api.init();
@@ -35,13 +34,8 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   bool get _isFormValid {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    
-    // Basic email validation
     final emailValid = email.isNotEmpty && email.contains('@');
-    
-    // Password min 8 chars
     final passwordValid = password.length >= 8;
-    
     return emailValid && passwordValid;
   }
 
@@ -50,54 +44,51 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   }
 
   Future<void> _login() async {
-    if (!_isFormValid) {
-      return;
-    }
+    if (!_isFormValid) return;
 
     setState(() {
       _loading = true;
       _showCustomerBanner = false;
     });
-    
+
     try {
       await _api.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } catch (e) {
       if (mounted) {
         final errorMsg = e.toString();
-        
-        // Check for customer email exception
         if (errorMsg.contains('CUSTOMER_EMAIL')) {
           setState(() => _showCustomerBanner = true);
-          // Auto-dismiss after 10 seconds
           Future.delayed(const Duration(seconds: 10), () {
-            if (mounted) {
-              setState(() => _showCustomerBanner = false);
-            }
+            if (mounted) setState(() => _showCustomerBanner = false);
           });
         } else {
-          // Show other errors as snackbar
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: ${e.toString().replaceAll('Exception: ', '')}')),
+            SnackBar(
+              content: Text(
+                'Login failed: ${e.toString().replaceAll('Exception: ', '')}',
+              ),
+            ),
           );
         }
       }
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -105,16 +96,22 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.business_center, size: 80, color: Colors.blue),
-              const SizedBox(height: 24),
-              const Text(
-                'Poste Finance Agent',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              Image.asset(
+                'assets/brand/poste-finance-logo.png',
+                height: 72,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Agent',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: primary,
+                ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
-              
-              // Customer banner (dismissible)
+              const SizedBox(height: 40),
               if (_showCustomerBanner)
                 Card(
                   color: Colors.orange.shade50,
@@ -126,7 +123,7 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Customer accounts must use Yole customer app. Download from app store.',
+                            'Customer accounts must use the Poste Finance customer app.',
                             style: TextStyle(
                               color: Colors.orange.shade900,
                               fontSize: 13,
@@ -144,35 +141,29 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                   ),
                 ),
               if (_showCustomerBanner) const SizedBox(height: 16),
-              
-              // Email field
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
+                  prefixIcon: Icon(Icons.email_outlined),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: 16),
-              
-              // Password field
               TextField(
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock_outline),
                 ),
                 onChanged: (_) => setState(() {}),
                 onSubmitted: (_) => _isFormValid ? _login() : null,
               ),
               const SizedBox(height: 24),
-              
-              // Login button
               ElevatedButton(
                 onPressed: (_loading || !_isFormValid) ? null : _login,
                 style: ElevatedButton.styleFrom(
@@ -182,7 +173,10 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Login'),
               ),

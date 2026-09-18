@@ -28,6 +28,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    if (CoreApiService.offlineDemo) {
+      _emailCtrl.text = 'jp.kabila@gmail.com';
+      _pwdCtrl.text = 'Password1!';
+    }
+  }
+
+  @override
   void dispose() {
     _emailCtrl.dispose();
     _pwdCtrl.dispose();
@@ -135,30 +144,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
 
                         const SizedBox(height: 32),
-
-                        // Demo credentials hint
-                        if (CoreApiService.offlineDemo)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color:
-                                      theme.colorScheme.primary.withOpacity(0.3)),
-                            ),
-                            child: Text(
-                              'Demo login: jp.kabila@gmail.com / Password1! · PIN 123456',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ),
 
                         // Error message display
                         if (authState.error != null) ...[

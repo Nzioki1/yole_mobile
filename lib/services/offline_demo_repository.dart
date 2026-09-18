@@ -42,6 +42,10 @@ class OfflineDemoRepository {
   /// DEM transaction PIN — pre-seeded on offline login.
   static const String demoPin = '123456';
 
+  /// DEM customer login credentials — Jean-Paul Kabila.
+  static const String demoEmail = 'jp.kabila@gmail.com';
+  static const String demoPassword = 'Password1!';
+
   /// DEM-07 honesty string (also shown on CardsScreen).
   static const String cardsMockBanner =
       'MOCK — not Visa/Mastercard certified';

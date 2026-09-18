@@ -228,6 +228,36 @@ With `--dart-define=OFFLINE_DEMO=true` and core-api **stopped**:
 7. [ ] Airplane mode does not break the above
 8. [ ] `apps/admin_web` unchanged in the PR diff
 
+## Biometric Testing (Pixel 8)
+
+### Prerequisites
+
+- Pixel 8 device with fingerprint enrolled (Settings > Security > Fingerprint)
+- Offline demo mode: `flutter run -d <device-id> --dart-define=OFFLINE_DEMO=true`
+
+### Verification Checklist
+
+With biometric enrolled and app running on Pixel 8:
+
+1. [ ] **Profile toggle appears**: Open Profile > Settings > Biometric Login toggle is visible
+2. [ ] **Enable flow**: Toggle ON prompts for fingerprint, then asks for password
+3. [ ] **Enable success**: After entering password, toggle stays ON and shows "Biometric login enabled" snackbar
+4. [ ] **Cold start unlock**: Kill app, restart — after splash logo, fingerprint prompt appears
+5. [ ] **Unlock success**: Authenticate with fingerprint → app navigates to Home screen (skips Login screen)
+6. [ ] **Transaction confirm**: Navigate to Pay/Send, initiate transaction, tap "Use Biometric" in PIN confirm sheet
+7. [ ] **Transaction success**: Authenticate with fingerprint → transaction confirms without typing PIN
+8. [ ] **Disable flow**: Profile > toggle OFF → biometric data cleared, no prompt needed
+9. [ ] **Logout clears data**: Log out → log back in → biometric toggle is OFF (data cleared)
+10. [ ] **No enrollment fallback**: Disable: Settings > remove all fingerprints → Profile > toggle is disabled with "No biometrics enrolled" subtitle
+11. [ ] **Cancel unlock**: Cold start → cancel fingerprint prompt → stay on splash screen (Get Started / Login buttons available)
+12. [ ] **Failed unlock**: Cold start → fail fingerprint (wrong finger 3x) → stay on splash screen
+
+### Offline Demo Credentials
+
+- Email: `kasee.demo@yole.com`
+- Password: `Password1!`
+- Transaction PIN: `123456` (auto-used with biometric)
+
 ## Next Steps
 
 When ready for production:

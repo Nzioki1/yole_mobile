@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/mock_auth_service.dart';
+import '../services/storage_service.dart';
 import '../models/api/auth_response.dart';
 import 'api_providers.dart';
 
@@ -276,6 +277,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Log error but don't block UI
       print('Background logout failed: $e');
     });
+
+    // Clear biometric unlock data
+    try {
+      final storageService = StorageService();
+      await storageService.clearBiometricData();
+    } catch (e) {
+      print('Failed to clear biometric data on logout: $e');
+    }
   }
 
   /// Send password reset email

@@ -193,8 +193,17 @@ class _SendMoneyCheckoutScreenState
       }
 
       final amount = args['amount'] as double;
-      // Convert USD to CDF for premium calculation (1 USD = 2750 CDF)
-      final principalCdfMinor = (amount * 2750 * 100).round();
+      final currency = args['currency'] as String;
+      
+      // Calculate principal for premium collection (same logic as preview)
+      final int principalMinor;
+      if (currency == 'CDF') {
+        // If sending CDF, use amount directly in CDF minor
+        principalMinor = (amount * 100).round();
+      } else {
+        // If sending USD, convert to CDF at 2750 rate for premium calculation
+        principalMinor = (amount * 2750 * 100).round();
+      }
 
       final api = CoreApiService();
       await api.init();
@@ -202,7 +211,7 @@ class _SendMoneyCheckoutScreenState
       final collected = await api.collectInsurancePremiums(
         customerId: 'cust_kasee',
         rail: 'SEND',
-        principalMinor: principalCdfMinor,
+        principalMinor: principalMinor,
         parentTransactionId: transactionId,
       );
 

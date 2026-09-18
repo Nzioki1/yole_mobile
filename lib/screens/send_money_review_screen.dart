@@ -74,10 +74,15 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
       final amount = args['amount'] as double;
       final currency = args['currency'] as String;
 
-      // Premiums only for USD (Send Money typically uses USD)
-      // Convert USD amount to CDF for premium calculation
-      // In offline demo, assume 1 USD = 2750 CDF exchange rate
-      final principalCdfMinor = (amount * 2750 * 100).round();
+      // Calculate principal for premium preview
+      final int principalMinor;
+      if (currency == 'CDF') {
+        // If sending CDF, use amount directly in CDF minor
+        principalMinor = (amount * 100).round();
+      } else {
+        // If sending USD, convert to CDF at 2750 rate for premium calculation only
+        principalMinor = (amount * 2750 * 100).round();
+      }
 
       final api = CoreApiService();
       await api.init();
@@ -85,7 +90,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
       final lineItems = await api.previewInsurancePremiums(
         customerId: 'cust_kasee',
         rail: 'SEND',
-        principalMinor: principalCdfMinor,
+        principalMinor: principalMinor,
       );
 
       setState(() {
@@ -461,77 +466,135 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     return originalTotalCdf + (totalPremiumMinor / 100);
   }
 
+  int _getTotalPremiumMinor() {
+    return _premiumLineItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['premiumMinor'] as int),
+    );
+  }
+
+  Future<int> _getWalletBalanceMinor(String currency) async {
+    try {
+      final api = CoreApiService();
+      await api.init();
+      final wallets = await api.getMyWallets();
+      final walletList = wallets['wallets'] as List<dynamic>;
+      for (final wallet in walletList) {
+        if (wallet['currency'] == currency) {
+          return int.tryParse(wallet['availableMinor']?.toString() ?? '0') ?? 0;
+        }
+      }
+    } catch (e) {
+      print('Failed to get wallet balance: $e');
+    }
+    return 0;
+  }
+
+  Future<void> _handleContinue(BuildContext context, Map<String, dynamic> args, 
+      double feeAmount, double totalAmount) async {
+    // Check wallet balance if premiums exist
+    if (_premiumLineItems.isNotEmpty) {
+      final amount = args['amount'] as double;
+      final currency = args['currency'] as String;
+      final totalPremiumMinor = _getTotalPremiumMinor();
+
+      if (currency == 'CDF') {
+        // If sending CDF, check CDF wallet for (principal + fees + premiums)
+        final totalMinor = (totalAmount * 100).round(); // principal + fees in CDF minor
+        final grandTotalMinor = totalMinor + totalPremiumMinor;
+        
+        final cdfBalanceMinor = await _getWalletBalanceMinor('CDF');
+        if (cdfBalanceMinor < grandTotalMinor) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Insufficient balance to cover amount and insurance premiums. '
+                  'Required: ${(grandTotalMinor / 100).toStringAsFixed(2)} CDF, '
+                  'Available: ${(cdfBalanceMinor / 100).toStringAsFixed(2)} CDF'
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      } else {
+        // If sending USD, check USD wallet for (principal + fees) 
+        // AND check CDF wallet for premiums
+        final usdTotalMinor = (totalAmount * 100).round();
+        final usdBalanceMinor = await _getWalletBalanceMinor('USD');
+        
+        if (usdBalanceMinor < usdTotalMinor) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Insufficient USD balance. '
+                  'Required: ${(usdTotalMinor / 100).toStringAsFixed(2)} USD, '
+                  'Available: ${(usdBalanceMinor / 100).toStringAsFixed(2)} USD'
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Also check CDF wallet for premiums
+        final cdfBalanceMinor = await _getWalletBalanceMinor('CDF');
+        if (cdfBalanceMinor < totalPremiumMinor) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Insufficient CDF balance for insurance premiums. '
+                  'Required: ${(totalPremiumMinor / 100).toStringAsFixed(2)} CDF, '
+                  'Available: ${(cdfBalanceMinor / 100).toStringAsFixed(2)} CDF'
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+      }
+    }
+
+    // Balance check passed, proceed to checkout
+    print('=== REVIEW: NAVIGATE TO CHECKOUT ===');
+    print('Base args: $args');
+    print('Fee amount: $feeAmount');
+    print('Total amount: $totalAmount');
+
+    final checkoutArgs = {
+      ...args,
+      'feeAmount': feeAmount,
+      'totalAmount': totalAmount,
+      'premiumLineItems': _premiumLineItems,
+    };
+
+    print('Checkout args to send: $checkoutArgs');
+    print('Checkout args keys: ${checkoutArgs.keys.toList()}');
+
+    if (context.mounted) {
+      Navigator.pushNamed(
+        context,
+        RouteNames.sendMoneyCheckout,
+        arguments: checkoutArgs,
+      );
+      print('Navigation call completed');
+    }
+  }
+
   Widget _buildContinueButton(ThemeData theme, AppState appState,
       Map<String, dynamic> args, double feeAmount, double totalAmount) {
-    // Check insufficient balance if premiums exist
-    bool hasInsufficientBalance = false;
-    String? balanceError;
-    
-    if (_premiumLineItems.isNotEmpty) {
-      final grandTotal = _getGrandTotal(totalAmount);
-      // Get wallet balance from appState (assumed to be in CDF)
-      // For now, assume sufficient balance (real balance check would query wallet)
-      // In production, check: appState.walletBalance < grandTotal
-      // hasInsufficientBalance = appState.walletBalance < grandTotal;
-      // if (hasInsufficientBalance) {
-      //   balanceError = 'Insufficient balance to cover amount and insurance premiums';
-      // }
-    }
-    
     return Column(
       children: [
-        if (balanceError != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning, color: Colors.red, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      balanceError,
-                      style: const TextStyle(color: Colors.red, fontSize: 14),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         SizedBox(
           height: 48,
           child: GradientButton(
-            onPressed: hasInsufficientBalance ? null : () {
-              // Logging for debugging navigation arguments
-              print('=== REVIEW: NAVIGATE TO CHECKOUT ===');
-              print('Base args: $args');
-              print('Fee amount: $feeAmount');
-              print('Total amount: $totalAmount');
-
-              final checkoutArgs = {
-                ...args,
-                'feeAmount': feeAmount,
-                'totalAmount': totalAmount,
-                'premiumLineItems': _premiumLineItems,
-              };
-
-              print('Checkout args to send: $checkoutArgs');
-              print('Checkout args keys: ${checkoutArgs.keys.toList()}');
-
-              // Navigate to payment processing (checkout)
-              Navigator.pushNamed(
-                context,
-                RouteNames.sendMoneyCheckout,
-                arguments: checkoutArgs,
-              );
-              print('Navigation call completed');
-            },
+            onPressed: () => _handleContinue(context, args, feeAmount, totalAmount),
             child: const Text('Proceed to Payment'),
           ),
         ),

@@ -1,5 +1,17 @@
 /** Shared offline demo universe types (DEM-01…DEM-12 seed graph). */
 
+export interface AmlBanEntry {
+  id: string;
+  fullName: string;
+  idRef?: string;
+  matchType: 'NAME' | 'ID' | 'ENTITY';
+  reason: string;
+  sourceList: string;
+  status: 'BANNED' | 'LIFTED';
+  notes?: string;
+  createdAt: string;
+}
+
 export interface UniverseMeta {
   version: number;
   name: string;
@@ -336,4 +348,5 @@ export interface Universe {
   reconDays: ReconDay[];
   kyc: KycSubmission[];
   notifications: Notification[];
+  amlBanList: AmlBanEntry[];
 }

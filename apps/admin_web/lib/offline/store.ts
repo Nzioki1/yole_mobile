@@ -21,6 +21,7 @@ import type {
   PendingApproval,
   Remittance,
   CardAuth,
+  AmlBanEntry,
 } from 'demo_universe';
 
 function strMinor(n: number | string | undefined | null): string {
@@ -1068,6 +1069,49 @@ export class OfflineDemoStore {
   }
 
   /**
+   * AML ban list methods
+   */
+  listAmlBanList(): AmlBanEntry[] {
+    return (this.u.amlBanList ?? []).slice();
+  }
+
+  addAmlBanEntry(data: {
+    fullName: string;
+    idRef?: string;
+    matchType: 'NAME' | 'ID' | 'ENTITY';
+    reason: string;
+    sourceList: string;
+    notes?: string;
+    status?: 'BANNED' | 'LIFTED';
+  }): AmlBanEntry {
+    if (!this.u.amlBanList) this.u.amlBanList = [];
+    const row: AmlBanEntry = {
+      id: `ban_demo_${Date.now()}`,
+      fullName: data.fullName.trim(),
+      idRef: data.idRef,
+      matchType: data.matchType,
+      reason: data.reason.trim(),
+      sourceList: data.sourceList.trim() || 'DEMO_SANCTIONS',
+      status: data.status || 'BANNED',
+      notes: data.notes,
+      createdAt: nowIso(),
+    };
+    this.u.amlBanList.push(row);
+    return row;
+  }
+
+  liftAmlBanEntry(id: string): AmlBanEntry {
+    const row = (this.u.amlBanList ?? []).find((e) => e.id === id);
+    if (!row) throw new Error(`Ban entry not found: ${id}`);
+    row.status = 'LIFTED';
+    return row;
+  }
+
+  listCustomers(): Omit<Customer, 'password'>[] {
+    return this.u.customers.map(({ password: _p, ...rest }) => rest);
+  }
+
+  /**
    * DEM-12: Build open-format export pack JSON.
    */
   buildExportPack() {
@@ -1090,6 +1134,7 @@ export class OfflineDemoStore {
       feeLimits: this.u.feeLimits,
       reconDays: this.u.reconDays,
       notifications: this.u.notifications,
+      amlBanList: this.u.amlBanList ?? [],
       agents: this.u.agents.map(({ password: _p, ...rest }) => rest),
       employers: this.u.employers,
       employees: this.u.employees,

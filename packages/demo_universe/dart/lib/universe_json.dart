@@ -1,6 +1,6 @@
-// GENERATED from packages/demo_universe/data/universe.json — do not edit by hand.
-// Keep in sync when updating the seed.
-const String kUniverseJson = r'''{
+/// Auto-generated embedded universe.json — do not edit by hand.
+const String kUniverseJson = r'''
+{
   "meta": {
     "version": 1,
     "name": "yole-poste-offline-demo",
@@ -903,5 +903,57 @@ const String kUniverseJson = r'''{
       "read": false,
       "createdAt": "2026-09-16T08:01:00Z"
     }
+  ],
+  "amlBanList": [
+    {
+      "id": "ban_demo_001",
+      "fullName": "DEMO BLOCKED PERSON ONE",
+      "idRef": "ID-BAN-0001",
+      "matchType": "ID",
+      "reason": "Internal fraud — demo entry",
+      "sourceList": "INTERNAL_FRAUD",
+      "status": "BANNED",
+      "notes": "Fictional demo identity only",
+      "createdAt": "2026-08-01T10:00:00Z"
+    },
+    {
+      "id": "ban_demo_002",
+      "fullName": "ACME SHELL TRADING SARL",
+      "idRef": "RCCM-DEMO-999",
+      "matchType": "ENTITY",
+      "reason": "Suspected mule network — demo",
+      "sourceList": "DEMO_SANCTIONS",
+      "status": "BANNED",
+      "createdAt": "2026-08-15T12:00:00Z"
+    },
+    {
+      "id": "ban_demo_003",
+      "fullName": "DEMO ALIAS MATCH",
+      "matchType": "NAME",
+      "reason": "Partial name match on demo sanctions list",
+      "sourceList": "DEMO_SANCTIONS",
+      "status": "BANNED",
+      "createdAt": "2026-09-01T09:00:00Z"
+    },
+    {
+      "id": "ban_demo_004",
+      "fullName": "FORMERLY BLOCKED DEMO",
+      "idRef": "ID-BAN-0004",
+      "matchType": "ID",
+      "reason": "Cleared after review — demo",
+      "sourceList": "INTERNAL_FRAUD",
+      "status": "LIFTED",
+      "createdAt": "2026-07-01T08:00:00Z"
+    },
+    {
+      "id": "ban_demo_005",
+      "fullName": "DEMO PEPS PROXY",
+      "matchType": "NAME",
+      "reason": "PEP association — demo hold",
+      "sourceList": "DEMO_SANCTIONS",
+      "status": "BANNED",
+      "createdAt": "2026-09-10T14:00:00Z"
+    }
   ]
-}''';
+}
+''';

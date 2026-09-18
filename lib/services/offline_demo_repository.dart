@@ -1079,4 +1079,149 @@ class OfflineDemoRepository {
       'asOf': asOf ?? DateTime.now().toUtc().toIso8601String(),
     };
   }
+
+  // ---------------------------------------------------------------------------
+  // Savings Goals (Poste Finance)
+  // ---------------------------------------------------------------------------
+
+  Map<String, dynamic> _savingsGoalDto(Map<String, dynamic> goal) {
+    return {
+      ...goal,
+      'targetMinor': _str(goal['targetMinor']),
+      'depositedMinor': _str(goal['depositedMinor']),
+      'autoDepositMinor': _str(goal['autoDepositMinor'] ?? 0),
+    };
+  }
+
+  List<dynamic> listSavingsGoals() {
+    final cid = _requireCustomer();
+    return _list('savingsGoals')
+        .where((g) => g['customerId'] == cid)
+        .map(_savingsGoalDto)
+        .toList();
+  }
+
+  Map<String, dynamic> getSavingsGoal(String goalId) {
+    final goal = _list('savingsGoals').firstWhere(
+      (g) => g['id'] == goalId,
+      orElse: () => throw Exception('Savings goal not found: $goalId'),
+    );
+    return _savingsGoalDto(goal);
+  }
+
+  Map<String, dynamic> createSavingsGoal({
+    required String name,
+    required String targetMinor,
+    required String currency,
+    bool autoDepositEnabled = false,
+    String? autoDepositMinor,
+  }) {
+    final cid = _requireCustomer();
+    final goalId = _nextId('goal');
+    final now = DateTime.now().toUtc().toIso8601String();
+    
+    final goal = <String, dynamic>{
+      'id': goalId,
+      'customerId': cid,
+      'name': name,
+      'targetMinor': _int(targetMinor),
+      'depositedMinor': 0,
+      'currency': currency,
+      'autoDepositEnabled': autoDepositEnabled,
+      'autoDepositMinor': autoDepositMinor != null ? _int(autoDepositMinor) : 0,
+      'createdAt': now,
+    };
+    
+    _writeList('savingsGoals', _list('savingsGoals')..add(goal));
+    return _savingsGoalDto(goal);
+  }
+
+  Map<String, dynamic> addMoneyToGoal({
+    required String goalId,
+    required String amountMinor,
+    required String pin,
+  }) {
+    final cid = _requireCustomer();
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    if (!verifyPin(pin: pin)) {
+      throw Exception('Invalid PIN');
+    }
+
+    final goals = _list('savingsGoals');
+    final goalIdx = goals.indexWhere((g) => g['id'] == goalId);
+    if (goalIdx < 0) {
+      throw Exception('Savings goal not found: $goalId');
+    }
+    
+    final goal = goals[goalIdx];
+    if (goal['customerId'] != cid) {
+      throw Exception('Unauthorized: goal belongs to another customer');
+    }
+
+    final amount = _int(amountMinor);
+    final currency = goal['currency'] as String;
+    final currentDeposited = _int(goal['depositedMinor']);
+    final target = _int(goal['targetMinor']);
+    
+    // Cap amount at remaining target
+    final remaining = target - currentDeposited;
+    final actualAmount = amount > remaining ? remaining : amount;
+
+    // Find and debit wallet
+    final wallets = _list('wallets');
+    final walletIdx = wallets.indexWhere(
+      (w) => w['customerId'] == cid && w['currency'] == currency,
+    );
+    
+    if (walletIdx < 0) {
+      throw Exception('No $currency wallet found');
+    }
+    
+    final wallet = wallets[walletIdx];
+    final availableMinor = _int(wallet['availableMinor']);
+    
+    if (availableMinor < actualAmount) {
+      throw Exception('Insufficient balance: need ${actualAmount / 100}, have ${availableMinor / 100}');
+    }
+
+    final newAvailable = availableMinor - actualAmount;
+    final newLedger = _int(wallet['ledgerMinor']) - actualAmount;
+    
+    wallets[walletIdx] = {
+      ...wallet,
+      'availableMinor': newAvailable,
+      'ledgerMinor': newLedger,
+    };
+    _writeList('wallets', wallets);
+
+    // Credit goal
+    final newDeposited = currentDeposited + actualAmount;
+    goals[goalIdx] = {
+      ...goal,
+      'depositedMinor': newDeposited,
+    };
+    _writeList('savingsGoals', goals);
+
+    // Create journal entry
+    final journalId = _nextId('jnl');
+    final journals = _list('journals');
+    journals.add({
+      'id': journalId,
+      'customerId': cid,
+      'walletId': wallet['id'],
+      'type': 'SAVINGS_DEPOSIT',
+      'direction': 'DEBIT',
+      'currency': currency,
+      'amountMinor': actualAmount,
+      'balanceAfterMinor': newAvailable,
+      'refType': 'SAVINGS_GOAL',
+      'refId': goalId,
+      'narration': 'Deposit to ${goal['name']}',
+      'postedAt': now,
+    });
+    _writeList('journals', journals);
+
+    return _savingsGoalDto(goals[goalIdx]);
+  }
 }

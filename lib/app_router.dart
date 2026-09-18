@@ -39,6 +39,11 @@ import 'screens/withdraw_screen.dart';
 import 'screens/language_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/transaction_detail_screen.dart';
+import 'screens/savings_screen.dart';
+import 'screens/savings_create_goal_screen.dart';
+import 'screens/savings_goal_detail_screen.dart';
+import 'screens/insurance_screen.dart';
+import 'screens/budget_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
 import 'screens/main_tabs.dart'; // ensure you have lib/screens/main_tabs.dart
@@ -290,6 +295,35 @@ class AppRouter {
 
       case RouteNames.remittance:
         return MaterialPageRoute(builder: (_) => const RemittanceScreen());
+
+      // Poste Finance Products
+      case RouteNames.savings:
+        return MaterialPageRoute(builder: (_) => const SavingsScreen());
+
+      case RouteNames.savingsCreateGoal:
+        return MaterialPageRoute(
+            builder: (_) => const SavingsCreateGoalScreen());
+
+      case RouteNames.savingsGoalDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final goalId = args?['goalId'] as String?;
+        if (goalId == null) {
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: const Text('Error')),
+              body: const Center(child: Text('Goal ID required')),
+            ),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => SavingsGoalDetailScreen(goalId: goalId),
+        );
+
+      case RouteNames.insurance:
+        return MaterialPageRoute(builder: (_) => const InsuranceScreen());
+
+      case RouteNames.budget:
+        return MaterialPageRoute(builder: (_) => const BudgetScreen());
 
       // Fallback
       default:

@@ -798,4 +798,108 @@ class CoreApiService {
       throw Exception('Convert currency failed: ${response.body}');
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Savings Goals (Poste Finance)
+  // ---------------------------------------------------------------------------
+
+  /// List savings goals
+  Future<List<dynamic>> listSavingsGoals() async {
+    if (offlineDemo) {
+      return _offline.listSavingsGoals();
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/savings/goals'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data is List ? data : (data['goals'] as List? ?? []);
+    } else {
+      throw Exception('List savings goals failed: ${response.body}');
+    }
+  }
+
+  /// Get savings goal by ID
+  Future<Map<String, dynamic>> getSavingsGoal(String goalId) async {
+    if (offlineDemo) {
+      return _offline.getSavingsGoal(goalId);
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/savings/goals/$goalId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Get savings goal failed: ${response.body}');
+    }
+  }
+
+  /// Create savings goal
+  Future<Map<String, dynamic>> createSavingsGoal({
+    required String name,
+    required String targetMinor,
+    required String currency,
+    bool autoDepositEnabled = false,
+    String? autoDepositMinor,
+  }) async {
+    if (offlineDemo) {
+      return _offline.createSavingsGoal(
+        name: name,
+        targetMinor: targetMinor,
+        currency: currency,
+        autoDepositEnabled: autoDepositEnabled,
+        autoDepositMinor: autoDepositMinor,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/savings/goals'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'name': name,
+        'targetMinor': targetMinor,
+        'currency': currency,
+        'autoDepositEnabled': autoDepositEnabled,
+        if (autoDepositMinor != null) 'autoDepositMinor': autoDepositMinor,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Create savings goal failed: ${response.body}');
+    }
+  }
+
+  /// Add money to savings goal
+  Future<Map<String, dynamic>> addMoneyToGoal({
+    required String goalId,
+    required String amountMinor,
+    required String pin,
+  }) async {
+    if (offlineDemo) {
+      return _offline.addMoneyToGoal(
+        goalId: goalId,
+        amountMinor: amountMinor,
+        pin: pin,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/savings/goals/$goalId/deposit'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+        'pin': pin,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Add money to goal failed: ${response.body}');
+    }
+  }
 }

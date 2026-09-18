@@ -26,6 +26,13 @@ class RouteNames {
   static const String emailVerification = '/email-verification';
   static const String forgotPassword = '/forgot-password';
 
+  // Poste Finance Product Routes
+  static const String savings = '/savings';
+  static const String savingsCreateGoal = '/savings/create-goal';
+  static const String savingsGoalDetail = '/savings/goal-detail';
+  static const String insurance = '/insurance';
+  static const String budget = '/budget';
+
   // KYC Flow Routes
   static const String kycPhone = '/kyc-phone';
   static const String kycOtp = '/kyc-otp';

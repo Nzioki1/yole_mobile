@@ -503,6 +503,24 @@ class _QuickActionsGrid extends StatelessWidget {
           color: const Color(0xFF912D2D),
           onTap: () => Navigator.of(context).pushNamed('/fx'),
         ),
+        _QuickActionButton(
+          icon: Icons.savings_outlined,
+          label: 'Savings',
+          color: const Color(0xFF00ACAC),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.savings),
+        ),
+        _QuickActionButton(
+          icon: Icons.health_and_safety_outlined,
+          label: 'Insurance',
+          color: const Color(0xFF008A8A),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.insurance),
+        ),
+        _QuickActionButton(
+          icon: Icons.pie_chart_outlined,
+          label: 'Budget',
+          color: const Color(0xFF0C7A53),
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.budget),
+        ),
       ],
     );
   }

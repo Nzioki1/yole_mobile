@@ -1165,8 +1165,19 @@ const String kUniverseJson = r'''
       "status": "BANNED",
       "createdAt": "2026-09-10T14:00:00Z"
     }
+  ],
+  "savingsGoals": [
+    {
+      "id": "goal_kasee_emergency",
+      "customerId": "cust_kasee",
+      "name": "Emergency fund",
+      "targetMinor": 50000000,
+      "depositedMinor": 10000000,
+      "currency": "CDF",
+      "autoDepositEnabled": false,
+      "autoDepositMinor": 0,
+      "createdAt": "2026-09-10T08:00:00Z"
+    }
   ]
 }
-
 ''';
-

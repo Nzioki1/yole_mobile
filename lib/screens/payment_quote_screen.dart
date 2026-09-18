@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
 import '../widgets/pin_confirm_sheet.dart';
+import '../widgets/premium_summary_widget.dart';
 
 /// Payment quote review and confirmation screen
 class PaymentQuoteScreen extends StatefulWidget {
@@ -13,11 +14,87 @@ class PaymentQuoteScreen extends StatefulWidget {
 class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
   final _api = CoreApiService();
   bool _confirming = false;
+  List<Map<String, dynamic>> _premiumLineItems = [];
+  bool _loadingPremiums = false;
+  bool _premiumsLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _api.init();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_premiumsLoaded) {
+      _premiumsLoaded = true;
+      _loadPremiums();
+    }
+  }
+
+  Future<void> _loadPremiums() async {
+    setState(() => _loadingPremiums = true);
+
+    try {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      final quote = args['quote'] as Map<String, dynamic>;
+      final railType = args['railType'] as String;
+      final currency = args['currency'] as String;
+      final amountMinor = quote['amountMinor'] as String;
+
+      // Only preview premiums for CDF BILL transactions
+      if (currency != 'CDF' || railType != 'BILL') {
+        setState(() {
+          _loadingPremiums = false;
+          _premiumLineItems = [];
+        });
+        return;
+      }
+
+      final lineItems = await _api.previewInsurancePremiums(
+        customerId: 'cust_kasee', // TODO: actual customer ID from session
+        rail: 'BILL',
+        principalMinor: int.parse(amountMinor),
+      );
+
+      setState(() {
+        _loadingPremiums = false;
+        _premiumLineItems = lineItems;
+      });
+    } catch (e) {
+      setState(() {
+        _loadingPremiums = false;
+        _premiumLineItems = [];
+      });
+    }
+  }
+
+  int _getTotalPremiumMinor() {
+    return _premiumLineItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['premiumMinor'] as int),
+    );
+  }
+
+  Future<int> _getWalletBalanceMinor(String currency) async {
+    try {
+      final wallets = await _api.getMyWallets();
+      final walletList = wallets['wallets'] as List<dynamic>;
+      for (final wallet in walletList) {
+        if (wallet['currency'] == currency) {
+          return int.tryParse(wallet['availableMinor']?.toString() ?? '0') ?? 0;
+        }
+      }
+    } catch (e) {
+      // Ignore error, return 0 to trigger insufficient balance check
+    }
+    return 0;
+  }
+
+  double _getGrandTotal(double originalTotal) {
+    final totalPremiumMinor = _getTotalPremiumMinor();
+    return originalTotal + (totalPremiumMinor / 100);
   }
 
   @override
@@ -128,6 +205,30 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
                           : 'FC ${total.toStringAsFixed(2)}',
                       isTotal: true,
                     ),
+
+                    // Insurance premiums
+                    if (_loadingPremiums)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 16),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
+                      PremiumSummaryWidget(
+                        premiumLineItems: _premiumLineItems,
+                        currency: currency,
+                      ),
+
+                    // Grand total (payment + premiums)
+                    if (_premiumLineItems.isNotEmpty) ...[
+                      const Divider(height: 32),
+                      _DetailRow(
+                        label: 'Total to debit',
+                        value: currency == 'USD'
+                            ? '\$${_getGrandTotal(total).toStringAsFixed(2)}'
+                            : 'FC ${_getGrandTotal(total).toStringAsFixed(2)}',
+                        isTotal: true,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -200,6 +301,33 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
   }
 
   Future<void> _handleConfirm(String paymentId) async {
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final quote = args['quote'] as Map<String, dynamic>;
+    final currency = args['currency'] as String;
+    final railType = args['railType'] as String;
+    final totalMinor = int.parse(quote['totalMinor'] as String);
+
+    // Calculate grand total including premiums
+    final totalPremiumMinor = _getTotalPremiumMinor();
+    final grandTotalMinor = totalMinor + totalPremiumMinor;
+
+    // Check wallet balance
+    final walletBalanceMinor = await _getWalletBalanceMinor(currency);
+    if (walletBalanceMinor < grandTotalMinor) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Insufficient balance. Required: ${(grandTotalMinor / 100).toStringAsFixed(2)} $currency, '
+              'Available: ${(walletBalanceMinor / 100).toStringAsFixed(2)} $currency'
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     // Check if PIN is set
     final hasPin = await _api.hasPin();
 
@@ -244,6 +372,22 @@ class _PaymentQuoteScreenState extends State<PaymentQuoteScreen> {
       }
 
       final result = await _api.confirmPayment(paymentId: paymentId);
+
+      // Collect insurance premiums after successful payment
+      if (_premiumLineItems.isNotEmpty && currency == 'CDF' && railType == 'BILL') {
+        try {
+          final amountMinor = quote['amountMinor'] as String;
+          await _api.collectInsurancePremiums(
+            customerId: 'cust_kasee', // TODO: actual customer ID from session
+            rail: 'BILL',
+            principalMinor: int.parse(amountMinor),
+            parentTransactionId: paymentId,
+          );
+        } catch (e) {
+          // Log premium collection error but don't block payment success flow
+          debugPrint('Insurance premium collection error: $e');
+        }
+      }
 
       if (mounted) {
         Navigator.pushReplacementNamed(

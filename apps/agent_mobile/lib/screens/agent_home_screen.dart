@@ -15,6 +15,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   bool _loading = true;
   Map<String, dynamic>? _agentInfo;
   List<dynamic> _pockets = [];
+  String? _currentAgentId;
 
   @override
   void initState() {
@@ -30,9 +31,23 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
       // Load float balances from backend
       final wallet = await _api.getFloatBalances();
       final pockets = wallet['pockets'] as List<dynamic>? ?? [];
+      final agentId = wallet['agentId'] as String?;
+      
+      // Load agent info for status card
+      Map<String, dynamic>? agentInfo;
+      if (agentId != null && agentId.isNotEmpty) {
+        try {
+          agentInfo = await _api.getAgentInfo(agentId);
+        } catch (e) {
+          // Agent info fetch failed, continue without it
+          debugPrint('Failed to load agent info: $e');
+        }
+      }
       
       setState(() {
         _pockets = pockets;
+        _agentInfo = agentInfo;
+        _currentAgentId = agentId;
       });
     } catch (e) {
       if (mounted) {
@@ -48,7 +63,10 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
           ),
         );
         // Set empty state on error
-        setState(() => _pockets = []);
+        setState(() {
+          _pockets = [];
+          _agentInfo = null;
+        });
       }
     } finally {
       setState(() => _loading = false);
@@ -126,6 +144,62 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                     }),
                   const SizedBox(height: 24),
                   const Text(
+                    'Agent Status',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_agentInfo != null)
+                    Card(
+                      child: ListTile(
+                        leading: Icon(
+                          _agentInfo!['status'] == 'ACTIVE'
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: _agentInfo!['status'] == 'ACTIVE'
+                              ? Colors.green
+                              : Colors.red,
+                          size: 32,
+                        ),
+                        title: Text(
+                          '${_agentInfo!['firstName'] ?? ''} ${_agentInfo!['lastName'] ?? ''}'.trim(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text('Agent ID: ${_agentInfo!['id'] ?? ''}'),
+                            const SizedBox(height: 2),
+                            Text(
+                              _agentInfo!['status'] == 'ACTIVE'
+                                  ? '✓ Active'
+                                  : '⊗ Inactive',
+                              style: TextStyle(
+                                color: _agentInfo!['status'] == 'ACTIVE'
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'Agent information unavailable',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  const Text(
                     'Actions',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -160,9 +234,68 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                       },
                     ),
                   ),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.history),
+                      title: const Text('History'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const _AgentHistoryPlaceholderScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
+    );
+  }
+}
+
+class _AgentHistoryPlaceholderScreen extends StatelessWidget {
+  const _AgentHistoryPlaceholderScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Transaction History'),
+      ),
+      body: const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.history,
+                size: 64,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Transaction History',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Coming in Phase 6',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

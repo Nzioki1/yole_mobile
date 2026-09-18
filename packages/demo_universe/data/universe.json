@@ -233,6 +233,10 @@
       "password": "Password1!",
       "floatCdfMinor": 500000000,
       "floatUsdMinor": 200000,
+      "dailyLimitCdfMinor": 1000000000,
+      "perTxnLimitCdfMinor": 500000000,
+      "dailyLimitUsdMinor": 400000,
+      "perTxnLimitUsdMinor": 200000,
       "floatWalletId": "wallet_float_agent001",
       "status": "ACTIVE",
       "createdAt": "2026-07-01T08:00:00Z"
@@ -247,6 +251,10 @@
       "password": "Password1!",
       "floatCdfMinor": 250000000,
       "floatUsdMinor": 100000,
+      "dailyLimitCdfMinor": 500000000,
+      "perTxnLimitCdfMinor": 250000000,
+      "dailyLimitUsdMinor": 200000,
+      "perTxnLimitUsdMinor": 100000,
       "floatWalletId": "wallet_float_agent002",
       "status": "ACTIVE",
       "createdAt": "2026-07-01T08:00:00Z"
@@ -893,6 +901,50 @@
       "feePercent": 2,
       "minFeeMinor": 200,
       "maxFeeMinor": 20000,
+      "effectiveFrom": "2026-01-01",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "fee_agent_cash_in_cdf",
+      "kind": "FEE",
+      "paymentType": "AGENT_CASH_IN",
+      "currency": "CDF",
+      "feePercent": 0.5,
+      "minFeeMinor": 500,
+      "maxFeeMinor": 50000,
+      "effectiveFrom": "2026-01-01",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "fee_agent_cash_in_usd",
+      "kind": "FEE",
+      "paymentType": "AGENT_CASH_IN",
+      "currency": "USD",
+      "feePercent": 0.5,
+      "minFeeMinor": 25,
+      "maxFeeMinor": 500,
+      "effectiveFrom": "2026-01-01",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "fee_agent_cash_out_cdf",
+      "kind": "FEE",
+      "paymentType": "AGENT_CASH_OUT",
+      "currency": "CDF",
+      "feePercent": 1.0,
+      "minFeeMinor": 1000,
+      "maxFeeMinor": 100000,
+      "effectiveFrom": "2026-01-01",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "fee_agent_cash_out_usd",
+      "kind": "FEE",
+      "paymentType": "AGENT_CASH_OUT",
+      "currency": "USD",
+      "feePercent": 1.0,
+      "minFeeMinor": 50,
+      "maxFeeMinor": 1000,
       "effectiveFrom": "2026-01-01",
       "status": "ACTIVE"
     },

@@ -140,7 +140,7 @@ class _CreditScreenState extends State<CreditScreen> {
                   else
                     ..._loans.map((loan) => _LoanCard(
                           loan: loan,
-                          onTap: () => _navigateToDetail(loan['id']),
+                          onTap: () => _navigateToDetail(loan['id']?.toString()),
                           theme: theme,
                         )),
                 ],
@@ -156,7 +156,8 @@ class _CreditScreenState extends State<CreditScreen> {
     ).then((_) => _loadData());
   }
 
-  void _navigateToDetail(String loanId) {
+  void _navigateToDetail(String? loanId) {
+    if (loanId == null || loanId.isEmpty) return;
     Navigator.of(context).pushNamed(
       RouteNames.creditDetail,
       arguments: {'loanId': loanId},
@@ -242,7 +243,7 @@ class _CreditProductCard extends StatelessWidget {
               if (maxAmount != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  'Max Amount: ${(int.parse(maxAmount.toString()) / 100).toStringAsFixed(2)} USD',
+                  'Max Amount: ${_formatAmount(maxAmount.toString())} ${eligibility?['currency'] ?? 'USD'}',
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
@@ -380,8 +381,13 @@ class _LoanCard extends StatelessWidget {
     );
   }
 
-  String _formatType(String type) {
-    return type.split('_').map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase()).join(' ');
+  String _formatType(String? type) {
+    if (type == null || type.isEmpty) return 'Loan';
+    return type
+        .split('_')
+        .where((word) => word.isNotEmpty) // Filter out empty segments
+        .map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ');
   }
 
   String _formatAmount(String amountStr) {
@@ -393,7 +399,8 @@ class _LoanCard extends StatelessWidget {
     }
   }
 
-  String _formatDate(String dateStr) {
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return 'N/A';
     try {
       final date = DateTime.parse(dateStr);
       final now = DateTime.now();

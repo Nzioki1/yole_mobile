@@ -71,12 +71,16 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
   Map<String, dynamic>? _quote;
   String? _selectedRecipient;
 
-  // Demo recipients for offline mode
+  // Demo recipients for offline mode - international mix
   static const List<Map<String, String>> _demoRecipients = [
-    {'id': 'rcpt_001', 'name': 'Marie Tshala', 'country': 'DRC'},
-    {'id': 'rcpt_002', 'name': 'Papa Wemba', 'country': 'DRC'},
-    {'id': 'rcpt_003', 'name': 'Fally Ipupa', 'country': 'DRC'},
-    {'id': 'rcpt_004', 'name': 'Koffi Olomide', 'country': 'DRC'},
+    {'id': 'rcpt_001', 'name': 'Marie Tshala', 'country': 'DRC', 'currency': 'CDF'},
+    {'id': 'rcpt_002', 'name': 'Papa Wemba', 'country': 'DRC', 'currency': 'CDF'},
+    {'id': 'rcpt_003', 'name': 'James Kamau', 'country': 'Kenya', 'currency': 'KES'},
+    {'id': 'rcpt_004', 'name': 'Sarah Nakato', 'country': 'Uganda', 'currency': 'UGX'},
+    {'id': 'rcpt_005', 'name': 'Pierre Dubois', 'country': 'France', 'currency': 'EUR'},
+    {'id': 'rcpt_006', 'name': 'John Smith', 'country': 'USA', 'currency': 'USD'},
+    {'id': 'rcpt_007', 'name': 'Luc Bertrand', 'country': 'Belgium', 'currency': 'EUR'},
+    {'id': 'rcpt_008', 'name': 'Thabo Mbeki', 'country': 'South Africa', 'currency': 'ZAR'},
   ];
 
   @override
@@ -175,15 +179,31 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
     setState(() => _loading = true);
 
     try {
-      // Note: Backend doesn't have outbound confirm yet, showing quote success
+      // Note: Backend doesn't have outbound confirm yet
+      final quoteId = _quote!['quoteId'] ?? _quote!['id'] ?? 'N/A';
+      final sendAmountMinor = int.tryParse(_quote!['sendAmountMinor']?.toString() ?? '0') ?? 0;
+      final sendAmount = (sendAmountMinor / 100).toStringAsFixed(2);
+      
+      // Get recipient details
+      final recipient = _demoRecipients.firstWhere(
+        (r) => r['id'] == _selectedRecipient,
+        orElse: () => {'name': 'Unknown', 'country': 'Unknown', 'currency': _currency},
+      );
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Remittance initiated! Reference: ${_quote!['quoteId']}'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
-          ),
+        setState(() => _loading = false);
+        
+        // Show confirmation dialog
+        await _showConfirmationDialog(
+          context,
+          sendAmount: sendAmount,
+          currency: _currency,
+          recipientName: recipient['name']!,
+          recipientCountry: recipient['country']!,
+          referenceId: quoteId,
         );
+        
+        // Reset form
         setState(() {
           _quote = null;
           _selectedRecipient = null;
@@ -204,6 +224,86 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  Future<void> _showConfirmationDialog(
+    BuildContext context, {
+    required String sendAmount,
+    required String currency,
+    required String recipientName,
+    required String recipientCountry,
+    required String referenceId,
+  }) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.green, size: 32),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Money Sent!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Your international remittance has been successfully sent.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 20),
+            _ConfirmationRow(label: 'Amount Sent', value: '$currency $sendAmount'),
+            const SizedBox(height: 12),
+            _ConfirmationRow(label: 'Recipient', value: recipientName),
+            const SizedBox(height: 12),
+            _ConfirmationRow(label: 'Destination', value: recipientCountry),
+            const SizedBox(height: 12),
+            _ConfirmationRow(label: 'Reference ID', value: referenceId),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Recipient will receive the money within 24 hours',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -686,6 +786,45 @@ class _QuoteRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ConfirmationRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _ConfirmationRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

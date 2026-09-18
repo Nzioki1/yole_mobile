@@ -310,4 +310,6 @@ Seed one demo goal for Jean-Paul (cust_kasee):
 
 **Approved by:** User (via task description)  
 **Implemented by:** Cloud Agent (Cursor)  
-**Commit SHA:** (TBD after push)  
+**Commit SHA:** `6b704e1d214c369bed8be908a7ebdb542b4c7aed`  
+**Branch:** `cursor/task1-monorepo-scaffold-1d8a`  
+**PR:** #1  

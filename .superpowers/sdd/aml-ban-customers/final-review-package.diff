@@ -1,0 +1,908 @@
+=== COMMITS (AML plan implementation) ===
+e2c4bf7 docs: append fix note to Task 5 SDD report
+ac18308 fix(admin): gate Users create form with isAdmin
+a343ef5 docs: add SDD report for Task 5 Users page RBAC
+153366b feat(admin): allow all staff roles to view Users list
+014de2c docs: Task 4 implementation report
+220728e feat(admin): customers directory with Customer 360 deep link
+c9ab757 feat(admin): add AML ban list page implementation
+77eeb35 feat(admin): AML ban list page with add and lift
+81086da docs: note SUPPORT trim in Task 2 report
+bd30078 fix(admin): do not expand SUPPORT beyond users/aml/customers
+8e46502 docs: add Task 2 implementation report
+186be3e feat(admin): RBAC and nav for AML ban list and customers directory
+dec855d docs: add Task 1 implementation report
+8ebdf5d feat(demo): seed AML ban list + store list/add/lift and listCustomers
+
+=== STAT ===
+ apps/admin_web/app/dashboard/aml-ban-list/page.tsx | 205 +++++++++++++++++++
+ apps/admin_web/app/dashboard/customers/page.tsx    |  94 +++++++++
+ apps/admin_web/app/dashboard/layout.tsx            |   2 +
+ apps/admin_web/app/dashboard/users/page.tsx        |  54 +++--
+ apps/admin_web/components/sidebar/Sidebar.tsx      |   2 +
+ apps/admin_web/lib/api.ts                          |  20 ++
+ apps/admin_web/lib/offline/store.aml-ban.test.ts   |  55 ++++++
+ apps/admin_web/lib/offline/store.ts                |  45 +++++
+ apps/admin_web/lib/rbac.ts                         |  17 +-
+ docs/demo/DEM-SCRIPT.md                            |   4 +-
+ .../sdd-reports/2026-09-18-aml-task-1-report.md    | 217 +++++++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-2-report.md    | 148 ++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-3-report.md    | 175 +++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-4-report.md    | 205 +++++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-5-report.md    | 154 +++++++++++++++
+ packages/demo_universe/dart/assets/universe.json   |  51 +++++
+ packages/demo_universe/dart/lib/universe_json.dart |  60 +++++-
+ packages/demo_universe/data/universe.json          |  51 +++++
+ packages/demo_universe/ts/types.ts                 |  13 ++
+ 19 files changed, 1547 insertions(+), 25 deletions(-)
+
+=== NAME ONLY ===
+apps/admin_web/app/dashboard/aml-ban-list/page.tsx
+apps/admin_web/app/dashboard/customers/page.tsx
+apps/admin_web/app/dashboard/layout.tsx
+apps/admin_web/app/dashboard/users/page.tsx
+apps/admin_web/components/sidebar/Sidebar.tsx
+apps/admin_web/lib/api.ts
+apps/admin_web/lib/offline/store.aml-ban.test.ts
+apps/admin_web/lib/offline/store.ts
+apps/admin_web/lib/rbac.ts
+docs/demo/DEM-SCRIPT.md
+docs/superpowers/sdd-reports/2026-09-18-aml-task-1-report.md
+docs/superpowers/sdd-reports/2026-09-18-aml-task-2-report.md
+docs/superpowers/sdd-reports/2026-09-18-aml-task-3-report.md
+docs/superpowers/sdd-reports/2026-09-18-aml-task-4-report.md
+docs/superpowers/sdd-reports/2026-09-18-aml-task-5-report.md
+packages/demo_universe/dart/assets/universe.json
+packages/demo_universe/dart/lib/universe_json.dart
+packages/demo_universe/data/universe.json
+packages/demo_universe/ts/types.ts
+
+=== DIFF (excluding dart embed bulk if huge — include all) ===
+diff --git a/apps/admin_web/app/dashboard/aml-ban-list/page.tsx b/apps/admin_web/app/dashboard/aml-ban-list/page.tsx
+new file mode 100644
+index 0000000..d0210b3
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/aml-ban-list/page.tsx
+@@ -0,0 +1,205 @@
++'use client';
++
++import { useEffect, useState, FormEvent } from 'react';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++interface AmlBanEntry {
++  id: string;
++  fullName: string;
++  idRef?: string;
++  matchType: 'NAME' | 'ID' | 'ENTITY';
++  reason: string;
++  sourceList: string;
++  status: 'BANNED' | 'LIFTED';
++  notes?: string;
++  createdAt: string;
++}
++
++export default function AmlBanListPage() {
++  const [entries, setEntries] = useState<AmlBanEntry[]>([]);
++  const [showForm, setShowForm] = useState(false);
++  const [formData, setFormData] = useState({
++    fullName: '',
++    idRef: '',
++    matchType: 'NAME' as 'NAME' | 'ID' | 'ENTITY',
++    reason: '',
++    sourceList: 'DEMO_SANCTIONS',
++  });
++
++  useEffect(() => {
++    loadEntries();
++  }, []);
++
++  const loadEntries = async () => {
++    try {
++      const data = await api.listAmlBanList();
++      setEntries(Array.isArray(data) ? data : []);
++    } catch (error) {
++      console.error(error);
++    }
++  };
++
++  const handleSubmit = async (e: FormEvent) => {
++    e.preventDefault();
++    try {
++      await api.addAmlBanEntry({
++        fullName: formData.fullName,
++        idRef: formData.idRef || undefined,
++        matchType: formData.matchType,
++        reason: formData.reason,
++        sourceList: formData.sourceList,
++      });
++      setShowForm(false);
++      setFormData({ 
++        fullName: '', 
++        idRef: '', 
++        matchType: 'NAME', 
++        reason: '', 
++        sourceList: 'DEMO_SANCTIONS' 
++      });
++      loadEntries();
++    } catch (error) {
++      alert(`Error: ${error}`);
++    }
++  };
++
++  const handleLift = async (id: string) => {
++    try {
++      await api.liftAmlBanEntry(id);
++      loadEntries();
++    } catch (error) {
++      alert(`Error: ${error}`);
++    }
++  };
++
++  return (
++    <div>
++      <div className="alert alert-warning mb-3">
++        <i className="fa fa-info-circle me-2"></i>
++        Offline demo — not a live sanctions feed
++      </div>
++
++      <div className="mb-3">
++        <button className="btn btn-theme" onClick={() => setShowForm(!showForm)}>
++          {showForm ? 'Cancel' : '+ Add to ban list'}
++        </button>
++      </div>
++
++      {showForm && (
++        <Panel>
++          <PanelHeader>Add AML Ban Entry</PanelHeader>
++          <PanelBody>
++            <form onSubmit={handleSubmit} className="row g-3">
++              <div className="col-md-6">
++                <label className="form-label">Full Name</label>
++                <input 
++                  className="form-control" 
++                  placeholder="Full Name" 
++                  value={formData.fullName}
++                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
++                  required 
++                />
++              </div>
++              <div className="col-md-6">
++                <label className="form-label">ID/Reference (optional)</label>
++                <input 
++                  className="form-control" 
++                  placeholder="ID or Reference" 
++                  value={formData.idRef}
++                  onChange={(e) => setFormData({ ...formData, idRef: e.target.value })} 
++                />
++              </div>
++              <div className="col-md-6">
++                <label className="form-label">Match Type</label>
++                <select 
++                  className="form-select" 
++                  value={formData.matchType}
++                  onChange={(e) => setFormData({ ...formData, matchType: e.target.value as 'NAME' | 'ID' | 'ENTITY' })}
++                  required
++                >
++                  <option value="NAME">NAME</option>
++                  <option value="ID">ID</option>
++                  <option value="ENTITY">ENTITY</option>
++                </select>
++              </div>
++              <div className="col-md-6">
++                <label className="form-label">Source List</label>
++                <input 
++                  className="form-control" 
++                  placeholder="Source List" 
++                  value={formData.sourceList}
++                  onChange={(e) => setFormData({ ...formData, sourceList: e.target.value })} 
++                  required 
++                />
++              </div>
++              <div className="col-12">
++                <label className="form-label">Reason</label>
++                <textarea 
++                  className="form-control" 
++                  placeholder="Reason for ban" 
++                  value={formData.reason}
++                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })} 
++                  rows={3}
++                  required 
++                />
++              </div>
++              <div className="col-12">
++                <button type="submit" className="btn btn-success">Add Entry</button>
++              </div>
++            </form>
++          </PanelBody>
++        </Panel>
++      )}
++
++      <Panel>
++        <PanelHeader>{entries.length} AML Ban List Entries</PanelHeader>
++        <PanelBody className="p-0">
++          <div className="table-responsive">
++            <table className="table table-striped table-hover mb-0 align-middle">
++              <thead>
++                <tr>
++                  <th>Name</th>
++                  <th>ID/Ref</th>
++                  <th>Match</th>
++                  <th>Reason</th>
++                  <th>Source</th>
++                  <th>Status</th>
++                  <th>Added</th>
++                  <th>Actions</th>
++                </tr>
++              </thead>
++              <tbody>
++                {entries.map((entry) => (
++                  <tr key={entry.id}>
++                    <td className="fw-semibold">{entry.fullName}</td>
++                    <td className="font-monospace small">{entry.idRef || '—'}</td>
++                    <td><span className="badge bg-secondary">{entry.matchType}</span></td>
++                    <td className="text-truncate" style={{ maxWidth: '200px' }}>{entry.reason}</td>
++                    <td className="small">{entry.sourceList}</td>
++                    <td>
++                      <span className={`badge ${entry.status === 'BANNED' ? 'bg-danger' : 'bg-secondary'}`}>
++                        {entry.status}
++                      </span>
++                    </td>
++                    <td className="small">{new Date(entry.createdAt).toLocaleDateString()}</td>
++                    <td>
++                      {entry.status === 'BANNED' && (
++                        <button 
++                          className="btn btn-sm btn-outline-success"
++                          onClick={() => handleLift(entry.id)}
++                        >
++                          Lift
++                        </button>
++                      )}
++                    </td>
++                  </tr>
++                ))}
++              </tbody>
++            </table>
++          </div>
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/customers/page.tsx b/apps/admin_web/app/dashboard/customers/page.tsx
+new file mode 100644
+index 0000000..539973b
+--- /dev/null
++++ b/apps/admin_web/app/dashboard/customers/page.tsx
+@@ -0,0 +1,94 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++import Link from 'next/link';
++import { api } from '@/lib/api';
++import { Panel, PanelHeader, PanelBody } from '@/components/panel/Panel';
++
++export default function CustomersPage() {
++  const [customers, setCustomers] = useState<any[]>([]);
++
++  useEffect(() => {
++    loadCustomers();
++  }, []);
++
++  const loadCustomers = async () => {
++    try {
++      const data = await api.listCustomers();
++      setCustomers(Array.isArray(data) ? data : []);
++    } catch (error) {
++      console.error(error);
++    }
++  };
++
++  return (
++    <div>
++      <Panel>
++        <PanelHeader>{customers.length} Customers</PanelHeader>
++        <PanelBody className="p-0">
++          <div className="table-responsive">
++            <table className="table table-striped table-hover mb-0 align-middle">
++              <thead>
++                <tr>
++                  <th>ID</th>
++                  <th>Name</th>
++                  <th>Email</th>
++                  <th>Phone</th>
++                  <th>Segment</th>
++                  <th>KYC</th>
++                  <th>Status</th>
++                  <th>Action</th>
++                </tr>
++              </thead>
++              <tbody>
++                {customers.map((c) => (
++                  <tr key={c.id}>
++                    <td className="font-monospace small">{c.id}</td>
++                    <td className="fw-semibold">
++                      {c.firstName} {c.lastName}
++                    </td>
++                    <td>{c.email}</td>
++                    <td>{c.phoneE164 || '—'}</td>
++                    <td>
++                      <span className="badge bg-info">{c.segment}</span>
++                    </td>
++                    <td>
++                      <span
++                        className={`badge ${
++                          c.kycStatus === 'VERIFIED'
++                            ? 'bg-success'
++                            : c.kycStatus === 'PENDING'
++                            ? 'bg-warning'
++                            : 'bg-secondary'
++                        }`}
++                      >
++                        {c.kycStatus}
++                      </span>
++                    </td>
++                    <td>
++                      <span
++                        className={`badge ${
++                          c.status === 'ACTIVE' ? 'bg-teal' : 'bg-secondary'
++                        }`}
++                      >
++                        {c.status || 'ACTIVE'}
++                      </span>
++                    </td>
++                    <td>
++                      <Link
++                        href={`/dashboard/customer360?customerId=${c.id}`}
++                        className="btn btn-sm btn-theme"
++                      >
++                        Open 360
++                      </Link>
++                    </td>
++                  </tr>
++                ))}
++              </tbody>
++            </table>
++          </div>
++        </PanelBody>
++      </Panel>
++    </div>
++  );
++}
+diff --git a/apps/admin_web/app/dashboard/layout.tsx b/apps/admin_web/app/dashboard/layout.tsx
+index 9909049..824897d 100644
+--- a/apps/admin_web/app/dashboard/layout.tsx
++++ b/apps/admin_web/app/dashboard/layout.tsx
+@@ -23,10 +23,12 @@ const pageTitles: Record<string, string> = {
+   '/dashboard/credit-exceptions': 'Credit Exceptions',
+   '/dashboard/idempotency': 'Idempotency',
+   '/dashboard/remittance': 'Remittance',
+   '/dashboard/resilience': 'Resilience',
+   '/dashboard/export': 'Export / Reports',
++  '/dashboard/customers': 'Customers',
++  '/dashboard/aml-ban-list': 'AML Ban List',
+ };
+ 
+ export default function DashboardLayout({
+   children,
+ }: {
+diff --git a/apps/admin_web/app/dashboard/users/page.tsx b/apps/admin_web/app/dashboard/users/page.tsx
+index ca9baf5..b431886 100644
+--- a/apps/admin_web/app/dashboard/users/page.tsx
++++ b/apps/admin_web/app/dashboard/users/page.tsx
+@@ -21,10 +21,11 @@ type StaffRow = {
+   lastName?: string;
+ };
+ 
+ export default function UsersPage() {
+   const router = useRouter();
++  const [currentUser, setCurrentUser] = useState<ReturnType<typeof authService.getCurrentUser>>(null);
+   const [staff, setStaff] = useState<StaffRow[]>([]);
+   const [showForm, setShowForm] = useState(false);
+   const [error, setError] = useState<string | null>(null);
+   const [formData, setFormData] = useState({
+     firstName: '',
+@@ -32,16 +33,19 @@ export default function UsersPage() {
+     email: '',
+     password: 'Password1!',
+     role: StaffRole.OPS as string,
+   });
+ 
++  const isAdmin = currentUser?.role === StaffRole.ADMIN;
++
+   useEffect(() => {
+     const user = authService.getCurrentUser();
+-    if (!user || user.role !== StaffRole.ADMIN) {
+-      router.replace('/dashboard');
++    if (!user) {
++      router.replace('/login');
+       return;
+     }
++    setCurrentUser(user);
+     loadStaff();
+   }, [router]);
+ 
+   const loadStaff = async () => {
+     try {
+@@ -53,10 +57,11 @@ export default function UsersPage() {
+     }
+   };
+ 
+   const handleCreate = async (e: FormEvent) => {
+     e.preventDefault();
++    if (!isAdmin) return;
+     try {
+       await api.createStaff(formData);
+       setShowForm(false);
+       setFormData({
+         firstName: '',
+@@ -90,17 +95,24 @@ export default function UsersPage() {
+       {error && (
+         <div className="alert alert-danger py-2" role="alert">
+           {error}
+         </div>
+       )}
+-      <div className="mb-3">
+-        <button className="btn btn-theme" type="button" onClick={() => setShowForm(!showForm)}>
+-          {showForm ? 'Cancel' : '+ Create staff'}
+-        </button>
+-      </div>
++      {!isAdmin && (
++        <p className="text-muted small mb-3">
++          View only — ask an ADMIN to create users or change roles.
++        </p>
++      )}
++      {isAdmin && (
++        <div className="mb-3">
++          <button className="btn btn-theme" type="button" onClick={() => setShowForm(!showForm)}>
++            {showForm ? 'Cancel' : '+ Create staff'}
++          </button>
++        </div>
++      )}
+ 
+-      {showForm && (
++      {isAdmin && showForm && (
+         <Panel>
+           <PanelHeader>Create staff</PanelHeader>
+           <PanelBody>
+             <form onSubmit={handleCreate} className="row g-3">
+               <div className="col-md-6">
+@@ -183,21 +195,25 @@ export default function UsersPage() {
+                     <td className="fw-semibold">
+                       {row.firstName} {row.lastName}
+                     </td>
+                     <td>{row.email}</td>
+                     <td style={{ minWidth: 140 }}>
+-                      <select
+-                        className="form-select form-select-sm"
+-                        value={row.role}
+-                        onChange={(e) => handleRoleChange(row.id, e.target.value)}
+-                      >
+-                        {ROLES.map((r) => (
+-                          <option key={r} value={r}>
+-                            {r}
+-                          </option>
+-                        ))}
+-                      </select>
++                      {isAdmin ? (
++                        <select
++                          className="form-select form-select-sm"
++                          value={row.role}
++                          onChange={(e) => handleRoleChange(row.id, e.target.value)}
++                        >
++                          {ROLES.map((r) => (
++                            <option key={r} value={r}>
++                              {r}
++                            </option>
++                          ))}
++                        </select>
++                      ) : (
++                        <span className="badge bg-secondary">{row.role}</span>
++                      )}
+                     </td>
+                     <td className="font-monospace small">{row.id}</td>
+                   </tr>
+                 ))}
+               </tbody>
+diff --git a/apps/admin_web/components/sidebar/Sidebar.tsx b/apps/admin_web/components/sidebar/Sidebar.tsx
+index 4371ee0..27e4c78 100644
+--- a/apps/admin_web/components/sidebar/Sidebar.tsx
++++ b/apps/admin_web/components/sidebar/Sidebar.tsx
+@@ -15,10 +15,11 @@ const NAV: NavGroup[] = [
+     items: [{ name: 'Dashboard', href: '/dashboard', icon: 'fa fa-sitemap' }],
+   },
+   {
+     title: 'Customers',
+     items: [
++      { name: 'Customers', href: '/dashboard/customers', icon: 'fa fa-address-book' },
+       { name: 'Customer 360', href: '/dashboard/customer360', icon: 'fa fa-user' },
+       { name: 'KYC Queue', href: '/dashboard/kyc', icon: 'fa fa-id-card' },
+       { name: 'Agents', href: '/dashboard/agents', icon: 'fa fa-users' },
+     ],
+   },
+@@ -43,10 +44,11 @@ const NAV: NavGroup[] = [
+   {
+     title: 'Operations',
+     items: [
+       { name: 'Reconciliation', href: '/dashboard/recon', icon: 'fa fa-balance-scale' },
+       { name: 'Cases', href: '/dashboard/cases', icon: 'fa fa-ticket' },
++      { name: 'AML ban list', href: '/dashboard/aml-ban-list', icon: 'fa fa-ban' },
+       { name: 'Resilience (demo)', href: '/dashboard/resilience', icon: 'fa fa-server' },
+       { name: 'Export pack', href: '/dashboard/export', icon: 'fa fa-download' },
+     ],
+   },
+   {
+diff --git a/apps/admin_web/lib/api.ts b/apps/admin_web/lib/api.ts
+index 4108151..514ee63 100644
+--- a/apps/admin_web/lib/api.ts
++++ b/apps/admin_web/lib/api.ts
+@@ -464,8 +464,28 @@ export class AdminApiClient {
+       cardsBadge: 'MOCK — not Visa/Mastercard certified',
+       resilienceBadge: 'DEMO STORYBOARD — not a live HA failover',
+     };
+   }
+ 
++  async listAmlBanList() {
++    if (OFFLINE_DEMO) return this.store().listAmlBanList();
++    throw new Error('listAmlBanList is only available in offline demo');
++  }
++
++  async addAmlBanEntry(data: Parameters<ReturnType<typeof getOfflineStore>['addAmlBanEntry']>[0]) {
++    if (OFFLINE_DEMO) return this.store().addAmlBanEntry(data);
++    throw new Error('addAmlBanEntry is only available in offline demo');
++  }
++
++  async liftAmlBanEntry(id: string) {
++    if (OFFLINE_DEMO) return this.store().liftAmlBanEntry(id);
++    throw new Error('liftAmlBanEntry is only available in offline demo');
++  }
++
++  async listCustomers() {
++    if (OFFLINE_DEMO) return this.store().listCustomers();
++    throw new Error('listCustomers is only available in offline demo');
++  }
++
+ }
+ 
+ export const api = new AdminApiClient();
+diff --git a/apps/admin_web/lib/offline/store.aml-ban.test.ts b/apps/admin_web/lib/offline/store.aml-ban.test.ts
+new file mode 100644
+index 0000000..a218af1
+--- /dev/null
++++ b/apps/admin_web/lib/offline/store.aml-ban.test.ts
+@@ -0,0 +1,55 @@
++import { OfflineDemoStore } from './store';
++
++describe('OfflineDemoStore AML ban + customers directory', () => {
++  test('listAmlBanList returns seeded BANNED and LIFTED entries', () => {
++    const store = OfflineDemoStore.createFresh();
++    const list = store.listAmlBanList();
++    expect(list.length).toBeGreaterThanOrEqual(5);
++    expect(list.some((e) => e.status === 'BANNED')).toBe(true);
++    expect(list.some((e) => e.id === 'ban_demo_001')).toBe(true);
++  });
++
++  test('addAmlBanEntry appends BANNED row', () => {
++    const store = OfflineDemoStore.createFresh();
++    const before = store.listAmlBanList().length;
++    const row = store.addAmlBanEntry({
++      fullName: 'NEW DEMO BAN',
++      matchType: 'NAME',
++      reason: 'Demo add',
++      sourceList: 'DEMO_SANCTIONS',
++    });
++    expect(row.status).toBe('BANNED');
++    expect(row.id).toMatch(/^ban_demo_/);
++    expect(store.listAmlBanList().length).toBe(before + 1);
++  });
++
++  test('liftAmlBanEntry sets LIFTED', () => {
++    const store = OfflineDemoStore.createFresh();
++    const updated = store.liftAmlBanEntry('ban_demo_001');
++    expect(updated.status).toBe('LIFTED');
++    expect(store.listAmlBanList().find((e) => e.id === 'ban_demo_001')?.status).toBe('LIFTED');
++  });
++
++  test('listCustomers omits passwords and includes cust_kasee', () => {
++    const store = OfflineDemoStore.createFresh();
++    const list = store.listCustomers();
++    expect(list.length).toBeGreaterThanOrEqual(4);
++    for (const c of list) {
++      expect(c).not.toHaveProperty('password');
++    }
++    expect(list.some((c) => c.id === 'cust_kasee')).toBe(true);
++  });
++
++  test('reset restores ban seed', () => {
++    const store = OfflineDemoStore.createFresh();
++    store.addAmlBanEntry({
++      fullName: 'TEMP',
++      matchType: 'NAME',
++      reason: 'x',
++      sourceList: 'DEMO_SANCTIONS',
++    });
++    store.reset();
++    expect(store.listAmlBanList().some((e) => e.fullName === 'TEMP')).toBe(false);
++    expect(store.listAmlBanList().some((e) => e.id === 'ban_demo_001')).toBe(true);
++  });
++});
+diff --git a/apps/admin_web/lib/offline/store.ts b/apps/admin_web/lib/offline/store.ts
+index b968c0c..88866a9 100644
+--- a/apps/admin_web/lib/offline/store.ts
++++ b/apps/admin_web/lib/offline/store.ts
+@@ -19,10 +19,11 @@ import type {
+   Notification,
+   Product,
+   PendingApproval,
+   Remittance,
+   CardAuth,
++  AmlBanEntry,
+ } from 'demo_universe';
+ 
+ function strMinor(n: number | string | undefined | null): string {
+   if (n === undefined || n === null) return '0';
+   return String(n);
+@@ -1065,10 +1066,53 @@ export class OfflineDemoStore {
+       status: day.status,
+       eodSnapshot: day.eodSnapshot,
+     };
+   }
+ 
++  /**
++   * AML ban list methods
++   */
++  listAmlBanList(): AmlBanEntry[] {
++    return (this.u.amlBanList ?? []).slice();
++  }
++
++  addAmlBanEntry(data: {
++    fullName: string;
++    idRef?: string;
++    matchType: 'NAME' | 'ID' | 'ENTITY';
++    reason: string;
++    sourceList: string;
++    notes?: string;
++    status?: 'BANNED' | 'LIFTED';
++  }): AmlBanEntry {
++    if (!this.u.amlBanList) this.u.amlBanList = [];
++    const row: AmlBanEntry = {
++      id: `ban_demo_${Date.now()}`,
++      fullName: data.fullName.trim(),
++      idRef: data.idRef,
++      matchType: data.matchType,
++      reason: data.reason.trim(),
++      sourceList: data.sourceList.trim() || 'DEMO_SANCTIONS',
++      status: data.status || 'BANNED',
++      notes: data.notes,
++      createdAt: nowIso(),
++    };
++    this.u.amlBanList.push(row);
++    return row;
++  }
++
++  liftAmlBanEntry(id: string): AmlBanEntry {
++    const row = (this.u.amlBanList ?? []).find((e) => e.id === id);
++    if (!row) throw new Error(`Ban entry not found: ${id}`);
++    row.status = 'LIFTED';
++    return row;
++  }
++
++  listCustomers(): Omit<Customer, 'password'>[] {
++    return this.u.customers.map(({ password: _p, ...rest }) => rest);
++  }
++
+   /**
+    * DEM-12: Build open-format export pack JSON.
+    */
+   buildExportPack() {
+     const pack = {
+@@ -1088,10 +1132,11 @@ export class OfflineDemoStore {
+       cardAuths: this.u.cardAuths,
+       products: this.u.products,
+       feeLimits: this.u.feeLimits,
+       reconDays: this.u.reconDays,
+       notifications: this.u.notifications,
++      amlBanList: this.u.amlBanList ?? [],
+       agents: this.u.agents.map(({ password: _p, ...rest }) => rest),
+       employers: this.u.employers,
+       employees: this.u.employees,
+     };
+     return pack;
+diff --git a/apps/admin_web/lib/rbac.ts b/apps/admin_web/lib/rbac.ts
+index f63d2cb..d13ff21 100644
+--- a/apps/admin_web/lib/rbac.ts
++++ b/apps/admin_web/lib/rbac.ts
+@@ -16,11 +16,13 @@ export type ModuleRoute =
+   | '/dashboard/credit-exceptions'
+   | '/dashboard/idempotency'
+   | '/dashboard/remittance'
+   | '/dashboard/resilience'
+   | '/dashboard/export'
+-  | '/dashboard/users';
++  | '/dashboard/users'
++  | '/dashboard/aml-ban-list'
++  | '/dashboard/customers';
+ 
+ const ALL_ADMIN: ModuleRoute[] = [
+   '/dashboard',
+   '/dashboard/customer360',
+   '/dashboard/kyc',
+@@ -37,34 +39,44 @@ const ALL_ADMIN: ModuleRoute[] = [
+   '/dashboard/idempotency',
+   '/dashboard/remittance',
+   '/dashboard/resilience',
+   '/dashboard/export',
+   '/dashboard/users',
++  '/dashboard/aml-ban-list',
++  '/dashboard/customers',
+ ];
+ 
+ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
+   [StaffRole.ADMIN]: ALL_ADMIN,
+   [StaffRole.OPS]: [
+     '/dashboard',
++    '/dashboard/customer360',
+     '/dashboard/kyc',
+     '/dashboard/agents',
+     '/dashboard/payments',
+     '/dashboard/recon',
+     '/dashboard/cases',
+     '/dashboard/approvals',
+     '/dashboard/credit-exceptions',
+     '/dashboard/idempotency',
+     '/dashboard/remittance',
+     '/dashboard/products',
++    '/dashboard/users',
++    '/dashboard/aml-ban-list',
++    '/dashboard/customers',
+   ],
+   [StaffRole.SUPPORT]: [
+     '/dashboard',
+     '/dashboard/customer360',
+     '/dashboard/cases',
++    '/dashboard/users',
++    '/dashboard/aml-ban-list',
++    '/dashboard/customers',
+   ],
+   [StaffRole.FINANCE]: [
+     '/dashboard',
++    '/dashboard/customer360',
+     '/dashboard/payments',
+     '/dashboard/cards',
+     '/dashboard/payroll',
+     '/dashboard/config',
+     '/dashboard/recon',
+@@ -73,10 +85,13 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
+     '/dashboard/credit-exceptions',
+     '/dashboard/remittance',
+     '/dashboard/export',
+     '/dashboard/resilience',
+     '/dashboard/idempotency',
++    '/dashboard/users',
++    '/dashboard/aml-ban-list',
++    '/dashboard/customers',
+   ],
+ };
+ 
+ export function canAccessRoute(role: StaffRole, route: string): boolean {
+   const allowedRoutes = ROLE_PERMISSIONS[role];
+diff --git a/docs/demo/DEM-SCRIPT.md b/docs/demo/DEM-SCRIPT.md
+index c3f6e94..40bdf5f 100644
+--- a/docs/demo/DEM-SCRIPT.md
++++ b/docs/demo/DEM-SCRIPT.md
+@@ -86,11 +86,13 @@ Base: `http://localhost:3001`
+ | DEM-04 | `/dashboard/credit-exceptions` | Credit exceptions |
+ | DEM-05 | `/dashboard/idempotency` | Idempotency lab |
+ | DEM-08 | `/dashboard/remittance` | Remittance |
+ | DEM-10 | `/dashboard/resilience` | Resilience (demo) |
+ | DEM-12 | `/dashboard/export` | Export pack |
+-| — | `/dashboard/users` | Users (ADMIN) |
++| — | `/dashboard/users` | Users (view all; create/role ADMIN) |
++| — | `/dashboard/aml-ban-list` | AML ban list |
++| — | `/dashboard/customers` | Customers directory |
+ 
+ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/dashboard/recon`, `/dashboard/payroll`, `/login`.
+ 
+ ---
+ 
+diff --git a/packages/demo_universe/data/universe.json b/packages/demo_universe/data/universe.json
+index 3bf905f..3702814 100644
+--- a/packages/demo_universe/data/universe.json
++++ b/packages/demo_universe/data/universe.json
+@@ -899,7 +899,58 @@
+       "title": "Confidential AML alert",
+       "body": "case_aml_conf_001 requires investigation",
+       "read": false,
+       "createdAt": "2026-09-16T08:01:00Z"
+     }
++  ],
++  "amlBanList": [
++    {
++      "id": "ban_demo_001",
++      "fullName": "DEMO BLOCKED PERSON ONE",
++      "idRef": "ID-BAN-0001",
++      "matchType": "ID",
++      "reason": "Internal fraud — demo entry",
++      "sourceList": "INTERNAL_FRAUD",
++      "status": "BANNED",
++      "notes": "Fictional demo identity only",
++      "createdAt": "2026-08-01T10:00:00Z"
++    },
++    {
++      "id": "ban_demo_002",
++      "fullName": "ACME SHELL TRADING SARL",
++      "idRef": "RCCM-DEMO-999",
++      "matchType": "ENTITY",
++      "reason": "Suspected mule network — demo",
++      "sourceList": "DEMO_SANCTIONS",
++      "status": "BANNED",
++      "createdAt": "2026-08-15T12:00:00Z"
++    },
++    {
++      "id": "ban_demo_003",
++      "fullName": "DEMO ALIAS MATCH",
++      "matchType": "NAME",
++      "reason": "Partial name match on demo sanctions list",
++      "sourceList": "DEMO_SANCTIONS",
++      "status": "BANNED",
++      "createdAt": "2026-09-01T09:00:00Z"
++    },
++    {
++      "id": "ban_demo_004",
++      "fullName": "FORMERLY BLOCKED DEMO",
++      "idRef": "ID-BAN-0004",
++      "matchType": "ID",
++      "reason": "Cleared after review — demo",
++      "sourceList": "INTERNAL_FRAUD",
++      "status": "LIFTED",
++      "createdAt": "2026-07-01T08:00:00Z"
++    },
++    {
++      "id": "ban_demo_005",
++      "fullName": "DEMO PEPS PROXY",
++      "matchType": "NAME",
++      "reason": "PEP association — demo hold",
++      "sourceList": "DEMO_SANCTIONS",
++      "status": "BANNED",
++      "createdAt": "2026-09-10T14:00:00Z"
++    }
+   ]
+ }
+diff --git a/packages/demo_universe/ts/types.ts b/packages/demo_universe/ts/types.ts
+index bff503c..3d4303d 100644
+--- a/packages/demo_universe/ts/types.ts
++++ b/packages/demo_universe/ts/types.ts
+@@ -1,7 +1,19 @@
+ /** Shared offline demo universe types (DEM-01…DEM-12 seed graph). */
+ 
++export interface AmlBanEntry {
++  id: string;
++  fullName: string;
++  idRef?: string;
++  matchType: 'NAME' | 'ID' | 'ENTITY';
++  reason: string;
++  sourceList: string;
++  status: 'BANNED' | 'LIFTED';
++  notes?: string;
++  createdAt: string;
++}
++
+ export interface UniverseMeta {
+   version: number;
+   name: string;
+   description?: string;
+   honesty?: {
+@@ -334,6 +346,7 @@ export interface Universe {
+   pendingApprovals: PendingApproval[];
+   cases: Case[];
+   reconDays: ReconDay[];
+   kyc: KycSubmission[];
+   notifications: Notification[];
++  amlBanList: AmlBanEntry[];
+ }
+
+=== DART/JSON SEED STAT ONLY ===
+ packages/demo_universe/dart/assets/universe.json   | 51 ++++++++++++++++++
+ packages/demo_universe/dart/lib/universe_json.dart | 60 ++++++++++++++++++++--
+ packages/demo_universe/data/universe.json          | 51 ++++++++++++++++++
+ 3 files changed, 158 insertions(+), 4 deletions(-)

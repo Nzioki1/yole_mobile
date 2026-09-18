@@ -17,9 +17,11 @@ export default function EmployerDetailPage() {
   const [importing, setImporting] = useState(false);
   const [crediting, setCrediting] = useState(false);
   const [lastCreditResult, setLastCreditResult] = useState<any>(null);
+  const [salaryHistory, setSalaryHistory] = useState<any[]>([]);
 
   useEffect(() => {
     loadEmployer();
+    loadSalaryHistory();
   }, [employerId]);
 
   const loadEmployer = async () => {
@@ -33,6 +35,15 @@ export default function EmployerDetailPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSalaryHistory = async () => {
+    try {
+      const history = await api.listSalaryHistory(employerId);
+      setSalaryHistory(Array.isArray(history) ? history : []);
+    } catch (err) {
+      console.error('Failed to load salary history:', err);
     }
   };
 
@@ -155,17 +166,69 @@ export default function EmployerDetailPage() {
               <table className="table table-striped mb-0 align-middle">
                 <thead>
                   <tr>
-                    <th>Customer ID</th>
-                    <th>Salary</th>
-                    <th>Currency</th>
+                    <th>Name</th>
+                    <th>Emp #</th>
+                    <th>Job</th>
+                    <th>Gross CDF</th>
+                    <th>Net CDF</th>
+                    <th>Advance max</th>
+                    <th>Status</th>
+                    <th>Open 360</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(employer.employees || []).map((emp: any, idx: number) => (
-                    <tr key={`${emp.customerId}-${idx}`}>
-                      <td className="font-monospace small">{emp.customerId}</td>
-                      <td>{(parseInt(emp.salaryMinor, 10) / 100).toFixed(2)}</td>
-                      <td>{emp.currency}</td>
+                    <tr key={`${emp.employeeId || emp.customerId}-${idx}`}>
+                      <td>{emp.displayName}</td>
+                      <td className="font-monospace small">{emp.employeeNumber}</td>
+                      <td>{emp.jobTitle || '—'}</td>
+                      <td>{(emp.grossSalaryCdfMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{(emp.netSalaryCdfMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{(emp.eligibleAdvanceMaxCdfMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td><span className="badge bg-success">{emp.status}</span></td>
+                      <td>
+                        {emp.customerId ? (
+                          <Link href={`/dashboard/customer360?customerId=${emp.customerId}`} className="btn btn-default btn-xs">
+                            <i className="fa fa-user"></i>
+                          </Link>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </PanelBody>
+      </Panel>
+
+      <Panel>
+        <PanelHeader>Salary History</PanelHeader>
+        <PanelBody className="p-0">
+          {salaryHistory.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">No salary history yet.</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-striped mb-0 align-middle">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Employee</th>
+                    <th>Gross</th>
+                    <th>Net</th>
+                    <th>Paid at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salaryHistory.map((entry: any, idx: number) => (
+                    <tr key={`${entry.id || idx}`}>
+                      <td>{entry.period}</td>
+                      <td>{entry.displayName}</td>
+                      <td>{(entry.grossCdfMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{(entry.netCdfMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td>{new Date(entry.paidAt).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>

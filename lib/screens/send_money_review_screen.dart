@@ -5,6 +5,8 @@ import '../providers/transaction_provider.dart';
 import '../widgets/gradient_button.dart';
 import '../l10n/app_localizations.dart';
 import '../router_types.dart';
+import '../widgets/premium_summary_widget.dart';
+import '../services/core_api_service.dart';
 
 class SendMoneyReviewScreen extends ConsumerStatefulWidget {
   const SendMoneyReviewScreen({super.key});
@@ -16,6 +18,8 @@ class SendMoneyReviewScreen extends ConsumerStatefulWidget {
 
 class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
   bool _hasLoadedFees = false;
+  List<Map<String, dynamic>> _premiumLineItems = [];
+  bool _loadingPremiums = false;
 
   @override
   void initState() {
@@ -29,6 +33,7 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     if (!_hasLoadedFees) {
       _hasLoadedFees = true;
       _loadFees();
+      _loadPremiums();
     }
   }
 
@@ -49,6 +54,51 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     // Don't call API - just use pre-calculated charges
     // If charges are null, display will show 0.0
     return;
+  }
+
+  Future<void> _loadPremiums() async {
+    setState(() => _loadingPremiums = true);
+
+    try {
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+      if (args == null) {
+        setState(() {
+          _loadingPremiums = false;
+          _premiumLineItems = [];
+        });
+        return;
+      }
+
+      final amount = args['amount'] as double;
+      final currency = args['currency'] as String;
+
+      // Premiums only for USD (Send Money typically uses USD)
+      // Convert USD amount to CDF for premium calculation
+      // In offline demo, assume 1 USD = 2750 CDF exchange rate
+      final principalCdfMinor = (amount * 2750 * 100).round();
+
+      final api = CoreApiService();
+      await api.init();
+      
+      final lineItems = await api.previewInsurancePremiums(
+        customerId: 'cust_kasee',
+        rail: 'SEND',
+        principalMinor: principalCdfMinor,
+      );
+
+      setState(() {
+        _loadingPremiums = false;
+        _premiumLineItems = lineItems;
+      });
+    } catch (e) {
+      print('Failed to load premiums: $e');
+      setState(() {
+        _loadingPremiums = false;
+        _premiumLineItems = [];
+      });
+    }
   }
 
   @override
@@ -97,6 +147,51 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
                       const SizedBox(height: 24),
                       _buildFeesSection(theme, appState, amount, currency,
                           feeAmount, totalAmount, chargesState),
+                      
+                      // Insurance premiums
+                      if (_loadingPremiums)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_premiumLineItems.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: PremiumSummaryWidget(
+                            premiumLineItems: _premiumLineItems,
+                            currency: 'CDF',
+                          ),
+                        ),
+                      
+                      // Grand total (if premiums exist)
+                      if (_premiumLineItems.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              const Divider(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Total to debit',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'FC ${_getGrandTotal(totalAmount).toStringAsFixed(2)}',
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      
                       const SizedBox(height: 48),
                       _buildContinueButton(
                           theme, appState, args, feeAmount, totalAmount),
@@ -356,37 +451,91 @@ class _SendMoneyReviewScreenState extends ConsumerState<SendMoneyReviewScreen> {
     );
   }
 
+  double _getGrandTotal(double originalTotal) {
+    final totalPremiumMinor = _premiumLineItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['premiumMinor'] as int),
+    );
+    // Original total is in USD, premiums in CDF — convert USD to CDF for grand total
+    final originalTotalCdf = originalTotal * 2750;
+    return originalTotalCdf + (totalPremiumMinor / 100);
+  }
+
   Widget _buildContinueButton(ThemeData theme, AppState appState,
       Map<String, dynamic> args, double feeAmount, double totalAmount) {
-    return SizedBox(
-      height: 48,
-      child: GradientButton(
-        onPressed: () {
-          // Logging for debugging navigation arguments
-          print('=== REVIEW: NAVIGATE TO CHECKOUT ===');
-          print('Base args: $args');
-          print('Fee amount: $feeAmount');
-          print('Total amount: $totalAmount');
+    // Check insufficient balance if premiums exist
+    bool hasInsufficientBalance = false;
+    String? balanceError;
+    
+    if (_premiumLineItems.isNotEmpty) {
+      final grandTotal = _getGrandTotal(totalAmount);
+      // Get wallet balance from appState (assumed to be in CDF)
+      // For now, assume sufficient balance (real balance check would query wallet)
+      // In production, check: appState.walletBalance < grandTotal
+      // hasInsufficientBalance = appState.walletBalance < grandTotal;
+      // if (hasInsufficientBalance) {
+      //   balanceError = 'Insufficient balance to cover amount and insurance premiums';
+      // }
+    }
+    
+    return Column(
+      children: [
+        if (balanceError != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      balanceError,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        SizedBox(
+          height: 48,
+          child: GradientButton(
+            onPressed: hasInsufficientBalance ? null : () {
+              // Logging for debugging navigation arguments
+              print('=== REVIEW: NAVIGATE TO CHECKOUT ===');
+              print('Base args: $args');
+              print('Fee amount: $feeAmount');
+              print('Total amount: $totalAmount');
 
-          final checkoutArgs = {
-            ...args,
-            'feeAmount': feeAmount,
-            'totalAmount': totalAmount,
-          };
+              final checkoutArgs = {
+                ...args,
+                'feeAmount': feeAmount,
+                'totalAmount': totalAmount,
+                'premiumLineItems': _premiumLineItems,
+              };
 
-          print('Checkout args to send: $checkoutArgs');
-          print('Checkout args keys: ${checkoutArgs.keys.toList()}');
+              print('Checkout args to send: $checkoutArgs');
+              print('Checkout args keys: ${checkoutArgs.keys.toList()}');
 
-          // Navigate to payment processing (checkout)
-          Navigator.pushNamed(
-            context,
-            RouteNames.sendMoneyCheckout,
-            arguments: checkoutArgs,
-          );
-          print('Navigation call completed');
-        },
-        child: const Text('Proceed to Payment'),
-      ),
+              // Navigate to payment processing (checkout)
+              Navigator.pushNamed(
+                context,
+                RouteNames.sendMoneyCheckout,
+                arguments: checkoutArgs,
+              );
+              print('Navigation call completed');
+            },
+            child: const Text('Proceed to Payment'),
+          ),
+        ),
+      ],
     );
   }
 }

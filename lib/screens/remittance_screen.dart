@@ -191,34 +191,24 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
         orElse: () => {'name': 'Unknown', 'country': 'Unknown', 'currency': _currency},
       );
 
-      if (mounted) {
-        setState(() => _loading = false);
-        
-        // Show confirmation dialog
-        await _showConfirmationDialog(
-          context,
-          sendAmount: sendAmount,
-          currency: _currency,
-          recipientName: recipient['name']!,
-          recipientCountry: recipient['country']!,
-          referenceId: quoteId,
-        );
+      if (!mounted) return;
+      setState(() => _loading = false);
 
+      // Show confirmation dialog, then return to home
+      await _showConfirmationDialog(
+        context,
+        sendAmount: sendAmount,
+        currency: _currency,
+        recipientName: recipient['name']!,
+        recipientCountry: recipient['country']!,
+        referenceId: quoteId,
+      );
 
-      if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          RouteNames.home,
-          (route) => false,
-        );
-      }
-        
-        // Reset form
-        setState(() {
-          _quote = null;
-          _selectedRecipient = null;
-          _amountController.clear();
-        });
-      }
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        RouteNames.home,
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

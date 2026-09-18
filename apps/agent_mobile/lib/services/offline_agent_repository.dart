@@ -83,6 +83,32 @@ class OfflineAgentRepository {
     return null;
   }
 
+  Map<String, dynamic>? _findCustomerByPhone(String phoneE164) {
+    for (final c in _list('customers')) {
+      if (c['phoneE164'] == phoneE164) return c;
+    }
+    return null;
+  }
+
+  /// Find customer by phone (E.164) or customer ID.
+  /// Throws if not found.
+  Map<String, dynamic> findCustomerByPhoneOrId(String phoneOrId) {
+    final query = phoneOrId.trim();
+    Map<String, dynamic>? customer;
+
+    if (query.startsWith('+')) {
+      customer = _findCustomerByPhone(query);
+    } else {
+      customer = _findCustomer(query);
+    }
+
+    if (customer == null) {
+      throw Exception('Customer not found. Enroll first?');
+    }
+
+    return Map<String, dynamic>.from(customer);
+  }
+
   Map<String, dynamic>? _findWallet({
     required String customerId,
     required String currency,
@@ -240,6 +266,153 @@ class OfflineAgentRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Fee calculation
+  // ---------------------------------------------------------------------------
+
+  /// Get transaction fee from feeLimits seed.
+  /// Returns fee in minor units.
+  Map<String, dynamic> getFee({
+    required String paymentType,
+    required String currency,
+    required int amountMinor,
+  }) {
+    final limits = _list('feeLimits');
+    Map<String, dynamic>? feeLimit;
+
+    for (final limit in limits) {
+      if (limit['kind'] == 'FEE' &&
+          limit['paymentType'] == paymentType &&
+          limit['currency'] == currency &&
+          limit['status'] == 'ACTIVE') {
+        feeLimit = limit;
+        break;
+      }
+    }
+
+    if (feeLimit == null) {
+      return {'feeMinor': 0};
+    }
+
+    final feePercent = (feeLimit['feePercent'] as num?)?.toDouble() ?? 0.0;
+    final minFeeMinor = _int(feeLimit['minFeeMinor']);
+    final maxFeeMinor = _int(feeLimit['maxFeeMinor']);
+
+    var calculatedFee = (amountMinor * feePercent / 100).toInt();
+    if (calculatedFee < minFeeMinor) calculatedFee = minFeeMinor;
+    if (calculatedFee > maxFeeMinor) calculatedFee = maxFeeMinor;
+
+    return {
+      'feeMinor': calculatedFee,
+      'feePercent': feePercent,
+      'minFeeMinor': minFeeMinor,
+      'maxFeeMinor': maxFeeMinor,
+    };
+  }
+
+  /// Get customer wallet for currency.
+  Map<String, dynamic> getWallet({
+    required String customerId,
+    required String currency,
+  }) {
+    final wallet = _findWallet(customerId: customerId, currency: currency);
+    if (wallet == null) {
+      throw Exception('Wallet not found for customer $customerId, $currency');
+    }
+    return Map<String, dynamic>.from(wallet);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Daily limits
+  // ---------------------------------------------------------------------------
+
+  /// Get today's usage for the current agent.
+  /// Returns total amounts and transaction counts for today.
+  Map<String, dynamic> getTodayUsage({String? agentId}) {
+    final aid = agentId ?? _requireAgent();
+    final today = DateTime.now().toUtc();
+    final todayStr = today.toIso8601String().split('T').first;
+
+    final journals = _list('journals');
+    int totalCdfMinor = 0;
+    int totalUsdMinor = 0;
+    int cashInCount = 0;
+    int cashOutCount = 0;
+
+    for (final j in journals) {
+      if (j['agentId'] != aid) continue;
+
+      final postedAt = j['postedAt'] as String?;
+      if (postedAt == null) continue;
+
+      final postedDate = postedAt.split('T').first;
+      if (postedDate != todayStr) continue;
+
+      final type = j['type'] as String?;
+      final currency = j['currency'] as String?;
+      final amountMinor = _int(j['amountMinor']);
+
+      if (type == 'AGENT_CASH_IN') {
+        cashInCount++;
+        if (currency == 'CDF') totalCdfMinor += amountMinor;
+        if (currency == 'USD') totalUsdMinor += amountMinor;
+      } else if (type == 'AGENT_CASH_OUT') {
+        cashOutCount++;
+        if (currency == 'CDF') totalCdfMinor += amountMinor;
+        if (currency == 'USD') totalUsdMinor += amountMinor;
+      }
+    }
+
+    final agent = getAgentInfo(aid);
+    return {
+      'totalCdfMinor': totalCdfMinor,
+      'totalUsdMinor': totalUsdMinor,
+      'cashInCount': cashInCount,
+      'cashOutCount': cashOutCount,
+      'dailyLimitCdfMinor': _int(agent['dailyLimitCdfMinor']),
+      'dailyLimitUsdMinor': _int(agent['dailyLimitUsdMinor']),
+      'perTxnLimitCdfMinor': _int(agent['perTxnLimitCdfMinor']),
+      'perTxnLimitUsdMinor': _int(agent['perTxnLimitUsdMinor']),
+    };
+  }
+
+  /// Check if transaction is within agent limits.
+  Map<String, dynamic> isWithinLimits({
+    required int amountMinor,
+    required String currency,
+  }) {
+    final usage = getTodayUsage();
+    final dailyLimit = currency == 'CDF'
+        ? _int(usage['dailyLimitCdfMinor'])
+        : _int(usage['dailyLimitUsdMinor']);
+    final perTxnLimit = currency == 'CDF'
+        ? _int(usage['perTxnLimitCdfMinor'])
+        : _int(usage['perTxnLimitUsdMinor']);
+    final todayTotal = currency == 'CDF'
+        ? _int(usage['totalCdfMinor'])
+        : _int(usage['totalUsdMinor']);
+
+    if (amountMinor > perTxnLimit) {
+      final symbol = currency == 'CDF' ? 'FC' : '\$';
+      final limit = perTxnLimit / 100;
+      return {
+        'withinLimits': false,
+        'reason': 'Per-transaction limit exceeded. Max: $symbol${limit.toStringAsFixed(2)}',
+      };
+    }
+
+    if (todayTotal + amountMinor > dailyLimit) {
+      final symbol = currency == 'CDF' ? 'FC' : '\$';
+      final remaining = (dailyLimit - todayTotal) / 100;
+      return {
+        'withinLimits': false,
+        'reason': 'Daily limit exceeded. Remaining: $symbol${remaining.toStringAsFixed(2)}',
+      };
+    }
+
+    return {'withinLimits': true};
+  }
+
+  // ---------------------------------------------------------------------------
   // Enroll
   // ---------------------------------------------------------------------------
 
@@ -365,6 +538,15 @@ class OfflineAgentRepository {
       );
     }
 
+    // Calculate fee
+    final paymentType = cashIn ? 'AGENT_CASH_IN' : 'AGENT_CASH_OUT';
+    final feeResult = getFee(
+      paymentType: paymentType,
+      currency: cur,
+      amountMinor: amount,
+    );
+    final feeMinor = _int(feeResult['feeMinor']);
+
     final agent = Map<String, dynamic>.from(getAgentInfo(aid));
     final floatKey = cur == 'CDF' ? 'floatCdfMinor' : 'floatUsdMinor';
     var floatBal = _int(agent[floatKey]);
@@ -380,6 +562,7 @@ class OfflineAgentRepository {
     var custLedger = _int(wallet['ledgerMinor']);
 
     if (cashIn) {
+      // Cash-in: agent gives amount, customer receives full amount (no fee deduction)
       if (floatBal < amount) {
         throw Exception('Cash-in failed: insufficient agent float');
       }
@@ -387,11 +570,13 @@ class OfflineAgentRepository {
       custAvail += amount;
       custLedger += amount;
     } else {
-      if (custAvail < amount) {
+      // Cash-out: customer debited amount + fee, agent receives amount only
+      final totalDebit = amount + feeMinor;
+      if (custAvail < totalDebit) {
         throw Exception('Cash-out failed: insufficient customer balance');
       }
-      custAvail -= amount;
-      custLedger -= amount;
+      custAvail -= totalDebit;
+      custLedger -= totalDebit;
       floatBal += amount;
     }
 
@@ -415,6 +600,7 @@ class OfflineAgentRepository {
       'direction': cashIn ? 'CREDIT' : 'DEBIT',
       'currency': cur,
       'amountMinor': amount,
+      'feeMinor': feeMinor,
       'balanceAfterMinor': custLedger,
       'refType': 'AGENT_TXN',
       'refId': txnId,
@@ -431,7 +617,9 @@ class OfflineAgentRepository {
       'agentId': aid,
       'currency': cur,
       'amountMinor': _str(amount),
+      'feeMinor': _str(feeMinor),
       'type': cashIn ? 'AGENT_CASH_IN' : 'AGENT_CASH_OUT',
+      'balanceAfterMinor': custLedger,
     };
   }
 }

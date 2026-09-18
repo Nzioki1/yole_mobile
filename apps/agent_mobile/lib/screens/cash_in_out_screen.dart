@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/agent_api_service.dart';
+import '../widgets/customer_lookup_field.dart';
 
 class CashInOutScreen extends StatefulWidget {
   const CashInOutScreen({super.key});
@@ -11,8 +12,8 @@ class CashInOutScreen extends StatefulWidget {
 class _CashInOutScreenState extends State<CashInOutScreen> {
   final _api = AgentApiService();
   final _formKey = GlobalKey<FormState>();
-  final _customerIdController = TextEditingController();
   final _amountController = TextEditingController();
+  Map<String, dynamic>? _selectedCustomer;
   String _currency = 'USD';
   bool _isCashIn = true;
   bool _loading = false;
@@ -25,6 +26,15 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
 
   Future<void> _execute() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedCustomer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please look up a customer first'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _loading = true);
     try {
@@ -32,12 +42,12 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
       
       final result = _isCashIn
           ? await _api.cashIn(
-              customerId: _customerIdController.text,
+              customerId: _selectedCustomer!['id'],
               amountMinor: amountMinor,
               currency: _currency,
             )
           : await _api.cashOut(
-              customerId: _customerIdController.text,
+              customerId: _selectedCustomer!['id'],
               amountMinor: amountMinor,
               currency: _currency,
             );
@@ -69,7 +79,7 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                Text('Customer: ${_customerIdController.text}'),
+                Text('Customer: ${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
                 const Divider(),
                 Text(
                   'Journal: ${result['journalId']}',
@@ -129,10 +139,10 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               },
             ),
             const SizedBox(height: 24),
-            TextFormField(
-              controller: _customerIdController,
-              decoration: const InputDecoration(labelText: 'Customer ID *'),
-              validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+            CustomerLookupField(
+              onCustomerSelected: (customer) {
+                setState(() => _selectedCustomer = customer);
+              },
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
@@ -147,6 +157,7 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               decoration: const InputDecoration(labelText: 'Amount *'),
               keyboardType: TextInputType.number,
               validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
+              enabled: _selectedCustomer != null,
             ),
             const SizedBox(height: 24),
             ElevatedButton(

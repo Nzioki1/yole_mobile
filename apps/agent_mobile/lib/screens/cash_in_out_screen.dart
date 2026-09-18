@@ -372,7 +372,7 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Per-txn max: FC ${(_todayUsage!['perTxnLimitCdfMinor'] as int / 100).toStringAsFixed(2)} / \$${(_todayUsage!['perTxnLimitUsdMinor'] as int / 100).toStringAsFixed(2)}',
+                        'Per-txn max: FC ${((_todayUsage!['perTxnLimitCdfMinor'] as int) / 100).toStringAsFixed(2)} / \$${((_todayUsage!['perTxnLimitUsdMinor'] as int) / 100).toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,

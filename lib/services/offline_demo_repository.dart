@@ -1043,7 +1043,17 @@ class OfflineDemoRepository {
   // FX
   // ---------------------------------------------------------------------------
 
-  List<dynamic> getFxRates() => _list('fxRates');
+  List<dynamic> getFxRates() {
+    return _list('fxRates')
+        .map((r) => {
+              ...r,
+              // UI expects fromCurrency/toCurrency; seed uses base/quote
+              'fromCurrency': r['fromCurrency'] ?? r['base'],
+              'toCurrency': r['toCurrency'] ?? r['quote'],
+              'rate': r['rate'],
+            })
+        .toList();
+  }
 
   Map<String, dynamic> convertCurrency({
     required String fromCurrency,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/core_api_service.dart';
+import '../services/offline_demo_repository.dart';
 import '../widgets/pin_confirm_sheet.dart';
 
 class FxScreen extends StatefulWidget {
@@ -76,12 +77,15 @@ class _FxScreenState extends State<FxScreen> {
 
     try {
       // Get the specific rate
-      final rateInfo = _rates.firstWhere(
-        (r) => r['fromCurrency'] == _fromCurrency && r['toCurrency'] == _toCurrency,
-        orElse: () => null,
-      );
-
-      final rate = rateInfo?['rate'] ?? 1.0;
+      final rateInfo = _rates.cast<dynamic>().where((r) {
+        final from = r['fromCurrency'] ?? r['base'];
+        final to = r['toCurrency'] ?? r['quote'];
+        return from == _fromCurrency && to == _toCurrency;
+      }).cast<Map?>().toList();
+      final match = rateInfo.isEmpty ? null : rateInfo.first;
+      final rate = (match?['rate'] is num)
+          ? match!['rate'] as num
+          : num.tryParse(match?['rate']?.toString() ?? '') ?? 1.0;
       final fromAmountMinor = (amount * 100).toInt();
       final toAmountMinor = (fromAmountMinor * rate).toInt();
 
@@ -109,20 +113,21 @@ class _FxScreenState extends State<FxScreen> {
   Future<void> _confirmConversion() async {
     if (_conversionPreview == null) return;
 
-    // Show PIN confirmation (debiting from wallet)
-    final pinConfirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => PinConfirmSheet(
-        title: 'Confirm Currency Exchange',
-        message: 'Enter your PIN to convert funds',
-        onPinEntered: (pin) async {
-          return true; // PIN verified in the sheet
-        },
-      ),
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Currency Exchange',
+      message: 'Enter your PIN to convert funds',
     );
-
-    if (pinConfirmed != true) return;
+    if (pin == null || !mounted) return;
+    if (CoreApiService.offlineDemo && pin != OfflineDemoRepository.demoPin) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid PIN. Demo PIN is ${OfflineDemoRepository.demoPin}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
     setState(() => _loading = true);
 
@@ -235,9 +240,12 @@ class _FxScreenState extends State<FxScreen> {
               )
             else
               ..._rates.map((rate) {
-                final from = rate['fromCurrency'];
-                final to = rate['toCurrency'];
+                final from = (rate['fromCurrency'] ?? rate['base'] ?? '').toString();
+                final to = (rate['toCurrency'] ?? rate['quote'] ?? '').toString();
                 final rateValue = rate['rate'];
+                final rateLabel = rateValue is num
+                    ? rateValue.toStringAsFixed(4)
+                    : (num.tryParse(rateValue?.toString() ?? '')?.toStringAsFixed(4) ?? '—');
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
@@ -278,7 +286,7 @@ class _FxScreenState extends State<FxScreen> {
                         ],
                       ),
                       Text(
-                        rateValue.toStringAsFixed(4),
+                        rateLabel,
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                       ),
                     ],

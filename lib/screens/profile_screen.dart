@@ -232,12 +232,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
+              Navigator.pop(context); // close confirm dialog
+              // Fully clear session before leaving Profile (await so tokens
+              // are gone before login mounts / auth re-init).
+              await ref.read(authProvider.notifier).logout();
+              try {
+                await ref.read(biometricAuthServiceProvider).clearUnlock();
+              } catch (_) {}
               if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/login',
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  RouteNames.login,
                   (route) => false,
                 );
               }

@@ -272,11 +272,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
       error: null,
     );
 
-    // Call logout service in background (non-blocking)
-    _authService.logout().catchError((e) {
-      // Log error but don't block UI
-      print('Background logout failed: $e');
-    });
+    // Await token/session clear so login cannot resurrect the session
+    try {
+      await _authService.logout();
+    } catch (e) {
+      print('Logout service failed: $e');
+    }
 
     // Clear biometric unlock data
     try {

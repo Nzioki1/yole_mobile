@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../services/core_api_service.dart';
 import '../services/offline_demo_repository.dart';
 import '../widgets/pin_confirm_sheet.dart';
+import '../router_types.dart';
 
 class FxScreen extends StatefulWidget {
   const FxScreen({super.key});
@@ -138,20 +139,48 @@ class _FxScreenState extends State<FxScreen> {
         fromAmountMinor: _conversionPreview!['fromAmountMinor'].toString(),
       );
 
+      if (!mounted) return;
       setState(() {
         _conversionResult = result;
         _conversionPreview = null;
         _amountController.clear();
+        _loading = false;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Currency conversion completed!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
+      final fromAmt = ((result['fromAmountMinor'] is num
+                  ? result['fromAmountMinor']
+                  : num.tryParse(result['fromAmountMinor']?.toString() ?? '0') ?? 0) /
+              100)
+          .toStringAsFixed(2);
+      final toAmt = ((result['toAmountMinor'] is num
+                  ? result['toAmountMinor']
+                  : num.tryParse(result['toAmountMinor']?.toString() ?? '0') ?? 0) /
+              100)
+          .toStringAsFixed(2);
+      final fromCur = result['fromCurrency']?.toString() ?? '';
+      final toCur = result['toCurrency']?.toString() ?? '';
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Exchange complete'),
+          content: Text('Converted $fromCur $fromAmt to $toCur $toAmt.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        RouteNames.home,
+        (route) => false,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

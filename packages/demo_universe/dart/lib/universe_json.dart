@@ -111,7 +111,22 @@ const String kUniverseJson = r'''
       "status": "ACTIVE",
       "kycStatus": "APPROVED",
       "enrolledByAgentId": "agent-001",
-      "createdAt": "2026-08-15T10:30:00Z"
+      "createdAt": "2026-08-15T10:30:00Z",
+      "insurancePolicies": [
+        {
+          "id": "pol_kasee_health_001",
+          "customerId": "cust_kasee",
+          "productId": "health_hosp",
+          "active": true,
+          "premiumMode": "FIXED",
+          "fixedSchedule": "MONTHLY",
+          "fixedMinor": 250000,
+          "percentBps": null,
+          "deductFrom": "BOTH",
+          "lastMonthlyCollectedYm": "2026-08",
+          "activatedAt": "2026-08-15T10:30:00Z"
+        }
+      ]
     },
     {
       "id": "cust_amina",
@@ -125,7 +140,8 @@ const String kUniverseJson = r'''
       "kycStatus": "APPROVED",
       "employerId": "emp_poste",
       "enrolledByAgentId": null,
-      "createdAt": "2026-07-01T09:00:00Z"
+      "createdAt": "2026-07-01T09:00:00Z",
+      "insurancePolicies": []
     },
     {
       "id": "cust_marie_tshala",
@@ -138,7 +154,8 @@ const String kUniverseJson = r'''
       "status": "ACTIVE",
       "kycStatus": "PENDING_REVIEW",
       "enrolledByAgentId": "agent-001",
-      "createdAt": "2026-09-10T14:20:00Z"
+      "createdAt": "2026-09-10T14:20:00Z",
+      "insurancePolicies": []
     },
     {
       "id": "cust_pierre_lumbu",
@@ -151,7 +168,8 @@ const String kUniverseJson = r'''
       "status": "ACTIVE",
       "kycStatus": "APPROVED",
       "enrolledByAgentId": "agent-001",
-      "createdAt": "2026-09-05T10:00:00Z"
+      "createdAt": "2026-09-05T10:00:00Z",
+      "insurancePolicies": []
     },
     {
       "id": "cust_julie_nkandu",
@@ -164,7 +182,8 @@ const String kUniverseJson = r'''
       "status": "ACTIVE",
       "kycStatus": "APPROVED",
       "enrolledByAgentId": "agent-002",
-      "createdAt": "2026-09-08T11:30:00Z"
+      "createdAt": "2026-09-08T11:30:00Z",
+      "insurancePolicies": []
     }
   ],
   "wallets": [

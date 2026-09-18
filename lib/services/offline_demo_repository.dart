@@ -1,6 +1,9 @@
 
 import 'package:demo_universe/demo_universe.dart';
 
+import '../constants/insurance_products.dart';
+import '../models/insurance_product.dart';
+
 /// Customer offline demo repository (DEM-01/03/06/07/08).
 ///
 /// Backed by shared [DemoUniverse] seed. Session mutations stay in-memory;
@@ -1223,5 +1226,289 @@ class OfflineDemoRepository {
     _writeList('journals', journals);
 
     return _savingsGoalDto(goals[goalIdx]);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Insurance (Poste Finance)
+  // ---------------------------------------------------------------------------
+
+  /// List insurance products (static catalog from constants)
+  List<Map<String, dynamic>> listInsuranceProducts() {
+    return kInsuranceProducts.map((p) => {
+      'id': p.id,
+      'nameFr': p.nameFr,
+      'subtitleEn': p.subtitleEn,
+      'descriptionFr': p.descriptionFr,
+      'claimCapMinor': p.claimCapMinor,
+      'iconAsset': p.iconAsset,
+      'defaults': {
+        'premiumMode': p.defaults.premiumMode.name,
+        'fixedSchedule': p.defaults.fixedSchedule?.name,
+        'fixedMinor': p.defaults.fixedMinor,
+        'percentBps': p.defaults.percentBps,
+        'deductFrom': p.defaults.deductFrom.name,
+      },
+    }).toList();
+  }
+
+  /// List customer insurance policies (from universe.json)
+  List<Map<String, dynamic>> listInsurancePolicies(String customerId) {
+    final customers = _list('customers');
+    final customerIdx = customers.indexWhere((c) => c['id'] == customerId);
+    if (customerIdx < 0) return [];
+
+    final customer = customers[customerIdx];
+    final policies = customer['insurancePolicies'] as List<dynamic>?;
+    if (policies == null) return [];
+
+    return policies.map((p) => Map<String, dynamic>.from(p as Map)).toList();
+  }
+
+  /// Activate insurance policy (create new or update existing)
+  Map<String, dynamic> activateInsurancePolicy({
+    required String customerId,
+    required String productId,
+    required String premiumMode, // "PERCENT" | "FIXED"
+    String? fixedSchedule, // "PER_TXN" | "MONTHLY"
+    int? fixedMinor,
+    int? percentBps,
+    required String deductFrom, // "BILL" | "SEND" | "BOTH"
+  }) {
+    final customers = _list('customers');
+    final customerIdx = customers.indexWhere((c) => c['id'] == customerId);
+    if (customerIdx < 0) {
+      throw Exception('Customer not found: $customerId');
+    }
+
+    final customer = customers[customerIdx];
+    final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
+
+    // Check if policy already exists for this product
+    final existingIdx = policies.indexWhere(
+      (p) => p['productId'] == productId && p['active'] == true,
+    );
+
+    final now = DateTime.now().toUtc().toIso8601String();
+    final policyId = existingIdx >= 0
+        ? policies[existingIdx]['id']
+        : _nextId('pol');
+
+    final policy = <String, dynamic>{
+      'id': policyId,
+      'customerId': customerId,
+      'productId': productId,
+      'active': true,
+      'premiumMode': premiumMode,
+      'fixedSchedule': fixedSchedule,
+      'fixedMinor': fixedMinor,
+      'percentBps': percentBps,
+      'deductFrom': deductFrom,
+      'lastMonthlyCollectedYm': existingIdx >= 0
+          ? policies[existingIdx]['lastMonthlyCollectedYm']
+          : null,
+      'activatedAt': existingIdx >= 0
+          ? policies[existingIdx]['activatedAt']
+          : now,
+    };
+
+    if (existingIdx >= 0) {
+      policies[existingIdx] = policy;
+    } else {
+      policies.add(policy);
+    }
+
+    customer['insurancePolicies'] = policies;
+    customers[customerIdx] = customer;
+    _writeList('customers', customers);
+
+    return policy;
+  }
+
+  /// Update insurance policy
+  Map<String, dynamic> updateInsurancePolicy({
+    required String policyId,
+    required String premiumMode,
+    String? fixedSchedule,
+    int? fixedMinor,
+    int? percentBps,
+    required String deductFrom,
+  }) {
+    final customers = _list('customers');
+    for (int ci = 0; ci < customers.length; ci++) {
+      final customer = customers[ci];
+      final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
+      final pi = policies.indexWhere((p) => p['id'] == policyId);
+      if (pi >= 0) {
+        policies[pi] = {
+          ...policies[pi],
+          'premiumMode': premiumMode,
+          'fixedSchedule': fixedSchedule,
+          'fixedMinor': fixedMinor,
+          'percentBps': percentBps,
+          'deductFrom': deductFrom,
+        };
+        customer['insurancePolicies'] = policies;
+        customers[ci] = customer;
+        _writeList('customers', customers);
+        return Map<String, dynamic>.from(policies[pi]);
+      }
+    }
+    throw Exception('Policy not found: $policyId');
+  }
+
+  /// Deactivate insurance policy
+  void deactivateInsurancePolicy(String policyId) {
+    final customers = _list('customers');
+    for (int ci = 0; ci < customers.length; ci++) {
+      final customer = customers[ci];
+      final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
+      final pi = policies.indexWhere((p) => p['id'] == policyId);
+      if (pi >= 0) {
+        policies[pi] = {
+          ...policies[pi],
+          'active': false,
+        };
+        customer['insurancePolicies'] = policies;
+        customers[ci] = customer;
+        _writeList('customers', customers);
+        return;
+      }
+    }
+    throw Exception('Policy not found: $policyId');
+  }
+
+  /// Preview insurance premiums for a transaction (before payment)
+  List<Map<String, dynamic>> previewInsurancePremiums({
+    required String customerId,
+    required String rail, // "BILL" | "SEND"
+    required int principalMinor,
+  }) {
+    final policies = listInsurancePolicies(customerId);
+    final activePolicies = policies.where((p) => p['active'] == true).toList();
+
+    final matchingPolicies = activePolicies.where((p) {
+      final deductFrom = p['deductFrom'] as String;
+      return deductFrom == rail || deductFrom == 'BOTH';
+    }).toList();
+
+    final currentYm = InsurancePremiumCalculator.getCurrentYearMonth();
+    final lineItems = <Map<String, dynamic>>[];
+
+    for (final policyJson in matchingPolicies) {
+      final policy = InsurancePolicy.fromJson(policyJson);
+      final premiumMinor = InsurancePremiumCalculator.calculatePremium(
+        policy: policy,
+        principalMinor: principalMinor,
+        currentYearMonth: currentYm,
+      );
+
+      // Find product name
+      final product = kInsuranceProducts.firstWhere(
+        (p) => p.id == policy.productId,
+        orElse: () => throw Exception('Product not found: ${policy.productId}'),
+      );
+
+      lineItems.add({
+        'policyId': policy.id,
+        'productNameFr': product.nameFr,
+        'premiumMinor': premiumMinor,
+      });
+    }
+
+    return lineItems;
+  }
+
+  /// Collect insurance premiums (after payment success)
+  List<Map<String, dynamic>> collectInsurancePremiums({
+    required String customerId,
+    required String rail, // "BILL" | "SEND"
+    required int principalMinor,
+    required String parentTransactionId,
+  }) {
+    final customers = _list('customers');
+    final customerIdx = customers.indexWhere((c) => c['id'] == customerId);
+    if (customerIdx < 0) {
+      throw Exception('Customer not found: $customerId');
+    }
+
+    final customer = customers[customerIdx];
+    final policies = customer['insurancePolicies'] as List<dynamic>? ?? [];
+    final activePolicies = policies.where((p) => p['active'] == true).toList();
+
+    final matchingPolicies = activePolicies.where((p) {
+      final deductFrom = p['deductFrom'] as String;
+      return deductFrom == rail || deductFrom == 'BOTH';
+    }).toList();
+
+    final currentYm = InsurancePremiumCalculator.getCurrentYearMonth();
+    final now = DateTime.now().toUtc().toIso8601String();
+    final journalEntries = <Map<String, dynamic>>[];
+
+    for (final policyJson in matchingPolicies) {
+      final policy = InsurancePolicy.fromJson(policyJson);
+      final premiumMinor = InsurancePremiumCalculator.calculatePremium(
+        policy: policy,
+        principalMinor: principalMinor,
+        currentYearMonth: currentYm,
+      );
+
+      if (premiumMinor == 0) continue; // Skip if no premium due
+
+      // Find product name
+      final product = kInsuranceProducts.firstWhere(
+        (p) => p.id == policy.productId,
+      );
+
+      // Update policy lastMonthlyCollectedYm if FIXED MONTHLY
+      if (policy.premiumMode == PremiumMode.FIXED &&
+          policy.fixedSchedule == FixedSchedule.MONTHLY) {
+        final pi = policies.indexWhere((p) => p['id'] == policy.id);
+        if (pi >= 0) {
+          policies[pi] = {
+            ...policies[pi],
+            'lastMonthlyCollectedYm': currentYm,
+          };
+        }
+      }
+
+      // Create journal entry
+      final journalId = _nextId('jnl');
+      final journalEntry = <String, dynamic>{
+        'id': journalId,
+        'customerId': customerId,
+        'walletId': null, // Premium is part of parent transaction debit
+        'type': 'INSURANCE_PREMIUM',
+        'direction': 'DEBIT',
+        'currency': 'CDF',
+        'amountMinor': premiumMinor,
+        'balanceAfterMinor': null,
+        'refType': 'INSURANCE_POLICY',
+        'refId': policy.id,
+        'parentTransactionId': parentTransactionId,
+        'narration': 'Insurance premium: ${product.nameFr}',
+        'metadata': {
+          'policyId': policy.id,
+          'productId': policy.productId,
+          'productNameFr': product.nameFr,
+          'premiumMode': policy.premiumMode.name,
+          'fixedSchedule': policy.fixedSchedule?.name,
+        },
+        'postedAt': now,
+      };
+
+      journalEntries.add(journalEntry);
+    }
+
+    // Update customer with modified policies
+    customer['insurancePolicies'] = policies;
+    customers[customerIdx] = customer;
+    _writeList('customers', customers);
+
+    // Append journal entries to journals list
+    final journals = _list('journals');
+    journals.addAll(journalEntries);
+    _writeList('journals', journals);
+
+    return journalEntries;
   }
 }

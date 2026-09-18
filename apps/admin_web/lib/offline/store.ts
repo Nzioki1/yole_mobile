@@ -478,14 +478,30 @@ export class OfflineDemoStore {
     return this.u.employers.map((e) => {
       const employees = this.u.employees
         .filter((emp) => emp.employerId === e.id)
-        .map((emp) => ({
-          customerId: emp.customerId,
-          salaryMinor: strMinor(emp.netSalaryCdfMinor),
-          currency: 'CDF',
-          employeeNumber: emp.employeeNumber,
-          jobTitle: emp.jobTitle,
-          status: emp.status,
-        }));
+        .map((emp) => {
+          let displayName = emp.employeeNumber;
+          if (emp.customerId) {
+            const customer = this.u.customers.find((c) => c.id === emp.customerId);
+            if (customer) {
+              displayName = `${customer.firstName} ${customer.lastName}`;
+            }
+          } else if (emp.jobTitle) {
+            displayName = emp.jobTitle;
+          }
+          return {
+            employeeId: emp.id,
+            customerId: emp.customerId,
+            employeeNumber: emp.employeeNumber,
+            displayName,
+            jobTitle: emp.jobTitle,
+            grossSalaryCdfMinor: emp.grossSalaryCdfMinor,
+            netSalaryCdfMinor: emp.netSalaryCdfMinor,
+            eligibleAdvanceMaxCdfMinor: emp.eligibleAdvanceMaxCdfMinor,
+            status: emp.status,
+            salaryMinor: strMinor(emp.netSalaryCdfMinor),
+            currency: 'CDF',
+          };
+        });
       return {
         ...e,
         employeeCount: e.employeeCount ?? employees.length,
@@ -554,6 +570,34 @@ export class OfflineDemoStore {
       totalMinor: strMinor(total),
       message: 'Offline demo salary credit posted',
     };
+  }
+
+  listSalaryHistory(employerId: string) {
+    const employeeIds = this.u.employees
+      .filter((e) => e.employerId === employerId)
+      .map((e) => e.id);
+    return this.u.salaryHistory
+      .filter((s) => employeeIds.includes(s.employeeId))
+      .map((s) => {
+        const employee = this.u.employees.find((e) => e.id === s.employeeId);
+        let displayName = s.employeeId;
+        if (employee) {
+          if (employee.customerId) {
+            const customer = this.u.customers.find((c) => c.id === employee.customerId);
+            if (customer) {
+              displayName = `${customer.firstName} ${customer.lastName}`;
+            }
+          } else if (employee.jobTitle) {
+            displayName = employee.jobTitle;
+          } else {
+            displayName = employee.employeeNumber;
+          }
+        }
+        return {
+          ...s,
+          displayName,
+        };
+      });
   }
 
   getDailySummary(date: string) {

@@ -322,6 +322,11 @@ export class AdminApiClient {
     });
   }
 
+  async listSalaryHistory(employerId: string) {
+    if (OFFLINE_DEMO) return this.store().listSalaryHistory(employerId);
+    throw new Error('listSalaryHistory is only available in offline demo');
+  }
+
   async getDailySummary(date: string) {
     if (OFFLINE_DEMO) return this.store().getDailySummary(date);
     if (this.preferSeed()) return getDemoRecon(date);

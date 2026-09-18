@@ -29,6 +29,7 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
   
   String _currency = 'USD';
   bool _loading = false;
+  String? _selectedBiller; // For BILL rail type dropdown
 
   @override
   void initState() {
@@ -294,7 +295,7 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
       case 'BILL':
         return [
           Text(
-            'Select Biller (Optional)',
+            'Select Biller',
             style: TextStyle(
               color: theme.colorScheme.onSurface,
               fontSize: 16,
@@ -302,19 +303,38 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: OfflineDemoRepository.kKinshasaBillers.map((biller) {
-              return ActionChip(
-                label: Text(biller['name']!),
-                onPressed: () {
-                  setState(() {
-                    _bankCodeController.text = biller['code']!;
-                  });
-                },
-              );
-            }).toList(),
+          DropdownButtonFormField<String>(
+            value: _selectedBiller,
+            decoration: InputDecoration(
+              hintText: 'Choose a biller',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            items: [
+              const DropdownMenuItem<String>(
+                value: null,
+                child: Text('-- Select Biller --'),
+              ),
+              ...OfflineDemoRepository.kKinshasaBillers.map((biller) {
+                return DropdownMenuItem<String>(
+                  value: biller['code'],
+                  child: Text(biller['name']!),
+                );
+              }),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedBiller = value;
+                if (value != null) {
+                  // Find selected biller and populate fields
+                  final biller = OfflineDemoRepository.kKinshasaBillers
+                      .firstWhere((b) => b['code'] == value);
+                  _bankCodeController.text = biller['code']!;
+                  _accountController.text = biller['demoAccount'] ?? '';
+                }
+              });
+            },
           ),
           const SizedBox(height: 16),
           Text(

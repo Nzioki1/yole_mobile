@@ -27,9 +27,9 @@ class _CreditScreenState extends State<CreditScreen> {
     setState(() => _loading = true);
     try {
       final results = await Future.wait([
-        _api.checkCreditEligibility(type: 'SALARY_ADVANCE').catchError((_) => {}),
-        _api.checkCreditEligibility(type: 'MICRO_LOAN').catchError((_) => {}),
-        _api.listLoans().catchError((_) => []),
+        _api.checkCreditEligibility(type: 'SALARY_ADVANCE').catchError((_) => <String, dynamic>{}),
+        _api.checkCreditEligibility(type: 'MICRO_LOAN').catchError((_) => <String, dynamic>{}),
+        _api.listLoans().catchError((_) => <dynamic>[]),
       ]);
       setState(() {
         _salaryAdvanceEligibility = results[0] as Map<String, dynamic>?;
@@ -338,7 +338,7 @@ class _LoanCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$currency ${(int.parse(principal.toString()) / 100).toStringAsFixed(2)}',
+                      '$currency ${_formatAmount(principal)}',
                       style: theme.textTheme.bodyLarge,
                     ),
                     if (disbursedAt != null) ...[
@@ -382,6 +382,15 @@ class _LoanCard extends StatelessWidget {
 
   String _formatType(String type) {
     return type.split('_').map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase()).join(' ');
+  }
+
+  String _formatAmount(String amountStr) {
+    try {
+      final num amount = num.tryParse(amountStr) ?? 0;
+      return (amount / 100).toStringAsFixed(2);
+    } catch (_) {
+      return '0.00';
+    }
   }
 
   String _formatDate(String dateStr) {

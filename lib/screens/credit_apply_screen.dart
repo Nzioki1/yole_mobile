@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
+import '../services/offline_demo_repository.dart';
 import '../widgets/pin_confirm_sheet.dart';
 
 class CreditApplyScreen extends StatefulWidget {
@@ -74,20 +75,43 @@ class _CreditApplyScreenState extends State<CreditApplyScreen> {
 
     final amountMinor = (amount * 100).toInt().toString();
 
-    // Show PIN confirmation
-    final pinConfirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => PinConfirmSheet(
-        title: 'Confirm Loan Application',
-        message: 'Enter your PIN to proceed',
-        onPinEntered: (pin) async {
-          return true; // PIN verified in the sheet
-        },
-      ),
+    // Show PIN confirmation - use correct pattern
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Loan Application',
+      message: 'Enter your PIN to proceed',
     );
 
-    if (pinConfirmed != true) return;
+    if (pin == null || !mounted) return;
+
+    // Verify PIN (offline demo accepts 123456)
+    if (CoreApiService.offlineDemo) {
+      if (pin != OfflineDemoRepository.demoPin) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invalid PIN. Demo PIN is ${OfflineDemoRepository.demoPin}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    } else {
+      // Live mode would verify PIN via API
+      final pinValid = await _api.verifyPin(pin: pin);
+      if (!pinValid) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid PIN'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     setState(() => _loading = true);
 

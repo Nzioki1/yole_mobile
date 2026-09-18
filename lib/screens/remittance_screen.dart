@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
+import '../services/offline_demo_repository.dart';
 import '../widgets/pin_confirm_sheet.dart';
 
 class RemittanceScreen extends StatefulWidget {
@@ -68,6 +69,15 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
   String _currency = 'USD';
   bool _loading = false;
   Map<String, dynamic>? _quote;
+  String? _selectedRecipient;
+
+  // Demo recipients for offline mode
+  static const List<Map<String, String>> _demoRecipients = [
+    {'id': 'rcpt_001', 'name': 'Marie Tshala', 'country': 'DRC'},
+    {'id': 'rcpt_002', 'name': 'Papa Wemba', 'country': 'DRC'},
+    {'id': 'rcpt_003', 'name': 'Fally Ipupa', 'country': 'DRC'},
+    {'id': 'rcpt_004', 'name': 'Koffi Olomide', 'country': 'DRC'},
+  ];
 
   @override
   void dispose() {
@@ -113,20 +123,54 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
   Future<void> _confirm() async {
     if (_quote == null) return;
 
-    // Show PIN confirmation for debit
-    final pinConfirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => PinConfirmSheet(
-        title: 'Confirm Remittance',
-        message: 'Enter your PIN to send money abroad',
-        onPinEntered: (pin) async {
-          return true; // PIN verified in the sheet
-        },
-      ),
+    // Validate recipient selected
+    if (_selectedRecipient == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a recipient'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Show PIN confirmation - use correct pattern
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Remittance',
+      message: 'Enter your PIN to send money abroad',
     );
 
-    if (pinConfirmed != true) return;
+    if (pin == null || !mounted) return;
+
+    // Verify PIN (offline demo accepts 123456)
+    if (CoreApiService.offlineDemo) {
+      if (pin != OfflineDemoRepository.demoPin) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invalid PIN. Demo PIN is ${OfflineDemoRepository.demoPin}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    } else {
+      // Live mode would verify PIN via API
+      final pinValid = await widget.api.verifyPin(pin: pin);
+      if (!pinValid) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid PIN'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     setState(() => _loading = true);
 
@@ -142,6 +186,7 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
         );
         setState(() {
           _quote = null;
+          _selectedRecipient = null;
           _amountController.clear();
         });
       }
@@ -188,6 +233,39 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 24),
+
+          // Recipient Selector
+          Text(
+            'Send To',
+            style: widget.theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _selectedRecipient,
+            decoration: const InputDecoration(
+              hintText: 'Select recipient',
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem<String>(
+                value: null,
+                child: Text('-- Select Recipient --'),
+              ),
+              ..._demoRecipients.map((recipient) {
+                return DropdownMenuItem<String>(
+                  value: recipient['id'],
+                  child: Text('${recipient['name']} (${recipient['country']})'),
+                );
+              }),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedRecipient = value;
+                _quote = null; // Reset quote when recipient changes
+              });
+            },
           ),
           const SizedBox(height: 24),
 

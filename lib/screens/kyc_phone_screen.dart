@@ -473,6 +473,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                             value:
                                                 '${country['code']}-${country['country']}',
                                             child: Row(
+                                              mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Text(
                                                   country['flag']!,
@@ -481,7 +482,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
-                                                Expanded(
+                                                Flexible(
                                                   child: Text(
                                                     country['name']!,
                                                     overflow:

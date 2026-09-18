@@ -52,14 +52,14 @@ class OfflineDemoRepository {
 
   /// DEM-06 Kinshasa billers for offline Pay Bill picker.
   static const List<Map<String, String>> kKinshasaBillers = [
-    {'code': 'SNEL', 'name': 'SNEL (Electricity)', 'hint': 'Account number'},
-    {'code': 'REGIDESO', 'name': 'REGIDESO (Water)', 'hint': 'Meter number'},
-    {'code': 'VODACOM', 'name': 'Vodacom Congo', 'hint': 'Phone number'},
-    {'code': 'AIRTEL', 'name': 'Airtel Congo', 'hint': 'Phone number'},
-    {'code': 'ORANGE', 'name': 'Orange RDC', 'hint': 'Phone number'},
-    {'code': 'CANAL', 'name': 'Canal+ Congo', 'hint': 'Decoder number'},
-    {'code': 'DGI', 'name': 'DGI (Tax Authority)', 'hint': 'Tax ID'},
-    {'code': 'KINSHASA', 'name': 'City of Kinshasa', 'hint': 'Reference number'},
+    {'code': 'SNEL', 'name': 'SNEL (Electricity)', 'hint': 'Account number', 'demoAccount': '123456789'},
+    {'code': 'REGIDESO', 'name': 'REGIDESO (Water)', 'hint': 'Meter number', 'demoAccount': '987654321'},
+    {'code': 'VODACOM', 'name': 'Vodacom Congo', 'hint': 'Phone number', 'demoAccount': '+243990123456'},
+    {'code': 'AIRTEL', 'name': 'Airtel Congo', 'hint': 'Phone number', 'demoAccount': '+243991234567'},
+    {'code': 'ORANGE', 'name': 'Orange RDC', 'hint': 'Phone number', 'demoAccount': '+243992345678'},
+    {'code': 'CANAL', 'name': 'Canal+ Congo', 'hint': 'Decoder number', 'demoAccount': 'DEC0123456'},
+    {'code': 'DGI', 'name': 'DGI (Tax Authority)', 'hint': 'Tax ID', 'demoAccount': 'TAX123456'},
+    {'code': 'KINSHASA', 'name': 'City of Kinshasa', 'hint': 'Reference number', 'demoAccount': 'KIN20260918'},
   ];
 
   String? get currentCustomerId => _currentCustomerId;

@@ -161,6 +161,8 @@ class _CardTile extends StatelessWidget {
     final cardNumber = card['cardNumber']?.toString() ?? '0000';
     final last4 = cardNumber.length >= 4 ? cardNumber.substring(cardNumber.length - 4) : cardNumber;
     final currency = card['currency'] ?? '';
+    final cardholderName = card['cardholderName']?.toString() ?? 'Cardholder';
+    final network = card['mockNetwork']?.toString() ?? 'VISA';
 
     Color statusColor = Colors.grey;
     Color cardColor = Colors.grey[200]!;
@@ -204,32 +206,51 @@ class _CardTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '•••• •••• •••• $last4',
+                      cardholderName,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      currency,
-                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
+                      '•••• •••• •••• $last4',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'monospace',
+                        color: Colors.grey[700],
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Text(
+                          network,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.blue[700],
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Text(
+                          currency,
+                          style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            status,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

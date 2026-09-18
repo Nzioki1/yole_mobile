@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/biometric_provider.dart';
 
 /// PIN Confirm Bottom Sheet - Used to verify transaction PIN
-class PinConfirmSheet extends StatefulWidget {
+class PinConfirmSheet extends ConsumerStatefulWidget {
   final String title;
   final String message;
   final Function(String pin) onPinEntered;
@@ -17,7 +17,7 @@ class PinConfirmSheet extends StatefulWidget {
   });
 
   @override
-  State<PinConfirmSheet> createState() => _PinConfirmSheetState();
+  ConsumerState<PinConfirmSheet> createState() => _PinConfirmSheetState();
 
   /// Show the PIN confirm sheet
   static Future<String?> show(
@@ -42,7 +42,7 @@ class PinConfirmSheet extends StatefulWidget {
   }
 }
 
-class _PinConfirmSheetState extends State<PinConfirmSheet> {
+class _PinConfirmSheetState extends ConsumerState<PinConfirmSheet> {
   final List<TextEditingController> _controllers = List.generate(
     6,
     (_) => TextEditingController(),
@@ -85,22 +85,12 @@ class _PinConfirmSheetState extends State<PinConfirmSheet> {
   }
 
   Future<void> _useBiometric() async {
-    final container = ProviderContainer();
-    final biometricService = container.read(biometricAuthServiceProvider);
+    final biometricService = ref.read(biometricAuthServiceProvider);
 
     final enabled = await biometricService.isEnabled();
     final available = await biometricService.canCheckBiometrics();
 
     if (!enabled || !available) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric not available'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      container.dispose();
       return;
     }
 
@@ -109,30 +99,12 @@ class _PinConfirmSheetState extends State<PinConfirmSheet> {
     );
 
     if (!authenticated) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      container.dispose();
       return;
     }
 
     final payload = await biometricService.getUnlockPayload();
-    container.dispose();
 
     if (payload == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No biometric credentials stored'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
       return;
     }
 
@@ -142,13 +114,11 @@ class _PinConfirmSheetState extends State<PinConfirmSheet> {
   }
 
   Future<bool> _shouldShowBiometricButton() async {
-    final container = ProviderContainer();
-    final biometricService = container.read(biometricAuthServiceProvider);
+    final biometricService = ref.read(biometricAuthServiceProvider);
 
     final enabled = await biometricService.isEnabled();
     final available = await biometricService.canCheckBiometrics();
 
-    container.dispose();
     return enabled && available;
   }
 

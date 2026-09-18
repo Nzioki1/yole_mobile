@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/agent_api_service.dart';
 import '../services/offline_agent_repository.dart';
 import '../widgets/customer_lookup_field.dart';
+import '../widgets/pin_input_modal.dart';
 
 class CashInOutScreen extends StatefulWidget {
   const CashInOutScreen({super.key});
@@ -129,6 +130,20 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
           duration: const Duration(seconds: 5),
         ),
       );
+      return;
+    }
+
+    // Show PIN modal for validation
+    final pinValid = await showPinModal(context);
+    if (!pinValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PIN validation failed. Transaction cancelled.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return;
     }
 

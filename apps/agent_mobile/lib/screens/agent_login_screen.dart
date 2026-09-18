@@ -15,10 +15,11 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   bool _loading = false;
   bool _showCustomerBanner = false;
 
+  static const _teal = Color(0xFF00ACAC);
+
   @override
   void initState() {
     super.initState();
-    // Autofill immediately so Login enables on first frame.
     _emailController.text = 'agent001@postefinance-agents.cd';
     _passwordController.text = 'Password1!';
     _api.init();
@@ -34,9 +35,7 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
   bool get _isFormValid {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
-    final emailValid = email.isNotEmpty && email.contains('@');
-    final passwordValid = password.length >= 8;
-    return emailValid && passwordValid;
+    return email.isNotEmpty && email.contains('@') && password.length >= 8;
   }
 
   void _dismissCustomerBanner() {
@@ -45,18 +44,15 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
 
   Future<void> _login() async {
     if (!_isFormValid) return;
-
     setState(() {
       _loading = true;
       _showCustomerBanner = false;
     });
-
     try {
       await _api.login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -85,8 +81,6 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -98,20 +92,40 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
             children: [
               Image.asset(
                 'assets/brand/poste-finance-logo.png',
-                height: 72,
+                height: 56,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Agent',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: primary,
+              const SizedBox(height: 12),
+              // Role chip — distinguishes from Customer app
+              Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _teal,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Agent',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 8),
+              Text(
+                'Sign in to your agent account',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black.withOpacity(0.65),
+                ),
+              ),
+              const SizedBox(height: 32),
               if (_showCustomerBanner)
                 Card(
                   color: Colors.orange.shade50,
@@ -119,7 +133,8 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                     padding: const EdgeInsets.all(12.0),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber, color: Colors.orange.shade700),
+                        Icon(Icons.warning_amber,
+                            color: Colors.orange.shade700),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(

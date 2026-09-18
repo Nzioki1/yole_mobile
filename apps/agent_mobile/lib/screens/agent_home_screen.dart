@@ -87,7 +87,19 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
               errorBuilder: (_, __, ___) => const SizedBox.shrink(),
             ),
             const SizedBox(width: 8),
-            const Text('Agent'),
+            const Text('Poste Finance'),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Agent',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
           ],
         ),
         actions: [

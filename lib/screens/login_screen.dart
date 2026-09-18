@@ -117,6 +117,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
 
+                        const SizedBox(height: 12),
+
+                        // Role chip — distinguishes from Agent app
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00ACAC).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF00ACAC).withOpacity(0.4),
+                            ),
+                          ),
+                          child: const Text(
+                            'Customer',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF00ACAC),
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
 
                         // Welcome back title - Secondary emphasis

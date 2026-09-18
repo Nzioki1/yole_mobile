@@ -1,3 +1,7 @@
 {
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/config/page": "app/dashboard/config/page.js",
+  "/dashboard/customer360/page": "app/dashboard/customer360/page.js",
+  "/dashboard/payroll/page": "app/dashboard/payroll/page.js",
+  "/dashboard/payroll/[id]/page": "app/dashboard/payroll/[id]/page.js",
+  "/dashboard/credit-exceptions/page": "app/dashboard/credit-exceptions/page.js"
 }

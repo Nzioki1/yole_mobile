@@ -1,13 +1,9 @@
 {
   "pages": {
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
+      "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
     "/login/page": [
@@ -15,15 +11,100 @@
       "static/chunks/main-app.js",
       "static/chunks/app/login/page.js"
     ],
+    "/dashboard/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/layout.js"
+    ],
     "/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/dashboard/layout": [
+    "/dashboard/aml-ban-list/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/layout.js"
+      "static/chunks/app/dashboard/aml-ban-list/page.js"
+    ],
+    "/dashboard/resilience/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/resilience/page.js"
+    ],
+    "/dashboard/users/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/users/page.js"
+    ],
+    "/dashboard/customer360/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/customer360/page.js"
+    ],
+    "/dashboard/customers/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/customers/page.js"
+    ],
+    "/dashboard/payments/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/payments/page.js"
+    ],
+    "/dashboard/agents/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/agents/page.js"
+    ],
+    "/dashboard/cards/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/cards/page.js"
+    ],
+    "/dashboard/payroll/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/payroll/page.js"
+    ],
+    "/dashboard/remittance/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/remittance/page.js"
+    ],
+    "/dashboard/idempotency/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/idempotency/page.js"
+    ],
+    "/dashboard/payroll/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/payroll/[id]/page.js"
+    ],
+    "/dashboard/config/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/config/page.js"
+    ],
+    "/dashboard/approvals/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/approvals/page.js"
+    ],
+    "/dashboard/recon/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/recon/page.js"
+    ],
+    "/dashboard/kyc/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/kyc/page.js"
+    ],
+    "/dashboard/credit-exceptions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/credit-exceptions/page.js"
     ]
   }
 }

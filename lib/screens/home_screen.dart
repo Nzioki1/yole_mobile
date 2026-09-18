@@ -516,7 +516,7 @@ class _QuickActionsGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).pushNamed(RouteNames.insurance),
         ),
         _QuickActionButton(
-          icon: Icons.pie_chart_outlined,
+          icon: Icons.pie_chart,
           label: 'Budget',
           color: const Color(0xFF0C7A53),
           onTap: () => Navigator.of(context).pushNamed(RouteNames.budget),

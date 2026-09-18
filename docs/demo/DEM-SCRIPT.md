@@ -53,7 +53,7 @@ flutter run -d chrome --dart-define=OFFLINE_DEMO=true
 | Ops | `ops@postefinance.com` | `Password1!` | Staff OPS |
 | Support | `support@postefinance.com` | `Password1!` | Staff SUPPORT |
 | Finance | `finance@postefinance.com` | `Password1!` | Staff FINANCE |
-| Kasee | `kasee.demo@postefinance.com` (`cust_kasee`) | `Password1!` | Open-market customer |
+| Jean-Paul | `jp.kabila@gmail.com` (`cust_kasee`) | `Password1!` | Open-market customer (mobile demo focus) |
 | Amina | `amina.payroll@postefinance.com` (`cust_amina`) | `Password1!` | Corporate employee @ `emp_poste` |
 | Agent | **`agent-001`** | (paste Agent ID) | Float / enroll / cash |
 
@@ -114,7 +114,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 
 1. Stop API `:3000`. Start customer with `--dart-define=OFFLINE_DEMO=true`.
 2. Confirm offline / no live API affordance where shown.
-3. **Option A (seeded login):** Log in `kasee.demo@postefinance.com` / `Password1!` → Home shows **CDF + USD** wallets.
+3. **Option A (seeded login):** Log in `jp.kabila@gmail.com` / `Password1!` → Home shows **CDF + USD** wallets.
 4. **Option B (register walk):** Create account → enter phone → OTP **`123456`** → eKYC submit (mock docs) → land on home with wallets.
 5. **Pass:** Home loads with dual currency wallets; Network has no `:3000`.
 
@@ -147,7 +147,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 
 ### DEM-04 — Credit exception maker-checker
 
-**Apps:** Admin (+ optional Customer credit for Kasee)  
+**Apps:** Admin (+ optional Customer credit for Jean-Paul)  
 **Seed:** `loan_kasee_exception_001` → `/dashboard/credit-exceptions`
 
 1. Admin → **Credit exceptions**.
@@ -166,7 +166,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 
 1. Admin → **Idempotency lab** (`/dashboard/idempotency`).
 2. Idempotency key prefilled `idem_replay_demo_001` → **Replay confirm** twice → **same payment ID**, no duplicate.
-3. On `pay_kasee_idem_001` (or listed Kasee payment) → **Compensate** → reversing journal + notification.
+3. On `pay_kasee_idem_001` (or listed Jean-Paul payment) → **Compensate** → reversing journal + notification.
 4. **Pass:** Replay stable; compensate posts reverse trail offline.
 
 ---
@@ -176,7 +176,7 @@ Also used: `/dashboard/customer360`, `/dashboard/cards`, `/dashboard/cases`, `/d
 **Apps:** Customer + Admin payments / 360 / recon  
 **Seed payments:** `pay_kasee_w2w_001`, `pay_kasee_mno_001`, `pay_kasee_bank_001`, `pay_kasee_bill_001`
 
-1. Customer login `kasee.demo@postefinance.com` / `Password1!`.
+1. Customer login `jp.kabila@gmail.com` / `Password1!`.
 2. History / Pay: open each rail receipt (W2W, MNO, bank, bill) — journal IDs present.
 3. Admin → Payments search / Customer 360 `cust_kasee` — same payment + journal IDs.
 4. Optional: Agent `agent-001` cash-in history appears as **pre-seeded** journals (not live sync).
@@ -287,7 +287,7 @@ Run with **core-api stopped** and offline flags on. Tick when observed.
 ### Personas / IDs
 
 - [ ] `admin@postefinance.com` / `Password1!` logs into admin
-- [ ] `kasee.demo@postefinance.com` / `Password1!` customer
+- [ ] `jp.kabila@gmail.com` / `Password1!` customer
 - [ ] `amina.payroll@postefinance.com` / `Password1!` customer
 - [ ] Agent login **`agent-001`**
 

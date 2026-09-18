@@ -902,4 +902,114 @@ class CoreApiService {
       throw Exception('Add money to goal failed: ${response.body}');
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Insurance (offline demo only this sprint)
+  // ---------------------------------------------------------------------------
+
+  /// Get insurance products
+  Future<List<Map<String, dynamic>>> getInsuranceProducts() async {
+    if (offlineDemo) {
+      return _offline.listInsuranceProducts();
+    }
+    // Future: real API call
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Get customer insurance policies
+  Future<List<Map<String, dynamic>>> getInsurancePolicies(String customerId) async {
+    if (offlineDemo) {
+      return _offline.listInsurancePolicies(customerId);
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Activate insurance policy
+  Future<Map<String, dynamic>> activateInsurance({
+    required String customerId,
+    required String productId,
+    required String premiumMode,
+    String? fixedSchedule,
+    int? fixedMinor,
+    int? percentBps,
+    required String deductFrom,
+  }) async {
+    if (offlineDemo) {
+      return _offline.activateInsurancePolicy(
+        customerId: customerId,
+        productId: productId,
+        premiumMode: premiumMode,
+        fixedSchedule: fixedSchedule,
+        fixedMinor: fixedMinor,
+        percentBps: percentBps,
+        deductFrom: deductFrom,
+      );
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Update insurance policy
+  Future<Map<String, dynamic>> updateInsurance({
+    required String policyId,
+    required String premiumMode,
+    String? fixedSchedule,
+    int? fixedMinor,
+    int? percentBps,
+    required String deductFrom,
+  }) async {
+    if (offlineDemo) {
+      return _offline.updateInsurancePolicy(
+        policyId: policyId,
+        premiumMode: premiumMode,
+        fixedSchedule: fixedSchedule,
+        fixedMinor: fixedMinor,
+        percentBps: percentBps,
+        deductFrom: deductFrom,
+      );
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Deactivate insurance policy
+  Future<void> deactivateInsurance(String policyId) async {
+    if (offlineDemo) {
+      _offline.deactivateInsurancePolicy(policyId);
+      return;
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Preview insurance premiums for a transaction
+  Future<List<Map<String, dynamic>>> previewInsurancePremiums({
+    required String customerId,
+    required String rail,
+    required int principalMinor,
+  }) async {
+    if (offlineDemo) {
+      return _offline.previewInsurancePremiums(
+        customerId: customerId,
+        rail: rail,
+        principalMinor: principalMinor,
+      );
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
+
+  /// Collect insurance premiums after payment success
+  Future<List<Map<String, dynamic>>> collectInsurancePremiums({
+    required String customerId,
+    required String rail,
+    required int principalMinor,
+    required String parentTransactionId,
+  }) async {
+    if (offlineDemo) {
+      return _offline.collectInsurancePremiums(
+        customerId: customerId,
+        rail: rail,
+        principalMinor: principalMinor,
+        parentTransactionId: parentTransactionId,
+      );
+    }
+    throw UnimplementedError('Insurance API not yet implemented');
+  }
 }

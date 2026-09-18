@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/agent_api_service.dart';
+import '../services/offline_agent_repository.dart';
 import '../widgets/customer_lookup_field.dart';
 
 class CashInOutScreen extends StatefulWidget {
@@ -11,17 +12,71 @@ class CashInOutScreen extends StatefulWidget {
 
 class _CashInOutScreenState extends State<CashInOutScreen> {
   final _api = AgentApiService();
+  final _repo = OfflineAgentRepository.instance;
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   Map<String, dynamic>? _selectedCustomer;
   String _currency = 'USD';
   bool _isCashIn = true;
   bool _loading = false;
+  Map<String, dynamic>? _feePreview;
 
   @override
   void initState() {
     super.initState();
     _api.init();
+    _amountController.addListener(_calculateFeePreview);
+  }
+
+  void _calculateFeePreview() {
+    final amountText = _amountController.text.trim();
+    if (amountText.isEmpty || _selectedCustomer == null) {
+      setState(() => _feePreview = null);
+      return;
+    }
+
+    final amount = double.tryParse(amountText);
+    if (amount == null || amount <= 0) {
+      setState(() => _feePreview = null);
+      return;
+    }
+
+    final amountMinor = (amount * 100).toInt();
+    final paymentType = _isCashIn ? 'AGENT_CASH_IN' : 'AGENT_CASH_OUT';
+
+    try {
+      final feeResult = _repo.getFee(
+        paymentType: paymentType,
+        currency: _currency,
+        amountMinor: amountMinor,
+      );
+
+      final feeMinor = feeResult['feeMinor'] as int;
+      final fee = feeMinor / 100;
+      final symbol = _currency == 'CDF' ? 'FC' : '\$';
+
+      setState(() {
+        _feePreview = {
+          'amount': amount,
+          'fee': fee,
+          'feeMinor': feeMinor,
+          'symbol': symbol,
+          'totalDebit': _isCashIn ? amount : amount + fee,
+          'customerReceives': _isCashIn ? amount : 0,
+          'customerDebited': _isCashIn ? 0 : amount + fee,
+          'agentFloatChange': _isCashIn ? -amount : amount,
+        };
+      });
+    } catch (e) {
+      setState(() => _feePreview = null);
+    }
+  }
+
+  @override
+  void dispose() {
+    _amountController.removeListener(_calculateFeePreview);
+    _amountController.dispose();
+    super.dispose();
   }
 
   Future<void> _execute() async {
@@ -135,7 +190,10 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               ],
               selected: {_isCashIn},
               onSelectionChanged: (Set<bool> newSelection) {
-                setState(() => _isCashIn = newSelection.first);
+                setState(() {
+                  _isCashIn = newSelection.first;
+                  _calculateFeePreview();
+                });
               },
             ),
             const SizedBox(height: 24),
@@ -149,7 +207,12 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               value: _currency,
               decoration: const InputDecoration(labelText: 'Currency'),
               items: ['USD', 'CDF'].map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-              onChanged: (v) => setState(() => _currency = v!),
+              onChanged: (v) {
+                setState(() {
+                  _currency = v!;
+                  _calculateFeePreview();
+                });
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -159,6 +222,53 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               validator: (v) => v?.isEmpty ?? true ? 'Required' : null,
               enabled: _selectedCustomer != null,
             ),
+            if (_feePreview != null) ...[
+              const SizedBox(height: 16),
+              Card(
+                color: Colors.blue.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Transaction Preview',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildPreviewRow(
+                        'Transaction Fee',
+                        '${_feePreview!['symbol']}${(_feePreview!['fee'] as double).toStringAsFixed(2)}',
+                      ),
+                      if (_isCashIn) ...[
+                        _buildPreviewRow(
+                          'Customer Credited',
+                          '${_feePreview!['symbol']}${(_feePreview!['customerReceives'] as double).toStringAsFixed(2)}',
+                          highlight: true,
+                        ),
+                        _buildPreviewRow(
+                          'Agent Float Change',
+                          '${_feePreview!['symbol']}${(_feePreview!['agentFloatChange'] as double).toStringAsFixed(2)}',
+                        ),
+                      ] else ...[
+                        _buildPreviewRow(
+                          'Customer Debited',
+                          '${_feePreview!['symbol']}${(_feePreview!['customerDebited'] as double).toStringAsFixed(2)}',
+                          highlight: true,
+                        ),
+                        _buildPreviewRow(
+                          'Agent Float Change',
+                          '+${_feePreview!['symbol']}${(_feePreview!['agentFloatChange'] as double).toStringAsFixed(2)}',
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loading ? null : _execute,
@@ -176,6 +286,30 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPreviewRow(String label, String value, {bool highlight = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
+              color: highlight ? Colors.green.shade700 : null,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -128,3 +128,21 @@ These require no changes to the files modified in Task 2.
 ## Status: DONE ✅
 
 All Task 2 requirements implemented, committed (186be3e), and pushed.
+
+---
+
+## Fix (Post-Review)
+
+**Issue:** Initial implementation incorrectly added `/dashboard/kyc`, `/dashboard/agents`, and `/dashboard/remittance` to SUPPORT role. These routes were not in the Task 2 brief and should not have been added.
+
+**Resolution (bd30078):** Removed the three extra routes from SUPPORT role. SUPPORT now correctly contains only:
+- `/dashboard` (existing)
+- `/dashboard/customer360` (existing)
+- `/dashboard/cases` (existing)
+- `/dashboard/users` (Task 2)
+- `/dashboard/aml-ban-list` (Task 2)
+- `/dashboard/customers` (Task 2)
+
+OPS and FINANCE roles unchanged (customer360 addition was correct per spec).
+
+**Commit:** bd30078 - "fix(admin): do not expand SUPPORT beyond users/aml/customers"

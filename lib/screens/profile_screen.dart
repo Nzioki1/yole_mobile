@@ -10,6 +10,10 @@ import '../providers/api_providers.dart';
 import '../widgets/gradient_button.dart';
 import '../models/api/auth_response.dart';
 import '../router_types.dart';
+import '../providers/biometric_provider.dart';
+import '../services/biometric_auth_service.dart';
+import '../models/biometric_unlock_payload.dart';
+import '../services/offline_demo_repository.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -124,6 +128,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   theme: theme,
                 ),
+                _BiometricToggleTile(theme: theme),
 
                 // Support Section
                 _SectionHeader(title: l10n.support, theme: theme),
@@ -1687,6 +1692,7 @@ class _ProfileTile extends StatelessWidget {
   final Widget? trailing;
   final ThemeData theme;
   final VoidCallback? onTap;
+  final Widget? subtitle;
 
   const _ProfileTile({
     required this.icon,
@@ -1694,6 +1700,7 @@ class _ProfileTile extends StatelessWidget {
     this.trailing,
     required this.theme,
     this.onTap,
+    this.subtitle,
   }) : assert(onTap != null || trailing != null || true);
 
   @override
@@ -1729,6 +1736,7 @@ class _ProfileTile extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
+        subtitle: subtitle,
         trailing: trailing ??
             Icon(
               Icons.arrow_forward_ios_rounded,
@@ -1738,6 +1746,223 @@ class _ProfileTile extends StatelessWidget {
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       ),
+    );
+  }
+}
+
+class _BiometricToggleTile extends ConsumerStatefulWidget {
+  final ThemeData theme;
+
+  const _BiometricToggleTile({required this.theme});
+
+  @override
+  ConsumerState<_BiometricToggleTile> createState() => _BiometricToggleTileState();
+}
+
+class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
+  bool _biometricsAvailable = false;
+  bool _biometricEnabled = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkBiometricStatus();
+  }
+
+  Future<void> _checkBiometricStatus() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+    final available = await biometricService.canCheckBiometrics();
+    final enabled = await biometricService.isEnabled();
+
+    if (mounted) {
+      setState(() {
+        _biometricsAvailable = available;
+        _biometricEnabled = enabled;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _handleToggle(bool value) async {
+    if (value) {
+      await _enableBiometric();
+    } else {
+      await _disableBiometric();
+    }
+  }
+
+  Future<void> _enableBiometric() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+    final l10n = AppLocalizations.of(context)!;
+
+    // Step 1: Authenticate with biometric first
+    final authenticated = await biometricService.authenticate(
+      reason: l10n.biometricLogin,
+    );
+
+    if (!authenticated) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric authentication failed or cancelled'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 2: Show password dialog to capture credentials
+    if (!mounted) return;
+    final password = await _showPasswordDialog();
+
+    if (password == null || password.isEmpty) {
+      return; // User cancelled
+    }
+
+    // Step 3: Verify password by attempting login (non-destructive check)
+    final authState = ref.read(authProvider);
+    final currentEmail = authState.user?.email;
+
+    if (currentEmail == null || currentEmail.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to get current user email'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Step 4: Save unlock payload
+    final payload = BiometricUnlockPayload(
+      email: currentEmail,
+      password: password,
+      transactionPin: OfflineDemoRepository.demoPin, // v1: use demoPin for both offline and live
+    );
+
+    await biometricService.saveUnlockPayload(payload);
+    await biometricService.setEnabled(true);
+
+    setState(() {
+      _biometricEnabled = true;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric login enabled'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _disableBiometric() async {
+    final biometricService = ref.read(biometricAuthServiceProvider);
+
+    await biometricService.clearUnlock();
+
+    setState(() {
+      _biometricEnabled = false;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric login disabled'),
+        ),
+      );
+    }
+  }
+
+  Future<String?> _showPasswordDialog() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: widget.theme.cardTheme.color,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Enter Password',
+          style: widget.theme.textTheme.titleLarge,
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Please enter your password to enable biometric login',
+              style: widget.theme.textTheme.bodyMedium,
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_loading) {
+      return _ProfileTile(
+        icon: Icons.fingerprint,
+        title: l10n.biometricLogin,
+        trailing: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+        theme: widget.theme,
+      );
+    }
+
+    return _ProfileTile(
+      icon: Icons.fingerprint,
+      title: l10n.biometricLogin,
+      trailing: Switch(
+        value: _biometricEnabled,
+        onChanged: _biometricsAvailable ? _handleToggle : null,
+        activeColor: widget.theme.colorScheme.primary,
+      ),
+      theme: widget.theme,
+      subtitle: !_biometricsAvailable
+          ? Text(
+              'No biometrics enrolled on device',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            )
+          : null,
     );
   }
 }

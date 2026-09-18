@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/agent_api_service.dart';
 import 'enroll_customer_screen.dart';
 import 'cash_in_out_screen.dart';
+import 'agent_history_screen.dart';
 
 class AgentHomeScreen extends StatefulWidget {
   const AgentHomeScreen({super.key});
@@ -243,7 +244,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const _AgentHistoryPlaceholderScreen(),
+                            builder: (context) => const AgentHistoryScreen(),
                           ),
                         );
                       },
@@ -252,50 +253,6 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                 ],
               ),
             ),
-    );
-  }
-}
-
-class _AgentHistoryPlaceholderScreen extends StatelessWidget {
-  const _AgentHistoryPlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Transaction History'),
-      ),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.history,
-                size: 64,
-                color: Colors.grey,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Transaction History',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Coming in Phase 6',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

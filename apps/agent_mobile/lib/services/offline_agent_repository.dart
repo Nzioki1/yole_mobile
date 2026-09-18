@@ -109,6 +109,25 @@ class OfflineAgentRepository {
     return Map<String, dynamic>.from(customer);
   }
 
+  /// Find customer by ID (public helper for history screen).
+  /// Returns null if not found.
+  Map<String, dynamic>? findCustomerById(String customerId) {
+    return _findCustomer(customerId);
+  }
+
+  /// Get all wallets for a customer (public helper for history screen).
+  List<Map<String, dynamic>> getCustomerWallets(String customerId) {
+    return _list('wallets')
+        .where((w) => w['customerId'] == customerId)
+        .map((w) => Map<String, dynamic>.from(w))
+        .toList();
+  }
+
+  /// Get all KYCs (public helper for history screen).
+  List<Map<String, dynamic>> getAllKycs() {
+    return _list('kycs');
+  }
+
   Map<String, dynamic>? _findWallet({
     required String customerId,
     required String currency,
@@ -502,6 +521,74 @@ class OfflineAgentRepository {
       'status': 'ACTIVE',
       'kycStatus': kycStatus,
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // History queries
+  // ---------------------------------------------------------------------------
+
+  /// Get today's cash operation history for the current agent.
+  /// Returns journals sorted by postedAt descending.
+  List<Map<String, dynamic>> getTodayHistory({String? agentId}) {
+    final aid = agentId ?? _requireAgent();
+    final today = DateTime.now().toUtc();
+    final todayStr = today.toIso8601String().split('T').first;
+
+    final journals = _list('journals');
+    final todayJournals = <Map<String, dynamic>>[];
+
+    for (final j in journals) {
+      if (j['agentId'] != aid) continue;
+
+      final postedAt = j['postedAt'] as String?;
+      if (postedAt == null) continue;
+
+      final postedDate = postedAt.split('T').first;
+      if (postedDate != todayStr) continue;
+
+      todayJournals.add(Map<String, dynamic>.from(j));
+    }
+
+    // Sort by postedAt descending
+    todayJournals.sort((a, b) {
+      final aTime = DateTime.parse(a['postedAt'] as String);
+      final bTime = DateTime.parse(b['postedAt'] as String);
+      return bTime.compareTo(aTime);
+    });
+
+    return todayJournals;
+  }
+
+  /// Get today's customer enrollments by the current agent.
+  /// Returns customers sorted by createdAt descending.
+  List<Map<String, dynamic>> getTodayEnrollments({String? agentId}) {
+    final aid = agentId ?? _requireAgent();
+    final today = DateTime.now().toUtc();
+    final todayStr = today.toIso8601String().split('T').first;
+
+    final customers = _list('customers');
+    final todayEnrollments = <Map<String, dynamic>>[];
+
+    for (final c in customers) {
+      if (c['enrolledByAgentId'] != aid) continue;
+
+      final createdAt = c['createdAt'] as String?;
+      if (createdAt == null) continue;
+
+      final createdDate = createdAt.split('T').first;
+      if (createdDate != todayStr) continue;
+
+      todayEnrollments.add(Map<String, dynamic>.from(c));
+    }
+
+    // Sort by createdAt descending
+    todayEnrollments.sort((a, b) {
+      final aTime = DateTime.parse(a['createdAt'] as String);
+      final bTime = DateTime.parse(b['createdAt'] as String);
+      return bTime.compareTo(aTime);
+    });
+
+    return todayEnrollments;
   }
 
   // ---------------------------------------------------------------------------

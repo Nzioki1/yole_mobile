@@ -365,5 +365,94 @@ void main() {
         expect(customer['enrolledByAgentId'], 'agent-001');
       });
     });
+
+    group('history queries', () {
+      setUp(() {
+        repo = OfflineAgentRepository.createFresh();
+        repo.setAgentId('agent-001');
+      });
+
+      test('getTodayHistory() with no transactions returns empty list', () {
+        final history = repo.getTodayHistory();
+        expect(history, isEmpty);
+      });
+
+      test('getTodayHistory() after cash-in returns 1 journal', () {
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '100000',
+          currency: 'CDF',
+        );
+
+        final history = repo.getTodayHistory();
+        expect(history, hasLength(1));
+        expect(history[0]['type'], 'AGENT_CASH_IN');
+        expect(history[0]['customerId'], 'cust_kasee');
+      });
+
+      test('getTodayHistory() returns journals sorted by postedAt descending', () {
+        // Create multiple transactions
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '100000',
+          currency: 'CDF',
+        );
+        
+        // Wait a moment to ensure different timestamps
+        Future.delayed(const Duration(milliseconds: 10));
+        
+        repo.cashOut(
+          customerId: 'cust_kasee',
+          amountMinor: '50000',
+          currency: 'CDF',
+        );
+
+        final history = repo.getTodayHistory();
+        expect(history, hasLength(2));
+        
+        // Most recent first (cash-out)
+        expect(history[0]['type'], 'AGENT_CASH_OUT');
+        expect(history[1]['type'], 'AGENT_CASH_IN');
+      });
+
+      test('getTodayEnrollments() with no enrollments returns empty list', () {
+        final enrollments = repo.getTodayEnrollments();
+        expect(enrollments, isEmpty);
+      });
+
+      test('getTodayEnrollments() after enrollment returns 1 customer', () {
+        repo.enrollCustomer(
+          firstName: 'Test',
+          lastName: 'Customer',
+          password: 'Password1!',
+        );
+
+        final enrollments = repo.getTodayEnrollments();
+        expect(enrollments, hasLength(1));
+        expect(enrollments[0]['firstName'], 'Test');
+        expect(enrollments[0]['enrolledByAgentId'], 'agent-001');
+      });
+
+      test('getTodayEnrollments() returns customers sorted by createdAt descending', () {
+        repo.enrollCustomer(
+          firstName: 'First',
+          lastName: 'Customer',
+          password: 'Password1!',
+        );
+        
+        repo.enrollCustomer(
+          firstName: 'Second',
+          lastName: 'Customer',
+          password: 'Password1!',
+        );
+
+        final enrollments = repo.getTodayEnrollments();
+        expect(enrollments, hasLength(2));
+        
+        // Most recent first
+        expect(enrollments[0]['firstName'], 'Second');
+        expect(enrollments[1]['firstName'], 'First');
+      });
+    });
   });
 }

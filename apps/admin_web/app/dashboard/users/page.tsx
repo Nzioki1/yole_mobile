@@ -23,6 +23,7 @@ type StaffRow = {
 
 export default function UsersPage() {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<ReturnType<typeof authService.getCurrentUser>>(null);
   const [staff, setStaff] = useState<StaffRow[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +35,15 @@ export default function UsersPage() {
     role: StaffRole.OPS as string,
   });
 
+  const isAdmin = currentUser?.role === StaffRole.ADMIN;
+
   useEffect(() => {
     const user = authService.getCurrentUser();
-    if (!user || user.role !== StaffRole.ADMIN) {
-      router.replace('/dashboard');
+    if (!user) {
+      router.replace('/login');
       return;
     }
+    setCurrentUser(user);
     loadStaff();
   }, [router]);
 
@@ -92,11 +96,18 @@ export default function UsersPage() {
           {error}
         </div>
       )}
-      <div className="mb-3">
-        <button className="btn btn-theme" type="button" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : '+ Create staff'}
-        </button>
-      </div>
+      {!isAdmin && (
+        <p className="text-muted small mb-3">
+          View only — ask an ADMIN to create users or change roles.
+        </p>
+      )}
+      {isAdmin && (
+        <div className="mb-3">
+          <button className="btn btn-theme" type="button" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : '+ Create staff'}
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <Panel>
@@ -185,17 +196,21 @@ export default function UsersPage() {
                     </td>
                     <td>{row.email}</td>
                     <td style={{ minWidth: 140 }}>
-                      <select
-                        className="form-select form-select-sm"
-                        value={row.role}
-                        onChange={(e) => handleRoleChange(row.id, e.target.value)}
-                      >
-                        {ROLES.map((r) => (
-                          <option key={r} value={r}>
-                            {r}
-                          </option>
-                        ))}
-                      </select>
+                      {isAdmin ? (
+                        <select
+                          className="form-select form-select-sm"
+                          value={row.role}
+                          onChange={(e) => handleRoleChange(row.id, e.target.value)}
+                        >
+                          {ROLES.map((r) => (
+                            <option key={r} value={r}>
+                              {r}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="badge bg-secondary">{row.role}</span>
+                      )}
                     </td>
                     <td className="font-monospace small">{row.id}</td>
                   </tr>

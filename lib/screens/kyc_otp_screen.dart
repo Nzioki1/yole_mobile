@@ -358,14 +358,15 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         // Top Section - Icon & Content
-                        Expanded(
-                          child: FadeTransition(
+                        FadeTransition(
                             opacity: _fadeAnimation,
                             child: SlideTransition(
                               position: _slideAnimation,
                               child: Column(
+                                mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   // Message Icon
@@ -617,7 +618,6 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
                               ),
                             ),
                           ),
-                        ),
 
                         const SizedBox(height: 100),
 

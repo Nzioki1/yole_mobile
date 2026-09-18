@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
 import '../services/offline_demo_repository.dart';
 import '../widgets/pin_confirm_sheet.dart';
+import '../router_types.dart';
 
 class RemittanceScreen extends StatefulWidget {
   const RemittanceScreen({super.key});
@@ -202,6 +203,14 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
           recipientCountry: recipient['country']!,
           referenceId: quoteId,
         );
+
+
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          RouteNames.home,
+          (route) => false,
+        );
+      }
         
         // Reset form
         setState(() {
@@ -298,8 +307,10 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            onPressed: () {
+              Navigator.of(context).pop(); // close dialog
+            },
+            child: const Text('Done'),
           ),
         ],
       ),

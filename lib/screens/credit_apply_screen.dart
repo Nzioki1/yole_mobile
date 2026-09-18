@@ -100,10 +100,13 @@ class _CreditApplyScreenState extends State<CreditApplyScreen> {
       );
 
       if (mounted) {
+        setState(() => _loading = false);
+        
         Navigator.of(context).pop(); // Return to credit screen
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Loan disbursed successfully! ID: ${result['loanId']}'),
+            content: Text('Loan disbursed successfully! ID: ${result['id'] ?? 'N/A'}'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 4),
           ),
@@ -111,16 +114,14 @@ class _CreditApplyScreenState extends State<CreditApplyScreen> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _loading = false);
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Application failed: $e'),
             backgroundColor: Colors.red,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _loading = false);
       }
     }
   }

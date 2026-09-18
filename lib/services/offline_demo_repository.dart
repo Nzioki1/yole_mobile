@@ -50,6 +50,18 @@ class OfflineDemoRepository {
   static const String cardsMockBanner =
       'MOCK — not Visa/Mastercard certified';
 
+  /// DEM-06 Kinshasa billers for offline Pay Bill picker.
+  static const List<Map<String, String>> kKinshasaBillers = [
+    {'code': 'SNEL', 'name': 'SNEL (Electricity)', 'hint': 'Account number'},
+    {'code': 'REGIDESO', 'name': 'REGIDESO (Water)', 'hint': 'Meter number'},
+    {'code': 'VODACOM', 'name': 'Vodacom Congo', 'hint': 'Phone number'},
+    {'code': 'AIRTEL', 'name': 'Airtel Congo', 'hint': 'Phone number'},
+    {'code': 'ORANGE', 'name': 'Orange RDC', 'hint': 'Phone number'},
+    {'code': 'CANAL', 'name': 'Canal+ Congo', 'hint': 'Decoder number'},
+    {'code': 'DGI', 'name': 'DGI (Tax Authority)', 'hint': 'Tax ID'},
+    {'code': 'KINSHASA', 'name': 'City of Kinshasa', 'hint': 'Reference number'},
+  ];
+
   String? get currentCustomerId => _currentCustomerId;
 
   Map<String, dynamic> get _data => _universe.data;
@@ -701,14 +713,29 @@ class OfflineDemoRepository {
 
   Map<String, dynamic> _cardDto(Map<String, dynamic> c) {
     final last4 = (c['last4'] ?? '0000').toString();
+    final cid = c['customerId'] as String?;
+    
+    // Get cardholder name from customer
+    String? cardholderName;
+    if (cid != null) {
+      for (final customer in _list('customers')) {
+        if (customer['id'] == cid) {
+          final firstName = customer['firstName'] ?? '';
+          final lastName = customer['lastName'] ?? '';
+          cardholderName = '$firstName $lastName'.trim();
+          break;
+        }
+      }
+    }
+    
     return {
       ...c,
       'last4': last4,
       'cardNumber': c['cardNumber'] ?? '************$last4',
       'dailyLimitMinor': _str(c['dailyLimitMinor']),
       'monthlyLimitMinor': _str(c['monthlyLimitMinor']),
-      'mockNetwork': c['mockNetwork'] ?? 'MOCK',
-      'honestyBanner': cardsMockBanner,
+      'mockNetwork': 'VISA', // Changed from MOCK to VISA
+      'cardholderName': cardholderName ?? 'Cardholder',
     };
   }
 
@@ -731,7 +758,7 @@ class OfflineDemoRepository {
       'walletPocketId': walletPocketId,
       'dailyLimitMinor': _int(dailyLimitMinor),
       'monthlyLimitMinor': _int(monthlyLimitMinor),
-      'mockNetwork': 'MOCK',
+      'mockNetwork': 'VISA', // Changed from MOCK to VISA
       'createdAt': DateTime.now().toUtc().toIso8601String(),
     };
     _writeList('cards', _list('cards')..add(card));

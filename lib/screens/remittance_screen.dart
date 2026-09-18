@@ -265,25 +265,25 @@ class _OutboundRemittanceTabState extends State<_OutboundRemittanceTab> {
                     const Divider(height: 24),
                     _QuoteRow(
                       label: 'Amount',
-                      value: '$_currency ${(int.parse(_quote!['amountMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '$_currency ${(int.tryParse(_quote!['sendAmountMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                     ),
                     _QuoteRow(
                       label: 'Exchange Rate',
-                      value: _quote!['exchangeRate']?.toString() ?? 'N/A',
+                      value: (_quote!['exchangeRate'] ?? _quote!['fxRate'])?.toString() ?? 'N/A',
                     ),
                     _QuoteRow(
                       label: 'Fee',
-                      value: '$_currency ${(int.parse(_quote!['feeMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '$_currency ${(int.tryParse(_quote!['feeMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                     ),
                     const Divider(height: 24),
                     _QuoteRow(
                       label: 'Total Debit',
-                      value: '$_currency ${(int.parse(_quote!['totalDebitMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '$_currency ${(int.tryParse(_quote!['totalMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                       bold: true,
                     ),
                     _QuoteRow(
                       label: 'Recipient Gets',
-                      value: '${_quote!['recipientCurrency']} ${(int.parse(_quote!['recipientAmountMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '${_quote!['receiveCurrency'] ?? _currency} ${(int.tryParse(_quote!['receiveAmountMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                       bold: true,
                     ),
                     const SizedBox(height: 16),
@@ -518,21 +518,22 @@ class _InboundRemittanceTabState extends State<_InboundRemittanceTab> {
                     const Divider(height: 24),
                     _QuoteRow(
                       label: 'Expected Amount',
-                      value: '$_currency ${(int.parse(_quote!['amountMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '$_currency ${(int.tryParse(_quote!['sendAmountMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                     ),
-                    _QuoteRow(
-                      label: 'Fee (Deducted)',
-                      value: '$_currency ${(int.parse(_quote!['feeMinor'].toString()) / 100).toStringAsFixed(2)}',
-                    ),
+                    if (_quote!['feeMinor'] != null)
+                      _QuoteRow(
+                        label: 'Fee (Deducted)',
+                        value: '$_currency ${(int.tryParse(_quote!['feeMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
+                      ),
                     const Divider(height: 24),
                     _QuoteRow(
                       label: 'You Receive',
-                      value: '$_currency ${(int.parse(_quote!['netCreditMinor'].toString()) / 100).toStringAsFixed(2)}',
+                      value: '${_quote!['receiveCurrency'] ?? _currency} ${(int.tryParse(_quote!['receiveAmountMinor']?.toString() ?? '0') ?? 0 / 100).toStringAsFixed(2)}',
                       bold: true,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Quote ID: ${_quote!['quoteId']}',
+                      'Quote ID: ${_quote!['quoteId'] ?? _quote!['id'] ?? 'N/A'}',
                       style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'monospace'),
                     ),
                     const SizedBox(height: 16),

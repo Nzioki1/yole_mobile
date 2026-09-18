@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../services/kyc_service.dart';
+import '../services/core_api_service.dart';
 
 /// KYC OTP Screen - One-time password verification step
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -147,35 +149,50 @@ class _KYCOTPScreenState extends ConsumerState<KYCOTPScreen>
     // Get OTP code from controllers
     final otpCode = _otpControllers.map((c) => c.text).join();
 
-    // Note: OTP verification happens as part of validateKyc endpoint
-    // So we just store the OTP code and proceed to ID capture
-    // The OTP will be verified when we submit the complete KYC
+    // Get phone data from route arguments or widget
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final phoneCode = args?['phoneCode'] ?? '+243';
+    final phoneNumber = args?['phoneNumber'] ?? widget.phoneNumber ?? '';
+    final fullPhone = phoneCode + phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
 
-    // Simulate brief delay for UX
-    await Future.delayed(const Duration(milliseconds: 500));
+    try {
+      // Submit KYC with OTP verification (offline demo accepts 123456)
+      final api = CoreApiService();
+      await api.init();
+      final kycService = KycService(api: api.yoleApi);
+      
+      await kycService.submitKyc(
+        phoneNumber: fullPhone,
+        otpCode: otpCode,
+        idNumber: 'DEMO-ID-${DateTime.now().millisecondsSinceEpoch}', // Demo ID
+      );
 
-    if (mounted) {
-      setState(() {
-        _isVerifying = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+        });
 
-      // Get phone data from route arguments or widget
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      final phoneCode = args?['phoneCode'] ?? '';
-      final phoneNumber = args?['phoneNumber'] ?? widget.phoneNumber ?? '';
-
-      if (widget.onVerifyOTP != null) {
-        widget.onVerifyOTP!();
-      } else {
-        // Pass phone and OTP data to next screen
-        Navigator.pushNamed(
-          context,
-          RouteNames.kycIdCapture,
-          arguments: {
-            'phoneCode': phoneCode,
-            'phoneNumber': phoneNumber,
-            'otpCode': otpCode,
-          },
+        if (widget.onVerifyOTP != null) {
+          widget.onVerifyOTP!();
+        } else {
+          // Navigate to KYC success screen
+          Navigator.pushNamed(
+            context,
+            RouteNames.kycSuccess,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVerifying = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Verification failed: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

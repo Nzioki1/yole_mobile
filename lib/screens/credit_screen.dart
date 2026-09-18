@@ -296,10 +296,11 @@ class _LoanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = loan['status'] ?? 'UNKNOWN';
-    final type = loan['type'] ?? '';
-    final principal = loan['principalMinor'];
-    final currency = loan['currency'] ?? 'USD';
+    final status = loan['status']?.toString() ?? 'UNKNOWN';
+    final type = loan['type']?.toString() ?? '';
+    final principalRaw = loan['principalMinor'];
+    final principal = principalRaw?.toString() ?? '0';
+    final currency = loan['currency']?.toString() ?? 'USD';
     final disbursedAt = loan['disbursedAt'];
 
     Color statusColor = Colors.grey;

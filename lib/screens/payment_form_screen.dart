@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
+import '../services/offline_demo_repository.dart';
 
 /// Universal payment form for all rail types
 class PaymentFormScreen extends StatefulWidget {
@@ -292,6 +293,30 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
 
       case 'BILL':
         return [
+          Text(
+            'Select Biller (Optional)',
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: OfflineDemoRepository.kKinshasaBillers.map((biller) {
+              return ActionChip(
+                label: Text(biller['name']!),
+                onPressed: () {
+                  setState(() {
+                    _bankCodeController.text = biller['code']!;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
           Text(
             'Biller Code',
             style: TextStyle(

@@ -26,17 +26,28 @@ class BiometricAuthService {
     }
   }
 
-  /// Authenticate user with biometric prompt
+  /// Authenticate user with biometric prompt.
+  /// Returns false if the user cancels or biometrics are unavailable.
+  /// Throws nothing — callers treat false as failure/cancel.
   Future<bool> authenticate({required String reason}) async {
     try {
+      final canAuthenticate = await _localAuth.canCheckBiometrics ||
+          await _localAuth.isDeviceSupported();
+      if (!canAuthenticate) {
+        return false;
+      }
       return await _localAuth.authenticate(
         localizedReason: reason,
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
+          useErrorDialogs: true,
         ),
       );
     } catch (e) {
+      // Common when MainActivity is not FlutterFragmentActivity, or no enrolled biometrics.
+      // ignore: avoid_print
+      print('BiometricAuthService.authenticate error: $e');
       return false;
     }
   }

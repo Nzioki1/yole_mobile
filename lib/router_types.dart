@@ -31,6 +31,7 @@ class RouteNames {
   static const String savingsCreateGoal = '/savings/create-goal';
   static const String savingsGoalDetail = '/savings/goal-detail';
   static const String insurance = '/insurance';
+  static const String insuranceActivate = '/insurance/activate';
   static const String budget = '/budget';
 
   // KYC Flow Routes

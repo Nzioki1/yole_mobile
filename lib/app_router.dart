@@ -43,6 +43,7 @@ import 'screens/savings_screen.dart';
 import 'screens/savings_create_goal_screen.dart';
 import 'screens/savings_goal_detail_screen.dart';
 import 'screens/insurance_screen.dart';
+import 'screens/activate_policy_screen.dart';
 import 'screens/budget_screen.dart';
 
 // Tab host that keeps tabs alive for instant switching
@@ -321,6 +322,12 @@ class AppRouter {
 
       case RouteNames.insurance:
         return MaterialPageRoute(builder: (_) => const InsuranceScreen());
+
+      case RouteNames.insuranceActivate:
+        return MaterialPageRoute(
+          builder: (_) => const ActivatePolicyScreen(),
+          settings: settings,
+        );
 
       case RouteNames.budget:
         return MaterialPageRoute(builder: (_) => const BudgetScreen());

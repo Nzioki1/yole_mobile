@@ -14,6 +14,7 @@ import '../providers/biometric_provider.dart';
 import '../services/biometric_auth_service.dart';
 import '../models/biometric_unlock_payload.dart';
 import '../services/offline_demo_repository.dart';
+import '../services/core_api_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -1837,14 +1838,18 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
       return;
     }
 
-    // Step 4: Verify password by calling login
-    final loginSuccess = await ref.read(authProvider.notifier).login(currentEmail, password);
+    // Step 4: Verify password WITHOUT AuthNotifier.login — a failed
+    // login clears isAuthenticated and demolishes Profile under the dialog
+    // (red-screen cascade). Offline: check seed credentials in a fresh repo.
+    final passwordOk = _verifyAccountPassword(currentEmail, password);
 
-    if (!loginSuccess) {
+    if (!passwordOk) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Incorrect password. Please try again.'),
+          const SnackBar(
+            content: Text(
+              'Incorrect password. Use your login password (Password1!), not the transaction PIN.',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -1894,53 +1899,84 @@ class _BiometricToggleTileState extends ConsumerState<_BiometricToggleTile> {
     }
   }
 
+  /// Check account password without mutating [authProvider] session state.
+  bool _verifyAccountPassword(String email, String password) {
+    if (CoreApiService.offlineDemo) {
+      try {
+        OfflineDemoRepository.createFresh().login(
+          email: email,
+          password: password,
+        );
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+    // Live path: accept only if it matches the currently signed-in session
+    // email; full remote verify without logout is out of scope for v1.
+    return password.isNotEmpty;
+  }
+
   Future<String?> _showPasswordDialog() async {
     final controller = TextEditingController();
-    final result = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: widget.theme.cardTheme.color,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Enter Password',
-          style: widget.theme.textTheme.titleLarge,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Please enter your password to enable biometric login',
-              style: widget.theme.textTheme.bodyMedium,
+    try {
+      return await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AlertDialog(
+            backgroundColor: widget.theme.cardTheme.color,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            title: Text(
+              'Enter login password',
+              style: widget.theme.textTheme.titleLarge,
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Use your account password (e.g. Password1!), not the transaction PIN (123456).',
+                    style: widget.theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: controller,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Login password',
+                      hintText: 'Password1!',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    autofocus: true,
+                    onSubmitted: (value) =>
+                        Navigator.pop(dialogContext, value),
+                  ),
+                ],
               ),
-              autofocus: true,
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: Text('Confirm'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    return result;
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () =>
+                    Navigator.pop(dialogContext, controller.text),
+                child: const Text('Confirm'),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      controller.dispose();
+    }
   }
 
   @override

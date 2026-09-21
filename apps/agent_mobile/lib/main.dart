@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/agent_login_screen.dart';
 import 'screens/agent_home_screen.dart';
 import 'screens/assisted_pay_screen.dart';
-
-/// Poste Finance teal — matches customer app primary.
-const Color kPosteTeal = Color(0xFF00ACAC);
+import 'theme/agent_poste_theme.dart';
 
 void main() {
   runApp(const AgentApp());
@@ -18,30 +16,7 @@ class AgentApp extends StatelessWidget {
     return MaterialApp(
       title: 'Poste Finance Agent',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: kPosteTeal,
-          primary: kPosteTeal,
-          brightness: Brightness.light,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: kPosteTeal,
-          foregroundColor: Colors.white,
-          centerTitle: true,
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPosteTeal,
-            foregroundColor: Colors.white,
-          ),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: kPosteTeal,
-          foregroundColor: Colors.white,
-        ),
-      ),
+      theme: buildAgentPosteTheme(),
       home: const AgentLoginScreen(),
       routes: {
         '/home': (context) => const AgentHomeScreen(),

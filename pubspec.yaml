@@ -2,7 +2,7 @@ name: yole_mobile
 description: "Poste Finance Mobile Application"
 publish_to: 'none'
 
-version: 1.0.1+22
+version: 1.0.1+23
 
 environment:
   sdk: ">=3.3.0 <4.0.0"

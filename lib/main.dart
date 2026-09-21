@@ -6,6 +6,7 @@ import 'app_router.dart';
 import 'providers/global_locale_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'theme/poste_theme.dart';
 import 'package:flutter/widgets.dart';
 
 // Global navigator key for forcing navigation stack rebuild
@@ -108,59 +109,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
   }
 
   ThemeData _buildLightTheme() {
-    return ThemeData(
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: const Color(0xFFF7F8FC),
-      primaryColor: const Color(0xFF00ACAC),
-      colorScheme: const ColorScheme.light(
-        primary: Color(0xFF00ACAC),
-        secondary: Color(0xFF008A8A),
-        surface: Colors.white,
-        background: Color(0xFFF7F8FC),
-        onSurface: Colors.black,
-        onBackground: Colors.black,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF7F8FC),
-        elevation: 0,
-        foregroundColor: Colors.black,
-        titleTextStyle: TextStyle(
-          color: Colors.black,
-          fontSize: 20,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFE5E7EB)),
-        ),
-      ),
-      textTheme: const TextTheme(
-        displayLarge:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w800),
-        displayMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        displaySmall:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        headlineMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        headlineSmall:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        titleLarge: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
-        titleMedium:
-            TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
-        titleSmall:
-            TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
-        bodyLarge: TextStyle(color: Colors.black87),
-        bodyMedium: TextStyle(color: Colors.black87),
-        bodySmall: TextStyle(color: Colors.black54),
-        labelLarge: TextStyle(color: Colors.black87),
-        labelMedium: TextStyle(color: Colors.black87),
-        labelSmall: TextStyle(color: Colors.black54),
-      ),
-    );
+    return buildPosteTheme();
   }
 
   ThemeData _buildDarkTheme() {

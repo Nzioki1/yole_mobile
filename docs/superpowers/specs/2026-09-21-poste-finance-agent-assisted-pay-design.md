@@ -36,6 +36,8 @@ Agents can now pay bills and purchase airtime on behalf of customers using agent
 
 **Enhancement:** Add new quick action tile "Pay for customer" (sibling of Enroll / Cash In-Out / History).
 
+**Note:** Agent Home uses vertical `ListTile` widgets for quick actions (not a 2×2 grid). The new "Pay for customer" tile follows the same pattern.
+
 **Layout:**
 
 ```
@@ -378,8 +380,7 @@ Add to `feeLimits` array:
   "paymentType": "AGENT_ASSISTED_BILL",
   "currency": "CDF",
   "status": "ACTIVE",
-  "fixedMinor": 0,
-  "percentBps": 50,
+  "feePercent": 0.5,
   "minFeeMinor": 25,
   "maxFeeMinor": 500000,
   "createdAt": "2026-09-21T00:00:00Z"
@@ -390,19 +391,19 @@ Add to `feeLimits` array:
   "paymentType": "AGENT_ASSISTED_AIRTIME",
   "currency": "CDF",
   "status": "ACTIVE",
-  "fixedMinor": 0,
-  "percentBps": 50,
+  "feePercent": 0.5,
   "minFeeMinor": 25,
   "maxFeeMinor": 500000,
   "createdAt": "2026-09-21T00:00:00Z"
 }
 ```
 
-**Fee math:** `feeMinor = max(minFeeMinor, min(maxFeeMinor, floor(amountMinor × percentBps / 10000)))`
+**Fee math:** `rawFee = (amountMinor * feePercent / 100).toInt()`, then `feeMinor = max(minFeeMinor, min(maxFeeMinor, rawFee))`
 
 **Example:**
 - Amount: FC 50.00 (5000 minor)
-- 0.5% (50bps): `floor(5000 × 50 / 10000) = 25 minor = FC 0.25`
+- 0.5%: `(5000 * 0.5 / 100).toInt() = 25 minor = FC 0.25`
+- Clamped: `max(25, min(500000, 25)) = 25`
 - Result: FC 0.25 fee
 
 **Dart universe regeneration:** If `packages/demo_universe` requires typed Dart generation, run `dart run build_runner build` after adding to `universe.json`. If repo uses dynamic access (`_list('feeLimits')`), regeneration not required (preferred for parity with other seed additions).

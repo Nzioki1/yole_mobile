@@ -112,6 +112,10 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
           return item['type'] == 'AGENT_CASH_OUT';
         } else if (_selectedSegment == 'ENROLL') {
           return item['type'] == 'ENROLL';
+        } else if (_selectedSegment == 'BILL') {
+          return item['type'] == 'AGENT_ASSISTED_BILL';
+        } else if (_selectedSegment == 'AIRTIME') {
+          return item['type'] == 'AGENT_ASSISTED_AIRTIME';
         }
         return true;
       }).toList();
@@ -248,20 +252,23 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
   ) {
     if (customer == null) return [const Text('Customer data unavailable')];
 
+    final type = item['type'] as String;
     final amountMinor = item['amountMinor'] as int? ?? 0;
     final feeMinor = item['feeMinor'] as int? ?? 0;
-    final balanceAfterMinor = item['balanceAfterMinor'] as int? ?? 0;
-    final currency = item['currency'] as String? ?? 'USD';
+    final currency = item['currency'] as String? ?? 'CDF';
     final symbol = currency == 'CDF' ? 'FC' : '\$';
     final amount = amountMinor / 100;
     final fee = feeMinor / 100;
-    final balanceAfter = balanceAfterMinor / 100;
 
-    // Get commission if available
+    // Get commission if available (cash-in/out only, not assisted pay)
     final commission = item['commission'] as Map<String, dynamic>?;
     final commissionMinor = commission?['commissionMinor'] as int? ?? 0;
     final commissionBps = commission?['bps'] as int? ?? 0;
     final commissionAmount = commissionMinor / 100;
+
+    // For assisted pay, get metadata
+    final data = item['data'] as Map<String, dynamic>?;
+    final metadata = data?['metadata'] as Map<String, dynamic>?;
 
     // Calculate agent float after (approximate from current float minus later transactions)
     final agentFloat = _repo.getFloatBalances();
@@ -277,6 +284,14 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
       _buildDetailRow('Phone', customer['phoneE164'] ?? 'N/A'),
       _buildDetailRow('Customer ID', customer['id'] ?? 'N/A'),
       const Divider(),
+      if (type == 'AGENT_ASSISTED_BILL' && metadata != null) ...[
+        _buildDetailRow('Biller', metadata['billerCode'] ?? 'N/A'),
+        _buildDetailRow('Account', metadata['accountNumber'] ?? 'N/A'),
+        const Divider(),
+      ] else if (type == 'AGENT_ASSISTED_AIRTIME' && metadata != null) ...[
+        _buildDetailRow('Phone Topped Up', metadata['phoneNumber'] ?? 'N/A'),
+        const Divider(),
+      ],
       _buildDetailRow('Amount', '$symbol${amount.toStringAsFixed(2)}', bold: true),
       _buildDetailRow('Fee', '$symbol${fee.toStringAsFixed(2)}'),
       if (commission != null) ...[
@@ -284,7 +299,11 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
         _buildDetailRow('Commission Rate', '${(commissionBps / 100).toStringAsFixed(2)}%'),
       ],
       const Divider(),
-      _buildDetailRow('Customer Balance After', '$symbol${balanceAfter.toStringAsFixed(2)}'),
+      if (type == 'AGENT_CASH_IN' || type == 'AGENT_CASH_OUT') ...[
+        final balanceAfterMinor = item['balanceAfterMinor'] as int? ?? 0,
+        final balanceAfter = balanceAfterMinor / 100,
+        _buildDetailRow('Customer Balance After', '$symbol${balanceAfter.toStringAsFixed(2)}'),
+      ],
       _buildDetailRow('Agent Float After', '$symbol${agentFloatAfter.toStringAsFixed(2)}'),
       const Divider(),
       _buildDetailRow('Journal ID', item['referenceId'] ?? 'N/A', small: true),
@@ -332,6 +351,10 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
         return 'Cash Out';
       case 'ENROLL':
         return 'Customer Enrollment';
+      case 'AGENT_ASSISTED_BILL':
+        return 'Bill Payment';
+      case 'AGENT_ASSISTED_AIRTIME':
+        return 'Airtime Purchase';
       default:
         return type;
     }
@@ -345,6 +368,10 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
         return Icons.arrow_upward;
       case 'ENROLL':
         return Icons.person_add;
+      case 'AGENT_ASSISTED_BILL':
+        return Icons.receipt_long;
+      case 'AGENT_ASSISTED_AIRTIME':
+        return Icons.phone_android;
       default:
         return Icons.info;
     }
@@ -358,6 +385,10 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
         return Colors.orange;
       case 'ENROLL':
         return Colors.blue;
+      case 'AGENT_ASSISTED_BILL':
+        return Colors.purple;
+      case 'AGENT_ASSISTED_AIRTIME':
+        return Colors.teal;
       default:
         return Colors.grey;
     }
@@ -383,6 +414,8 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
                     ButtonSegment(value: 'CASH_IN', label: Text('Cash In')),
                     ButtonSegment(value: 'CASH_OUT', label: Text('Cash Out')),
                     ButtonSegment(value: 'ENROLL', label: Text('Enroll')),
+                    ButtonSegment(value: 'BILL', label: Text('Bill')),
+                    ButtonSegment(value: 'AIRTIME', label: Text('Airtime')),
                   ],
                   selected: {_selectedSegment},
                   onSelectionChanged: (Set<String> newSelection) {
@@ -465,6 +498,17 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
                           String subtitle;
                           if (type == 'ENROLL') {
                             subtitle = customer?['phoneE164'] ?? 'No phone';
+                          } else if (type == 'AGENT_ASSISTED_BILL') {
+                            final amountMinor = item['amountMinor'] as int? ?? 0;
+                            final amount = amountMinor / 100;
+                            final data = item['data'] as Map<String, dynamic>?;
+                            final metadata = data?['metadata'] as Map<String, dynamic>?;
+                            final billerCode = metadata?['billerCode'] ?? 'Unknown';
+                            subtitle = 'FC ${amount.toStringAsFixed(2)} • $billerCode';
+                          } else if (type == 'AGENT_ASSISTED_AIRTIME') {
+                            final amountMinor = item['amountMinor'] as int? ?? 0;
+                            final amount = amountMinor / 100;
+                            subtitle = 'FC ${amount.toStringAsFixed(2)} • Airtime';
                           } else {
                             final amountMinor = item['amountMinor'] as int? ?? 0;
                             final currency = item['currency'] as String? ?? 'USD';

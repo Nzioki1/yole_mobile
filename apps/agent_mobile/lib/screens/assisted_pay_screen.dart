@@ -4,6 +4,7 @@ import '../services/offline_agent_repository.dart';
 import '../widgets/customer_lookup_field.dart';
 import '../widgets/pin_input_modal.dart';
 import '../constants/kinshasa_billers.dart';
+import '../widgets/agent_receipt_card.dart';
 
 class AssistedPayScreen extends StatefulWidget {
   const AssistedPayScreen({super.key});
@@ -178,77 +179,32 @@ class _AssistedPayScreenState extends State<AssistedPayScreen> {
         final floatAfter = (result['floatCdfMinorAfter'] as int) / 100;
         final timestamp = result['postedAt'] as String;
 
+        final fields = <MapEntry<String, String>>[
+          MapEntry('Customer', '${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
+          MapEntry('Phone', _selectedCustomer!['phoneE164'] ?? 'N/A'),
+          if (_isBillMode) ...[
+            MapEntry('Biller', _selectedBiller!['name']),
+            MapEntry('Account', _accountNumberController.text.trim()),
+          ] else ...[
+            MapEntry('Phone Topped Up', _phoneController.text.trim()),
+          ],
+          MapEntry('Amount', 'FC ${amount.toStringAsFixed(2)}'),
+          MapEntry('Fee', 'FC ${fee.toStringAsFixed(2)}'),
+          MapEntry('Total', 'FC ${totalDebit.toStringAsFixed(2)}'),
+          MapEntry('Float Left', 'FC ${floatAfter.toStringAsFixed(2)}'),
+          MapEntry('Journal', result['journalId']),
+        ];
+        
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  _isBillMode ? Icons.receipt_long : Icons.phone_android,
-                  color: Colors.green,
-                  size: 28,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(_isBillMode ? 'Bill Payment Complete' : 'Airtime Purchase Complete'),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'RECEIPT',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const Divider(thickness: 2),
-                  const SizedBox(height: 8),
-                  _buildReceiptRow('For Customer', '${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
-                  _buildReceiptRow('Phone', _selectedCustomer!['phoneE164'] ?? 'N/A'),
-                  const Divider(),
-                  if (_isBillMode) ...[
-                    _buildReceiptRow('Biller', _selectedBiller!['name']),
-                    _buildReceiptRow('Account', _accountNumberController.text.trim()),
-                  ] else ...[
-                    _buildReceiptRow('Phone Topped Up', _phoneController.text.trim()),
-                  ],
-                  const Divider(),
-                  _buildReceiptRow('Amount', 'FC ${amount.toStringAsFixed(2)}', bold: true),
-                  _buildReceiptRow('Fee', 'FC ${fee.toStringAsFixed(2)}'),
-                  _buildReceiptRow('Total', 'FC ${totalDebit.toStringAsFixed(2)}', bold: true),
-                  const Divider(),
-                  _buildReceiptRow('Float Left', 'FC ${floatAfter.toStringAsFixed(2)}'),
-                  const Divider(),
-                  _buildReceiptRow('Journal', result['journalId'], small: true),
-                  _buildReceiptRow('Time', timestamp, small: true),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon')),
-                  );
-                },
-                icon: const Icon(Icons.share, size: 18),
-                label: const Text('Share Receipt'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                child: const Text('Done'),
-              ),
-            ],
+          builder: (context) => AgentReceiptCard(
+            title: _isBillMode ? 'Bill Payment Complete' : 'Airtime Purchase Complete',
+            fields: fields,
+            onDone: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
           ),
         );
       }
@@ -409,19 +365,21 @@ class _AssistedPayScreenState extends State<AssistedPayScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loading ? null : _execute,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.teal,
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _execute,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Continue'),
               ),
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Continue'),
             ),
           ],
         ),

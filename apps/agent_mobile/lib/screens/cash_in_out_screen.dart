@@ -3,6 +3,7 @@ import '../services/agent_api_service.dart';
 import '../services/offline_agent_repository.dart';
 import '../widgets/customer_lookup_field.dart';
 import '../widgets/pin_input_modal.dart';
+import '../widgets/agent_receipt_card.dart';
 
 class CashInOutScreen extends StatefulWidget {
   const CashInOutScreen({super.key});
@@ -203,86 +204,34 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
         final agentPocket = pockets.firstWhere((p) => p['currency'] == _currency);
         final agentFloatAfter = int.parse(agentPocket['availableMinor']?.toString() ?? '0') / 100;
 
+        final commissionMinor = int.parse(result['commissionMinor']?.toString() ?? '0');
+        final commission = commissionMinor / 100;
+        
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  _isCashIn ? Icons.arrow_downward : Icons.arrow_upward,
-                  color: _isCashIn ? Colors.green : Colors.orange,
-                  size: 28,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text('${_isCashIn ? "Cash-In" : "Cash-Out"} Complete'),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'RECEIPT',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const Divider(thickness: 2),
-                  const SizedBox(height: 8),
-                  _buildReceiptRow('Customer', '${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
-                  _buildReceiptRow('Phone', _selectedCustomer!['phoneE164'] ?? 'N/A'),
-                  const Divider(),
-                  _buildReceiptRow('Amount', '$currencySymbol${amount.toStringAsFixed(2)}', bold: true),
-                  _buildReceiptRow('Transaction Fee', '$currencySymbol${fee.toStringAsFixed(2)}'),
-                  if (_isCashIn)
-                    _buildReceiptRow('Customer Credited', '$currencySymbol${amount.toStringAsFixed(2)}', highlight: true)
-                  else
-                    _buildReceiptRow('Customer Debited', '$currencySymbol${(amount + fee).toStringAsFixed(2)}', highlight: true),
-                  const Divider(),
-                  if (result['commissionMinor'] != null && int.parse(result['commissionMinor']?.toString() ?? '0') > 0)
-                    _buildReceiptRow(
-                      'Your Commission',
-                      '$currencySymbol${(int.parse(result['commissionMinor']?.toString() ?? '0') / 100).toStringAsFixed(2)}',
-                      bold: true,
-                      highlight: true,
-                    ),
-                  if (result['commissionMinor'] != null && int.parse(result['commissionMinor']?.toString() ?? '0') > 0)
-                    const Divider(),
-                  _buildReceiptRow('Customer Balance After', '$currencySymbol${customerBalanceAfter.toStringAsFixed(2)}'),
-                  _buildReceiptRow('Agent Float After', '$currencySymbol${agentFloatAfter.toStringAsFixed(2)}'),
-                  const Divider(),
-                  _buildReceiptRow('Journal ID', result['journalId'], small: true),
-                  _buildReceiptRow('Timestamp', timestamp, small: true),
-                  _buildReceiptRow('Status', result['status'], small: true),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feature coming soon')),
-                  );
-                },
-                icon: const Icon(Icons.share, size: 18),
-                label: const Text('Share Receipt'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                  // Refresh usage after successful transaction
-                  _loadTodayUsage();
-                },
-                child: const Text('Done'),
-              ),
+          builder: (context) => AgentReceiptCard(
+            title: '${_isCashIn ? "Cash-In" : "Cash-Out"} Complete',
+            fields: [
+              MapEntry('Customer', '${_selectedCustomer!['firstName']} ${_selectedCustomer!['lastName']}'),
+              MapEntry('Phone', _selectedCustomer!['phoneE164'] ?? 'N/A'),
+              MapEntry('Amount', '$currencySymbol${amount.toStringAsFixed(2)}'),
+              MapEntry('Fee', '$currencySymbol${fee.toStringAsFixed(2)}'),
+              if (_isCashIn)
+                MapEntry('Customer Credited', '$currencySymbol${amount.toStringAsFixed(2)}')
+              else
+                MapEntry('Customer Debited', '$currencySymbol${(amount + fee).toStringAsFixed(2)}'),
+              if (commissionMinor > 0)
+                MapEntry('Your Commission', '$currencySymbol${commission.toStringAsFixed(2)}'),
+              MapEntry('Customer Balance', '$currencySymbol${customerBalanceAfter.toStringAsFixed(2)}'),
+              MapEntry('Agent Float', '$currencySymbol${agentFloatAfter.toStringAsFixed(2)}'),
+              MapEntry('Journal', result['journalId']),
             ],
+            onDone: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+              _loadTodayUsage();
+            },
           ),
         );
       }
@@ -464,19 +413,21 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loading ? null : _execute,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: _isCashIn ? Colors.green : Colors.orange,
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _execute,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(_isCashIn ? 'Cash In' : 'Cash Out'),
               ),
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(_isCashIn ? 'Cash In' : 'Cash Out'),
             ),
           ],
         ),

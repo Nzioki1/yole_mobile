@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/offline_agent_repository.dart';
+import '../widgets/agent_txn_tile.dart';
 
 class AgentHistoryScreen extends StatefulWidget {
   const AgentHistoryScreen({super.key});
@@ -527,44 +528,24 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
                             }
                           }
 
-                          return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: _getTypeColor(type).withOpacity(0.2),
-                                child: Icon(
-                                  _getTypeIcon(type),
-                                  color: _getTypeColor(type),
-                                ),
-                              ),
-                              title: Text(
-                                '${customer?['firstName'] ?? 'Unknown'} ${customer?['lastName'] ?? ''}',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Text(subtitle),
-                              trailing: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    timeStr,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _getTypeLabel(type),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              onTap: () => _showDetailSheet(item),
-                            ),
+                          String amount = '';
+                          if (type == 'ENROLL') {
+                            amount = 'Enrolled';
+                          } else {
+                            final amountMinor = item['amountMinor'] as int? ?? 0;
+                            final currency = item['currency'] as String? ?? 'CDF';
+                            final symbol = currency == 'CDF' ? 'FC' : '\$';
+                            final amountValue = amountMinor / 100;
+                            amount = type.contains('IN') ? '+$symbol${amountValue.toStringAsFixed(2)}' : '-$symbol${amountValue.toStringAsFixed(2)}';
+                          }
+                          
+                          return AgentTxnTile(
+                            time: timeStr,
+                            title: '${customer?['firstName'] ?? 'Unknown'} ${customer?['lastName'] ?? ''}',
+                            amount: amount,
+                            subtitle: subtitle,
+                            icon: _getTypeIcon(type),
+                            onTap: () => _showDetailSheet(item),
                           );
                         },
                       ),

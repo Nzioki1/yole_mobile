@@ -366,6 +366,112 @@ void main() {
       });
     });
 
+    group('commission tracking', () {
+      setUp(() {
+        repo = OfflineAgentRepository.createFresh();
+        repo.setAgentId('agent-001');
+      });
+
+      test('floor math: 10000 minor × 50 bps → 50 minor', () {
+        final commission = (10000 * 50 / 10000).floor();
+        expect(commission, 50);
+      });
+
+      test('floor math: small amount floors to 0 → no commission row', () {
+        final commission = (10 * 50 / 10000).floor();
+        expect(commission, 0);
+      });
+
+      test('cash-in creates commission row with correct fields', () {
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '1000000',
+          currency: 'CDF',
+        );
+
+        final commissions = repo.listCommissionsToday();
+        expect(commissions, hasLength(1));
+
+        final comm = commissions[0];
+        expect(comm['agentId'], 'agent-001');
+        expect(comm['customerId'], 'cust_kasee');
+        expect(comm['type'], 'AGENT_CASH_IN');
+        expect(comm['currency'], 'CDF');
+        expect(comm['principalMinor'], 1000000);
+        expect(comm['bps'], 50);
+        expect(comm['commissionMinor'], 50);
+        expect(comm['txnId'], isNotNull);
+        expect(comm['createdAt'], isNotNull);
+      });
+
+      test('cash-out creates commission row with correct type', () {
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '2000000',
+          currency: 'CDF',
+        );
+
+        repo.cashOut(
+          customerId: 'cust_kasee',
+          amountMinor: '500000',
+          currency: 'CDF',
+        );
+
+        final commissions = repo.listCommissionsToday();
+        expect(commissions, hasLength(2));
+        expect(commissions.any((c) => c['type'] == 'AGENT_CASH_IN'), true);
+        expect(commissions.any((c) => c['type'] == 'AGENT_CASH_OUT'), true);
+      });
+
+      test('commissionSummaryToday aggregates CDF and USD separately', () {
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '1000000',
+          currency: 'CDF',
+        );
+
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '100000',
+          currency: 'USD',
+        );
+
+        final summary = repo.commissionSummaryToday();
+        expect(summary['cdfMinor'], 50);
+        expect(summary['usdMinor'], 50);
+        expect(summary['count'], 2);
+      });
+
+      test('commissionSummaryToday with empty day returns zeros', () {
+        final summary = repo.commissionSummaryToday();
+        expect(summary['cdfMinor'], 0);
+        expect(summary['usdMinor'], 0);
+        expect(summary['count'], 0);
+      });
+
+      test('cash-in return includes commission fields', () {
+        final result = repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '1000000',
+          currency: 'CDF',
+        );
+
+        expect(result['commissionMinor'], 50);
+        expect(result['commissionBps'], 50);
+      });
+
+      test('small amount that floors to 0 skips commission row', () {
+        repo.cashIn(
+          customerId: 'cust_kasee',
+          amountMinor: '10',
+          currency: 'CDF',
+        );
+
+        final commissions = repo.listCommissionsToday();
+        expect(commissions, isEmpty);
+      });
+    });
+
     group('history queries', () {
       setUp(() {
         repo = OfflineAgentRepository.createFresh();

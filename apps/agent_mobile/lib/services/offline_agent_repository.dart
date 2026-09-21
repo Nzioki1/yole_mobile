@@ -719,6 +719,17 @@ class OfflineAgentRepository {
     });
     _writeList('journals', journals);
 
+    // Accrue commission after successful post
+    final commissionMinor = _accrueCommission(
+      agentId: aid,
+      txnId: txnId,
+      customerId: customerId,
+      type: cashIn ? 'AGENT_CASH_IN' : 'AGENT_CASH_OUT',
+      currency: cur,
+      principalMinor: amount,
+      createdAt: now,
+    );
+
     return {
       'journalId': journalId,
       'status': 'POSTED',
@@ -729,6 +740,102 @@ class OfflineAgentRepository {
       'feeMinor': _str(feeMinor),
       'type': cashIn ? 'AGENT_CASH_IN' : 'AGENT_CASH_OUT',
       'balanceAfterMinor': custLedger,
+      'commissionMinor': commissionMinor,
+      'commissionBps': _int(agent['commissionBps']),
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Commission tracking
+  // ---------------------------------------------------------------------------
+
+  /// Accrue commission on cash-in/out after successful post.
+  /// Returns commissionMinor (may be 0 if bps <= 0 or floors to 0).
+  /// Skips writing row when bps <= 0 or commissionMinor == 0.
+  int _accrueCommission({
+    required String agentId,
+    required String txnId,
+    required String customerId,
+    required String type,
+    required String currency,
+    required int principalMinor,
+    required String createdAt,
+  }) {
+    final agent = _findAgent(agentId);
+    if (agent == null) return 0;
+
+    final bps = _int(agent['commissionBps']);
+    if (bps <= 0) return 0;
+
+    final commissionMinor = (principalMinor * bps / 10000).floor();
+    if (commissionMinor == 0) return 0;
+
+    final commissions = _list('agentCommissions');
+    commissions.add({
+      'id': _nextId('acm'),
+      'agentId': agentId,
+      'txnId': txnId,
+      'customerId': customerId,
+      'type': type,
+      'currency': currency,
+      'principalMinor': principalMinor,
+      'commissionMinor': commissionMinor,
+      'bps': bps,
+      'createdAt': createdAt,
+    });
+    _writeList('agentCommissions', commissions);
+
+    return commissionMinor;
+  }
+
+  /// List today's commissions for the current agent.
+  /// Optional currency filter.
+  List<Map<String, dynamic>> listCommissionsToday({String? currency}) {
+    final aid = _requireAgent();
+    final today = DateTime.now().toUtc();
+    final todayStr = today.toIso8601String().split('T').first;
+
+    final commissions = _list('agentCommissions');
+    final todayCommissions = <Map<String, dynamic>>[];
+
+    for (final c in commissions) {
+      if (c['agentId'] != aid) continue;
+
+      final createdAt = c['createdAt'] as String?;
+      if (createdAt == null) continue;
+
+      final createdDate = createdAt.split('T').first;
+      if (createdDate != todayStr) continue;
+
+      if (currency != null && c['currency'] != currency) continue;
+
+      todayCommissions.add(Map<String, dynamic>.from(c));
+    }
+
+    return todayCommissions;
+  }
+
+  /// Get today's commission summary for the current agent.
+  /// Returns { 'cdfMinor': int, 'usdMinor': int, 'count': int }.
+  Map<String, dynamic> commissionSummaryToday() {
+    final commissions = listCommissionsToday();
+    int cdfMinor = 0;
+    int usdMinor = 0;
+
+    for (final c in commissions) {
+      final currency = c['currency'] as String?;
+      final commissionMinor = _int(c['commissionMinor']);
+      if (currency == 'CDF') {
+        cdfMinor += commissionMinor;
+      } else if (currency == 'USD') {
+        usdMinor += commissionMinor;
+      }
+    }
+
+    return {
+      'cdfMinor': cdfMinor,
+      'usdMinor': usdMinor,
+      'count': commissions.length,
     };
   }
 }

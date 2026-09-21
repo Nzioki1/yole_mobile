@@ -240,6 +240,7 @@ const String kUniverseJson = r'''
       "dailyLimitUsdMinor": 400000,
       "perTxnLimitUsdMinor": 200000,
       "floatWalletId": "wallet_float_agent001",
+      "commissionBps": 50,
       "status": "ACTIVE",
       "createdAt": "2026-07-01T08:00:00Z"
     },
@@ -258,10 +259,12 @@ const String kUniverseJson = r'''
       "dailyLimitUsdMinor": 200000,
       "perTxnLimitUsdMinor": 100000,
       "floatWalletId": "wallet_float_agent002",
+      "commissionBps": 50,
       "status": "ACTIVE",
       "createdAt": "2026-07-01T08:00:00Z"
     }
   ],
+  "agentCommissions": [],
   "employers": [
     {
       "id": "emp_poste",

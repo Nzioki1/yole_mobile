@@ -5,6 +5,7 @@ import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/core_api_service.dart';
+import '../widgets/brand/poste_primary_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({
@@ -223,39 +224,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _emailCtrl,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
-                              style: TextStyle(
-                                color: theme.textTheme.bodyLarge?.color,
-                                fontSize: 16,
-                              ),
                               validator: (value) => null,
                               decoration: InputDecoration(
                                 hintText: l10n.emailPlaceholder,
-                                filled: true,
-                                fillColor: isDark
-                                    ? theme.cardColor.withOpacity(0.3)
-                                    : Colors.grey.shade100,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                                hintStyle: TextStyle(
-                                  color: theme.textTheme.bodyLarge?.color
-                                      ?.withOpacity(0.5),
-                                  fontSize: 16,
-                                ),
                               ),
                             ),
                           ],
@@ -280,46 +251,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _pwdCtrl,
                               obscureText: _obscurePassword,
                               textInputAction: TextInputAction.done,
-                              style: TextStyle(
-                                color: theme.textTheme.bodyLarge?.color,
-                                fontSize: 16,
-                              ),
                               validator: (value) => null,
                               decoration: InputDecoration(
                                 hintText: l10n.passwordHint,
-                                filled: true,
-                                fillColor: isDark
-                                    ? theme.cardColor.withOpacity(0.3)
-                                    : Colors.grey.shade100,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 14),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: theme.colorScheme.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                                hintStyle: TextStyle(
-                                  color: theme.textTheme.bodyLarge?.color
-                                      ?.withOpacity(0.5),
-                                  fontSize: 16,
-                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_off_outlined
                                         : Icons.visibility_outlined,
-                                    color: theme.textTheme.bodyLarge?.color
-                                        ?.withOpacity(0.7),
                                     size: 20,
                                   ),
                                   onPressed: () => setState(() =>
@@ -359,66 +298,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Log In button - Enhanced prominence
-                        SizedBox(
-                          height:
-                              48, // Reduced height to match LoginSpacing.loginBtnH
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            onPressed: authState.isLoading
-                                ? null
-                                : () => _handleLogin(context),
-                            child: Ink(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.secondary,
-                                  ],
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.primary
-                                        .withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Container(
-                                alignment: Alignment.center,
-                                child: authState.isLoading
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
-                                        ),
-                                      )
-                                    : Text(
-                                        l10n.logIn,
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                          ),
+                        // Log In button
+                        PostePrimaryButton(
+                          label: l10n.logIn,
+                          onPressed: () => _handleLogin(context),
+                          loading: authState.isLoading,
                         ),
 
                         const SizedBox(height: 32),

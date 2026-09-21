@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/core_api_service.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/brand/poste_txn_tile.dart';
 
 class TransactionsHistorySimple extends ConsumerStatefulWidget {
   const TransactionsHistorySimple({super.key});
@@ -39,6 +40,72 @@ class _TransactionsHistorySimpleState
       debugPrint('Error loading payments: $e');
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  String _getTimeFromPayment(Map<String, dynamic> payment) {
+    final createdAt = payment['createdAt'] as String?;
+    if (createdAt != null) {
+      try {
+        final dateTime = DateTime.parse(createdAt);
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+    return '00:00';
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status.toUpperCase()) {
+      case 'POSTED':
+        return 'Completed';
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
+        return 'Failed';
+      default:
+        return status;
+    }
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return Icons.swap_horiz;
+      case 'MNO_IN':
+      case 'MNO_OUT':
+        return Icons.phone_android;
+      case 'BANK_IN':
+      case 'BANK_OUT':
+        return Icons.account_balance;
+      case 'BILL_PAY':
+        return Icons.receipt;
+      case 'AIRTIME':
+        return Icons.phone;
+      default:
+        return Icons.payment;
+    }
+  }
+
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'W2W':
+        return 'Wallet Transfer';
+      case 'MNO_IN':
+        return 'Mobile Money Deposit';
+      case 'MNO_OUT':
+        return 'Mobile Money Withdrawal';
+      case 'BANK_IN':
+        return 'Bank Deposit';
+      case 'BANK_OUT':
+        return 'Bank Withdrawal';
+      case 'BILL_PAY':
+        return 'Bill Payment';
+      case 'AIRTIME':
+        return 'Airtime Purchase';
+      default:
+        return type;
     }
   }
 
@@ -142,7 +209,27 @@ class _TransactionsHistorySimpleState
                         itemCount: _payments.length,
                         itemBuilder: (context, index) {
                           final payment = _payments[index] as Map<String, dynamic>;
-                          return _PaymentTile(payment: payment);
+                          final paymentId = payment['id'] as String?;
+                          final amountMinor = int.tryParse(payment['amountMinor']?.toString() ?? '0') ?? 0;
+                          final amount = amountMinor / 100;
+                          final currency = payment['currency'] as String? ?? 'USD';
+                          final status = payment['status'] as String? ?? 'PENDING';
+                          final type = payment['type'] as String? ?? 'UNKNOWN';
+                          final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
+                          
+                          return PosteTxnTile(
+                            time: _getTimeFromPayment(payment),
+                            title: _getTypeLabel(type),
+                            amount: '-$currencySymbol${amount.toStringAsFixed(2)}',
+                            subtitle: _getStatusLabel(status),
+                            icon: _getIconForType(type),
+                            onTap: paymentId != null
+                                ? () => Navigator.of(context).pushNamed(
+                                      RouteNames.transactionDetail,
+                                      arguments: {'paymentId': paymentId},
+                                    )
+                                : null,
+                          );
                         },
                       ),
                     ),

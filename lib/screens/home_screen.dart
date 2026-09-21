@@ -4,6 +4,9 @@ import '../router_types.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/auth_provider.dart';
 import '../services/core_api_service.dart';
+import '../widgets/brand/poste_balance_card.dart';
+import '../widgets/brand/poste_quick_action.dart';
+import '../widgets/brand/poste_txn_tile.dart';
 
 /// Neo-bank home hub with wallet cards and quick actions
 class HomeScreen extends ConsumerStatefulWidget {
@@ -18,6 +21,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _loadingWallets = false;
   List<dynamic> _wallets = [];
   List<dynamic> _recentPayments = [];
+  bool _balanceVisible = true;
 
   @override
   void initState() {
@@ -93,6 +97,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  String _getCdfBalance() {
+    final cdfWallet = _wallets.firstWhere(
+      (w) => w['currency'] == 'CDF',
+      orElse: () => {'availableMinor': 0},
+    );
+    final availableMinor = int.tryParse(cdfWallet['availableMinor']?.toString() ?? '0') ?? 0;
+    final available = availableMinor / 100;
+    return 'FC ${available.toStringAsFixed(2)}';
+  }
+
+  String _getUsdBalance() {
+    final usdWallet = _wallets.firstWhere(
+      (w) => w['currency'] == 'USD',
+      orElse: () => {'availableMinor': 0},
+    );
+    final availableMinor = int.tryParse(usdWallet['availableMinor']?.toString() ?? '0') ?? 0;
+    final available = availableMinor / 100;
+    return '\$ ${available.toStringAsFixed(2)}';
+  }
+
+  String _getTimeFromPayment(Map<String, dynamic> payment) {
+    final createdAt = payment['createdAt'] as String?;
+    if (createdAt != null) {
+      try {
+        final dateTime = DateTime.parse(createdAt);
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+    return '00:00';
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return Icons.swap_horiz_rounded;
+      case 'MNO_OUT':
+        return Icons.phone_android_rounded;
+      case 'BANK_OUT':
+        return Icons.account_balance_rounded;
+      case 'BILL':
+        return Icons.receipt_outlined;
+      default:
+        return Icons.send_rounded;
+    }
+  }
+
+  String _getLabelForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return 'Wallet Transfer';
+      case 'MNO_OUT':
+        return 'Mobile Money';
+      case 'BANK_OUT':
+        return 'Bank Transfer';
+      case 'BILL':
+        return 'Bill Payment';
+      default:
+        return 'Payment';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -149,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Wallet cards
+                // Balance card
                 if (_loadingWallets)
                   const Center(
                     child: Padding(
@@ -160,10 +225,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 else if (_wallets.isEmpty)
                   _EmptyWalletCard()
                 else
-                  ..._wallets.map((wallet) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _WalletCard(wallet: wallet),
-                      )),
+                  PosteBalanceCard(
+                    cdfBalance: _getCdfBalance(),
+                    usdBalance: _getUsdBalance(),
+                    balanceVisible: _balanceVisible,
+                    onToggleVisibility: () => setState(() => _balanceVisible = !_balanceVisible),
+                  ),
 
                 const SizedBox(height: 16),
 
@@ -242,10 +309,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     message: 'No recent transactions',
                   )
                 else
-                  ..._recentPayments.map((payment) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _PaymentItem(payment: payment),
-                      )),
+                  ..._recentPayments.map((payment) {
+                    final amountMinor = payment['amountMinor'] as String? ?? '0';
+                    final amount = (int.tryParse(amountMinor) ?? 0) / 100;
+                    final currency = payment['currency'] as String? ?? 'USD';
+                    final type = payment['type'] as String? ?? 'UNKNOWN';
+                    final status = payment['status'] as String? ?? 'PENDING';
+                    final paymentId = payment['id'] as String?;
+                    
+                    return PosteTxnTile(
+                      time: _getTimeFromPayment(payment),
+                      title: _getLabelForType(type),
+                      amount: '-$currency ${amount.toStringAsFixed(2)}',
+                      subtitle: status,
+                      icon: _getIconForType(type),
+                      onTap: paymentId != null
+                          ? () => Navigator.of(context).pushNamed(
+                                RouteNames.transactionDetail,
+                                arguments: {'paymentId': paymentId},
+                              )
+                          : null,
+                    );
+                  }),
 
                 const SizedBox(height: 40),
               ],
@@ -456,70 +541,31 @@ class _QuickActionsGrid extends StatelessWidget {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
+      crossAxisCount: 2,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 0.95,
+      childAspectRatio: 1.2,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
-        _QuickActionButton(
-          icon: Icons.send_rounded,
-          label: 'Pay / Send',
-          color: const Color(0xFF00ACAC),
+        PosteQuickAction(
+          icon: Icons.send,
+          label: 'Send Money',
           onTap: () => Navigator.of(context).pushNamed('/payment/picker'),
         ),
-        _QuickActionButton(
-          icon: Icons.receipt_outlined,
-          label: 'Bills',
-          color: const Color(0xFF008A8A),
+        PosteQuickAction(
+          icon: Icons.receipt_long,
+          label: 'Pay Bill',
           onTap: () => Navigator.of(context).pushNamed('/payment/bill'),
         ),
-        _QuickActionButton(
-          icon: Icons.verified_user_outlined,
-          label: 'KYC',
-          color: const Color(0xFF0C7A53),
-          onTap: () => Navigator.of(context).pushNamed(RouteNames.kyc),
-        ),
-        _QuickActionButton(
-          icon: Icons.credit_card_rounded,
-          label: 'Cards',
-          color: const Color(0xFFE87C03),
-          onTap: () => Navigator.of(context).pushNamed('/cards'),
-        ),
-        _QuickActionButton(
-          icon: Icons.account_balance_outlined,
-          label: 'Credit',
-          color: const Color(0xFF165BAA),
-          onTap: () => Navigator.of(context).pushNamed('/credit'),
-        ),
-        _QuickActionButton(
-          icon: Icons.flight_takeoff_rounded,
-          label: 'Remittance',
-          color: const Color(0xFF7B1FA2),
-          onTap: () => Navigator.of(context).pushNamed(RouteNames.remittance),
-        ),
-        _QuickActionButton(
-          icon: Icons.currency_exchange_rounded,
-          label: 'FX',
-          color: const Color(0xFF912D2D),
-          onTap: () => Navigator.of(context).pushNamed('/fx'),
-        ),
-        _QuickActionButton(
-          icon: Icons.savings_outlined,
+        PosteQuickAction(
+          icon: Icons.savings,
           label: 'Savings',
-          color: const Color(0xFF00ACAC),
           onTap: () => Navigator.of(context).pushNamed(RouteNames.savings),
         ),
-        _QuickActionButton(
-          icon: Icons.health_and_safety_outlined,
+        PosteQuickAction(
+          icon: Icons.shield,
           label: 'Insurance',
-          color: const Color(0xFF008A8A),
           onTap: () => Navigator.of(context).pushNamed(RouteNames.insurance),
-        ),
-        _QuickActionButton(
-          icon: Icons.pie_chart,
-          label: 'Budget',
-          color: const Color(0xFF0C7A53),
-          onTap: () => Navigator.of(context).pushNamed(RouteNames.budget),
         ),
       ],
     );

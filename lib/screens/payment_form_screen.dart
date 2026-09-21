@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
 import '../services/offline_demo_repository.dart';
+import '../widgets/brand/poste_primary_button.dart';
 
 /// Universal payment form for all rail types
 class PaymentFormScreen extends StatefulWidget {
@@ -154,34 +155,10 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
                 const SizedBox(height: 32),
 
                 // Continue button
-                SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _handleContinue,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _loading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          )
-                        : const Text(
-                            'Get Quote',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
+                PostePrimaryButton(
+                  label: 'Get Quote',
+                  onPressed: _handleContinue,
+                  loading: _loading,
                 ),
               ],
             ),

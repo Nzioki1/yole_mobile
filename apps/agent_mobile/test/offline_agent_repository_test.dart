@@ -540,5 +540,223 @@ void main() {
         expect(enrollments[1]['firstName'], 'First');
       });
     });
+
+    group('payForCustomer - assisted bill pay and airtime', () {
+      setUp(() {
+        repo = OfflineAgentRepository.createFresh();
+        repo.setAgentId('agent-001');
+      });
+
+      group('bill payment', () {
+        test('debits agent float by amount + fee', () {
+          final floatBefore = repo.floatFor('agent-001');
+          final initialFloat = floatBefore['floatCdfMinor'] as int;
+
+          final result = repo.payForCustomer(
+            customerId: 'cust_kasee',
+            kind: 'BILL',
+            amountMinor: 5000, // FC 50.00
+            billerCode: 'SNEL_KINSHASA',
+            accountNumber: '12345678',
+          );
+
+          expect(result['status'], 'POSTED');
+
+          final floatAfter = repo.floatFor('agent-001');
+          final finalFloat = floatAfter['floatCdfMinor'] as int;
+
+          final feeMinor = result['feeMinor'] as int;
+          expect(finalFloat, lessThan(initialFloat));
+          expect(initialFloat - finalFloat, equals(5000 + feeMinor));
+        });
+
+        test('throws on insufficient float', () {
+          // Drain float to near-zero
+          final agent = repo.getAgentInfo('agent-001');
+          agent['floatCdfMinor'] = 100; // FC 1.00
+
+          expect(
+            () => repo.payForCustomer(
+              customerId: 'cust_kasee',
+              kind: 'BILL',
+              amountMinor: 5000,
+              billerCode: 'SNEL_KINSHASA',
+              accountNumber: '12345678',
+            ),
+            throwsA(
+              predicate((e) => 
+                e.toString().contains('Insufficient float') &&
+                e.toString().contains('Need') &&
+                e.toString().contains('have')
+              ),
+            ),
+          );
+        });
+
+        test('writes AGENT_ASSISTED_BILL journal with metadata', () {
+          final result = repo.payForCustomer(
+            customerId: 'cust_kasee',
+            kind: 'BILL',
+            amountMinor: 5000,
+            billerCode: 'SNEL_KINSHASA',
+            accountNumber: '12345678',
+          );
+
+          final history = repo.getTodayHistory();
+          final journal = history.firstWhere(
+            (j) => j['id'] == result['journalId'],
+          );
+
+          expect(journal['type'], 'AGENT_ASSISTED_BILL');
+          expect(journal['agentId'], 'agent-001');
+          expect(journal['customerId'], 'cust_kasee');
+          expect(journal['currency'], 'CDF');
+          expect(journal['amountMinor'], 5000);
+          
+          final metadata = journal['metadata'] as Map<String, dynamic>;
+          expect(metadata['billerCode'], 'SNEL_KINSHASA');
+          expect(metadata['accountNumber'], '12345678');
+        });
+
+        test('does not mutate customer wallet', () {
+          final walletBefore = repo.getWallet(
+            customerId: 'cust_kasee',
+            currency: 'CDF',
+          );
+          final initialBalance = int.parse(walletBefore['availableMinor']?.toString() ?? '0');
+
+          repo.payForCustomer(
+            customerId: 'cust_kasee',
+            kind: 'BILL',
+            amountMinor: 5000,
+            billerCode: 'SNEL_KINSHASA',
+            accountNumber: '12345678',
+          );
+
+          final walletAfter = repo.getWallet(
+            customerId: 'cust_kasee',
+            currency: 'CDF',
+          );
+          final finalBalance = int.parse(walletAfter['availableMinor']?.toString() ?? '0');
+
+          expect(finalBalance, equals(initialBalance)); // Wallet unchanged
+        });
+
+        test('does not accrue commission', () {
+          final commissionsBefore = repo.listCommissionsToday();
+          final initialCount = commissionsBefore.length;
+
+          repo.payForCustomer(
+            customerId: 'cust_kasee',
+            kind: 'BILL',
+            amountMinor: 5000,
+            billerCode: 'SNEL_KINSHASA',
+            accountNumber: '12345678',
+          );
+
+          final commissionsAfter = repo.listCommissionsToday();
+          final finalCount = commissionsAfter.length;
+
+          expect(finalCount, equals(initialCount)); // No commission row
+        });
+
+        test('throws on customer not found', () {
+          expect(
+            () => repo.payForCustomer(
+              customerId: 'cust_nonexistent',
+              kind: 'BILL',
+              amountMinor: 5000,
+              billerCode: 'SNEL_KINSHASA',
+              accountNumber: '12345678',
+            ),
+            throwsA(
+              predicate((e) => e.toString().contains('Customer not found')),
+            ),
+          );
+        });
+      });
+
+      group('airtime purchase', () {
+        test('debits agent float and writes AGENT_ASSISTED_AIRTIME journal', () {
+          final floatBefore = repo.floatFor('agent-001');
+          final initialFloat = floatBefore['floatCdfMinor'] as int;
+
+          final result = repo.payForCustomer(
+            customerId: 'cust_kasee',
+            kind: 'AIRTIME',
+            amountMinor: 10000, // FC 100.00
+            phoneNumber: '+243812345678',
+          );
+
+          expect(result['status'], 'POSTED');
+          expect(result['kind'], 'AIRTIME');
+
+          final history = repo.getTodayHistory();
+          final journal = history.firstWhere(
+            (j) => j['id'] == result['journalId'],
+          );
+
+          expect(journal['type'], 'AGENT_ASSISTED_AIRTIME');
+          
+          final metadata = journal['metadata'] as Map<String, dynamic>;
+          expect(metadata['phoneNumber'], '+243812345678');
+
+          final floatAfter = repo.floatFor('agent-001');
+          final finalFloat = floatAfter['floatCdfMinor'] as int;
+          expect(finalFloat, lessThan(initialFloat));
+        });
+
+        test('throws on customer not found', () {
+          expect(
+            () => repo.payForCustomer(
+              customerId: 'cust_nonexistent',
+              kind: 'AIRTIME',
+              amountMinor: 10000,
+              phoneNumber: '+243812345678',
+            ),
+            throwsA(
+              predicate((e) => e.toString().contains('Customer not found')),
+            ),
+          );
+        });
+      });
+
+      group('fee math', () {
+        test('calculates 0.5% fee with min/max bounds for AGENT_ASSISTED_BILL', () {
+          // Small amount → min fee (25 minor = FC 0.25)
+          final feeSmall = repo.getFee(
+            paymentType: 'AGENT_ASSISTED_BILL',
+            currency: 'CDF',
+            amountMinor: 100, // FC 1.00
+          );
+          expect(feeSmall['feeMinor'], 25); // Min FC 0.25
+
+          // Medium amount → percentage
+          final feeMedium = repo.getFee(
+            paymentType: 'AGENT_ASSISTED_BILL',
+            currency: 'CDF',
+            amountMinor: 10000, // FC 100.00
+          );
+          expect(feeMedium['feeMinor'], 50); // 0.5% = FC 0.50
+
+          // Large amount → max fee (500000 minor = FC 5000)
+          final feeLarge = repo.getFee(
+            paymentType: 'AGENT_ASSISTED_BILL',
+            currency: 'CDF',
+            amountMinor: 500000000, // FC 5,000,000
+          );
+          expect(feeLarge['feeMinor'], 500000); // Max FC 5,000
+        });
+
+        test('calculates 0.5% fee for AGENT_ASSISTED_AIRTIME', () {
+          final feeResult = repo.getFee(
+            paymentType: 'AGENT_ASSISTED_AIRTIME',
+            currency: 'CDF',
+            amountMinor: 10000, // FC 100.00
+          );
+          expect(feeResult['feeMinor'], 50); // 0.5% = FC 0.50
+        });
+      });
+    });
   });
 }

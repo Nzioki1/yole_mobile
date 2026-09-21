@@ -838,4 +838,110 @@ class OfflineAgentRepository {
       'count': commissions.length,
     };
   }
+
+  // ---------------------------------------------------------------------------
+  // Agent assisted bill pay / airtime
+  // ---------------------------------------------------------------------------
+
+  /// Pay bill or buy airtime on behalf of customer using agent float.
+  /// Customer pays agent in cash off-app; agent fronts payment from CDF float.
+  /// Does NOT mutate customer wallet. Does NOT accrue commission.
+  Map<String, dynamic> payForCustomer({
+    required String customerId,
+    required String kind, // 'BILL' or 'AIRTIME'
+    required int amountMinor,
+    String? billerCode,
+    String? accountNumber,
+    String? phoneNumber,
+  }) {
+    final aid = _requireAgent();
+
+    // Validate customer exists
+    final customer = _findCustomer(customerId);
+    if (customer == null) {
+      throw Exception('Customer not found');
+    }
+
+    // Calculate fee
+    final paymentType = kind == 'BILL' 
+        ? 'AGENT_ASSISTED_BILL' 
+        : 'AGENT_ASSISTED_AIRTIME';
+    final feeResult = getFee(
+      paymentType: paymentType,
+      currency: 'CDF',
+      amountMinor: amountMinor,
+    );
+    final feeMinor = _int(feeResult['feeMinor']);
+    final totalDebit = amountMinor + feeMinor;
+
+    // Validate sufficient float
+    final agent = Map<String, dynamic>.from(getAgentInfo(aid));
+    final floatCdfMinor = _int(agent['floatCdfMinor']);
+    if (floatCdfMinor < totalDebit) {
+      final needAmount = totalDebit / 100;
+      final haveAmount = floatCdfMinor / 100;
+      throw Exception(
+        'Insufficient float. Need FC ${needAmount.toStringAsFixed(2)}, '
+        'have FC ${haveAmount.toStringAsFixed(2)}'
+      );
+    }
+
+    // Debit agent float
+    agent['floatCdfMinor'] = floatCdfMinor - totalDebit;
+    _saveAgent(agent);
+
+    // Write journal entry
+    final journalType = kind == 'BILL' 
+        ? 'AGENT_ASSISTED_BILL' 
+        : 'AGENT_ASSISTED_AIRTIME';
+    
+    final metadata = <String, dynamic>{
+      'customerId': customerId,
+      'customerName': '${customer['firstName']} ${customer['lastName']}',
+    };
+    
+    if (kind == 'BILL') {
+      metadata['billerCode'] = billerCode;
+      metadata['accountNumber'] = accountNumber;
+    } else {
+      metadata['phoneNumber'] = phoneNumber;
+    }
+    
+    final journalId = _nextId('jnl_assist${kind.toLowerCase()}');
+    final refId = _nextId('ref_assist${kind.toLowerCase()}');
+    final now = DateTime.now().toUtc().toIso8601String();
+    
+    final journal = {
+      'id': journalId,
+      'type': journalType,
+      'agentId': aid,
+      'customerId': customerId,
+      'currency': 'CDF',
+      'amountMinor': amountMinor,
+      'feeMinor': feeMinor,
+      'metadata': metadata,
+      'postedAt': now,
+      'refId': refId,
+    };
+    
+    _list('journals').add(journal);
+
+    // Do NOT mutate customer wallets (customer paid agent in cash off-app)
+    // Do NOT call _accrueCommission (commission on assisted pay out of scope)
+
+    return {
+      'status': 'POSTED',
+      'journalId': journalId,
+      'refId': refId,
+      'amountMinor': amountMinor,
+      'feeMinor': feeMinor,
+      'totalMinor': totalDebit,
+      'floatCdfMinorAfter': agent['floatCdfMinor'],
+      'postedAt': now,
+      'kind': kind,
+      'billerCode': billerCode,
+      'accountNumber': accountNumber,
+      'phoneNumber': phoneNumber,
+    };
+  }
 }

@@ -954,6 +954,28 @@ const String kUniverseJson = r'''
       "status": "ACTIVE"
     },
     {
+      "id": "feelim_agent_assist_bill_cdf",
+      "kind": "FEE",
+      "paymentType": "AGENT_ASSISTED_BILL",
+      "currency": "CDF",
+      "status": "ACTIVE",
+      "feePercent": 0.5,
+      "minFeeMinor": 25,
+      "maxFeeMinor": 500000,
+      "createdAt": "2026-09-21T00:00:00Z"
+    },
+    {
+      "id": "feelim_agent_assist_airtime_cdf",
+      "kind": "FEE",
+      "paymentType": "AGENT_ASSISTED_AIRTIME",
+      "currency": "CDF",
+      "status": "ACTIVE",
+      "feePercent": 0.5,
+      "minFeeMinor": 25,
+      "maxFeeMinor": 500000,
+      "createdAt": "2026-09-21T00:00:00Z"
+    },
+    {
       "id": "lim_cust_daily_usd",
       "kind": "LIMIT",
       "limitType": "CUSTOMER_DAILY",

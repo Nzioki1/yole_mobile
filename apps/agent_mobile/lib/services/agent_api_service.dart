@@ -255,4 +255,29 @@ class AgentApiService {
     }
     throw UnimplementedError('Online commission summary not yet implemented');
   }
+
+  /// Pay for customer (assisted bill pay or airtime purchase)
+  Future<Map<String, dynamic>> payForCustomer({
+    required String customerId,
+    required String kind,
+    required int amountMinor,
+    String? billerCode,
+    String? accountNumber,
+    String? phoneNumber,
+  }) async {
+    if (offlineDemo) {
+      if (_agentId == null) throw Exception('Not logged in');
+      _offline.setAgentId(_agentId!);
+      return _offline.payForCustomer(
+        customerId: customerId,
+        kind: kind,
+        amountMinor: amountMinor,
+        billerCode: billerCode,
+        accountNumber: accountNumber,
+        phoneNumber: phoneNumber,
+      );
+    }
+    // Future: POST /api/agent/assisted-pay
+    throw UnimplementedError('Live API for assisted pay not implemented');
+  }
 }

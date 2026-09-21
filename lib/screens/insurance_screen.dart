@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/core_api_service.dart';
 import '../constants/insurance_products.dart';
 import '../models/insurance_product.dart';
+import '../widgets/brand/poste_product_card.dart';
 
 class InsuranceScreen extends StatefulWidget {
   const InsuranceScreen({super.key});
@@ -86,10 +87,10 @@ class _ProductsTabState extends State<_ProductsTab> {
           itemBuilder: (context, index) {
             final product = kInsuranceProducts[index];
             final isActive = activeProductIds.contains(product.id);
-            return _ProductCard(
-              product: product,
-              isActive: isActive,
-              onTap: () async {
+            return PosteProductCard(
+              title: product.nameFr,
+              description: '${product.subtitleEn} • ${isActive ? 'Active' : 'Inactive'}',
+              onActivate: () async {
                 final result = await Navigator.pushNamed(
                   context,
                   '/insurance/activate',

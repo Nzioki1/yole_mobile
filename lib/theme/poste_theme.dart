@@ -24,7 +24,7 @@ ThemeData buildPosteTheme() {
       titleTextStyle: PosteDesignTokens.heading2,
     ),
     
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(

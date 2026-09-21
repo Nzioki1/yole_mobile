@@ -245,4 +245,14 @@ class AgentApiService {
       throw Exception('Cash-out failed: ${response.body}');
     }
   }
+
+  /// Get today's commission summary
+  Future<Map<String, dynamic>> getCommissionSummaryToday() async {
+    if (offlineDemo) {
+      if (_agentId == null) throw Exception('Not logged in');
+      _offline.setAgentId(_agentId!);
+      return _offline.commissionSummaryToday();
+    }
+    throw UnimplementedError('Online commission summary not yet implemented');
+  }
 }

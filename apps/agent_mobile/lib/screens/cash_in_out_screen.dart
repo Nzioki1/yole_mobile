@@ -225,7 +225,7 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                 MapEntry('Your Commission', '$currencySymbol${commission.toStringAsFixed(2)}'),
               MapEntry('Customer Balance', '$currencySymbol${customerBalanceAfter.toStringAsFixed(2)}'),
               MapEntry('Agent Float', '$currencySymbol${agentFloatAfter.toStringAsFixed(2)}'),
-              MapEntry('Journal', result['journalId']),
+              MapEntry('Journal', result['journalId']?.toString() ?? ''),
             ],
             onDone: () {
               Navigator.pop(context);

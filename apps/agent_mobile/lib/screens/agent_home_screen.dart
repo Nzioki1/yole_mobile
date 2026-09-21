@@ -249,7 +249,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                                           ),
                                         ),
                                         Text(
-                                          'FC ${((_commissionSummary!['cdfMinor'] as int) / 100).toStringAsFixed(2)}',
+                                          'FC ${((int.tryParse(_commissionSummary!['cdfMinor']?.toString() ?? '0') ?? 0) / 100).toStringAsFixed(2)}',
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -270,7 +270,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '\$${((_commissionSummary!['usdMinor'] as int) / 100).toStringAsFixed(2)}',
+                                          '\$${((int.tryParse(_commissionSummary!['usdMinor']?.toString() ?? '0') ?? 0) / 100).toStringAsFixed(2)}',
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -290,7 +290,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                                         ),
                                       ),
                                       Text(
-                                        '${_commissionSummary!['count']}',
+                                        '${_commissionSummary!['count']?.toString() ?? '0'}',
                                         style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.bold,

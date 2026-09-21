@@ -192,7 +192,7 @@ class _AssistedPayScreenState extends State<AssistedPayScreen> {
           MapEntry('Fee', 'FC ${fee.toStringAsFixed(2)}'),
           MapEntry('Total', 'FC ${totalDebit.toStringAsFixed(2)}'),
           MapEntry('Float Left', 'FC ${floatAfter.toStringAsFixed(2)}'),
-          MapEntry('Journal', result['journalId']),
+          MapEntry('Journal', result['journalId']?.toString() ?? ''),
         ];
         
         showDialog(

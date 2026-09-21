@@ -532,7 +532,7 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
                           if (type == 'ENROLL') {
                             amount = 'Enrolled';
                           } else {
-                            final amountMinor = item['amountMinor'] as int? ?? 0;
+                            final amountMinor = int.tryParse(item['amountMinor']?.toString() ?? '0') ?? 0;
                             final currency = item['currency'] as String? ?? 'CDF';
                             final symbol = currency == 'CDF' ? 'FC' : '\$';
                             final amountValue = amountMinor / 100;

@@ -94,6 +94,7 @@ class _AgentLoginScreenState extends State<AgentLoginScreen> {
                 'assets/brand/poste-finance-logo.png',
                 height: 56,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const SizedBox(height: 56),
               ),
               const SizedBox(height: 12),
               // Role chip — distinguishes from Customer app

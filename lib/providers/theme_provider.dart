@@ -24,7 +24,7 @@ class ThemeState {
 
 /// Theme notifier that handles persistence
 class ThemeNotifier extends StateNotifier<ThemeState> {
-  ThemeNotifier() : super(const ThemeState(isDarkMode: true)) {
+  ThemeNotifier() : super(const ThemeState(isDarkMode: false)) {
     _initializeTheme();
   }
 

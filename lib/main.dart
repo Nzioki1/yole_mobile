@@ -138,7 +138,7 @@ class _YoleAppState extends ConsumerState<YoleApp> {
       cardTheme: CardThemeData(
         color: const Color(0xFF11163A),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Color(0xFF2B2F58)),
         ),
       ),

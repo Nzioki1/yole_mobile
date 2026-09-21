@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/agent_login_screen.dart';
 import 'screens/agent_home_screen.dart';
+import 'screens/assisted_pay_screen.dart';
 
 /// Poste Finance teal — matches customer app primary.
 const Color kPosteTeal = Color(0xFF00ACAC);
@@ -44,6 +45,7 @@ class AgentApp extends StatelessWidget {
       home: const AgentLoginScreen(),
       routes: {
         '/home': (context) => const AgentHomeScreen(),
+        '/assisted-pay': (context) => const AssistedPayScreen(),
       },
     );
   }

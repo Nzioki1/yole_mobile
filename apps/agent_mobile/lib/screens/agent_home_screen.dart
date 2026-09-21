@@ -449,6 +449,16 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                       },
                     ),
                   ),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.receipt_long),
+                      title: const Text('Pay for customer'),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/assisted-pay');
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),

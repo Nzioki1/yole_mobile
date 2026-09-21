@@ -35,12 +35,20 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
     try {
       final journals = _repo.getTodayHistory();
       final enrollments = _repo.getTodayEnrollments();
+      final commissions = _repo.listCommissionsToday();
 
       final items = <Map<String, dynamic>>[];
 
       // Add cash operations
       for (final journal in journals) {
         final customer = _repo.findCustomerById(journal['customerId'] as String);
+        
+        // Find matching commission by txnId/refId
+        final commission = commissions.firstWhere(
+          (c) => c['txnId'] == journal['refId'],
+          orElse: () => <String, dynamic>{},
+        );
+
         items.add({
           'type': journal['type'],
           'timestamp': journal['postedAt'],
@@ -51,6 +59,7 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
           'balanceAfterMinor': journal['balanceAfterMinor'],
           'referenceId': journal['id'],
           'data': journal,
+          'commission': commission.isNotEmpty ? commission : null,
         });
       }
 
@@ -248,6 +257,12 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
     final fee = feeMinor / 100;
     final balanceAfter = balanceAfterMinor / 100;
 
+    // Get commission if available
+    final commission = item['commission'] as Map<String, dynamic>?;
+    final commissionMinor = commission?['commissionMinor'] as int? ?? 0;
+    final commissionBps = commission?['bps'] as int? ?? 0;
+    final commissionAmount = commissionMinor / 100;
+
     // Calculate agent float after (approximate from current float minus later transactions)
     final agentFloat = _repo.getFloatBalances();
     final pockets = agentFloat['pockets'] as List<dynamic>;
@@ -264,6 +279,11 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
       const Divider(),
       _buildDetailRow('Amount', '$symbol${amount.toStringAsFixed(2)}', bold: true),
       _buildDetailRow('Fee', '$symbol${fee.toStringAsFixed(2)}'),
+      if (commission != null) ...[
+        _buildDetailRow('Commission', '$symbol${commissionAmount.toStringAsFixed(2)}', bold: true),
+        _buildDetailRow('Commission Rate', '${(commissionBps / 100).toStringAsFixed(2)}%'),
+      ],
+      const Divider(),
       _buildDetailRow('Customer Balance After', '$symbol${balanceAfter.toStringAsFixed(2)}'),
       _buildDetailRow('Agent Float After', '$symbol${agentFloatAfter.toStringAsFixed(2)}'),
       const Divider(),
@@ -450,7 +470,16 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
                             final currency = item['currency'] as String? ?? 'USD';
                             final symbol = currency == 'CDF' ? 'FC' : '\$';
                             final amount = amountMinor / 100;
-                            subtitle = '$symbol${amount.toStringAsFixed(2)} • ${customer?['phoneE164'] ?? 'No phone'}';
+                            
+                            // Add commission if available
+                            final commission = item['commission'] as Map<String, dynamic>?;
+                            if (commission != null) {
+                              final commissionMinor = commission['commissionMinor'] as int? ?? 0;
+                              final commissionAmount = commissionMinor / 100;
+                              subtitle = '$symbol${amount.toStringAsFixed(2)} • Commission: $symbol${commissionAmount.toStringAsFixed(2)}';
+                            } else {
+                              subtitle = '$symbol${amount.toStringAsFixed(2)} • ${customer?['phoneE164'] ?? 'No phone'}';
+                            }
                           }
 
                           return Card(

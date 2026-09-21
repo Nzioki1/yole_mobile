@@ -17,6 +17,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   Map<String, dynamic>? _agentInfo;
   List<dynamic> _pockets = [];
   String? _currentAgentId;
+  Map<String, dynamic>? _commissionSummary;
 
   @override
   void initState() {
@@ -44,11 +45,20 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
           debugPrint('Failed to load agent info: $e');
         }
       }
+
+      // Load commission summary
+      Map<String, dynamic>? commissionSummary;
+      try {
+        commissionSummary = await _api.getCommissionSummaryToday();
+      } catch (e) {
+        debugPrint('Failed to load commission summary: $e');
+      }
       
       setState(() {
         _pockets = pockets;
         _agentInfo = agentInfo;
         _currentAgentId = agentId;
+        _commissionSummary = commissionSummary;
       });
     } catch (e) {
       if (mounted) {
@@ -67,6 +77,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
         setState(() {
           _pockets = [];
           _agentInfo = null;
+          _commissionSummary = null;
         });
       }
     } finally {
@@ -190,6 +201,147 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                         ),
                       );
                     }),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Today\'s Commissions',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_commissionSummary != null)
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AgentHistoryScreen(),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: Colors.teal.shade50,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.attach_money,
+                                    color: Colors.teal.shade700,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Commission Earned',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'CDF',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          'FC ${((_commissionSummary!['cdfMinor'] as int) / 100).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'USD',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        Text(
+                                          '\$${((_commissionSummary!['usdMinor'] as int) / 100).toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      const Text(
+                                        'Transactions',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${_commissionSummary!['count']}',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Tap to view history',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.teal.shade700,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward_ios,
+                                    size: 12,
+                                    color: Colors.teal.shade700,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                          'No commissions earned today yet',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 24),
                   const Text(
                     'Agent Status',

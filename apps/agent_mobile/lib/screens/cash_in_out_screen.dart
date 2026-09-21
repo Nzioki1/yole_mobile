@@ -245,6 +245,15 @@ class _CashInOutScreenState extends State<CashInOutScreen> {
                   else
                     _buildReceiptRow('Customer Debited', '$currencySymbol${(amount + fee).toStringAsFixed(2)}', highlight: true),
                   const Divider(),
+                  if (result['commissionMinor'] != null && int.parse(result['commissionMinor']?.toString() ?? '0') > 0)
+                    _buildReceiptRow(
+                      'Your Commission',
+                      '$currencySymbol${(int.parse(result['commissionMinor']?.toString() ?? '0') / 100).toStringAsFixed(2)}',
+                      bold: true,
+                      highlight: true,
+                    ),
+                  if (result['commissionMinor'] != null && int.parse(result['commissionMinor']?.toString() ?? '0') > 0)
+                    const Divider(),
                   _buildReceiptRow('Customer Balance After', '$currencySymbol${customerBalanceAfter.toStringAsFixed(2)}'),
                   _buildReceiptRow('Agent Float After', '$currencySymbol${agentFloatAfter.toStringAsFixed(2)}'),
                   const Divider(),

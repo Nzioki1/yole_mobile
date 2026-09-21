@@ -1,4 +1,4 @@
-package com.example.yole_mobile
+package com.mpf.yole
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

@@ -3,6 +3,8 @@ import '../services/agent_api_service.dart';
 import 'enroll_customer_screen.dart';
 import 'cash_in_out_screen.dart';
 import 'agent_history_screen.dart';
+import '../widgets/agent_float_card.dart';
+import '../widgets/agent_action_tile.dart';
 
 class AgentHomeScreen extends StatefulWidget {
   const AgentHomeScreen({super.key});
@@ -85,6 +87,26 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
     }
   }
 
+  String _getCdfFloat() {
+    final cdfPocket = _pockets.firstWhere(
+      (p) => p['currency'] == 'CDF',
+      orElse: () => {'availableMinor': 0},
+    );
+    final availableMinor = int.tryParse(cdfPocket['availableMinor']?.toString() ?? '0') ?? 0;
+    final available = availableMinor / 100;
+    return 'FC ${available.toStringAsFixed(2)}';
+  }
+
+  String _getUsdFloat() {
+    final usdPocket = _pockets.firstWhere(
+      (p) => p['currency'] == 'USD',
+      orElse: () => {'availableMinor': 0},
+    );
+    final availableMinor = int.tryParse(usdPocket['availableMinor']?.toString() ?? '0') ?? 0;
+    final available = availableMinor / 100;
+    return '\$ ${available.toStringAsFixed(2)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,11 +178,6 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text(
-                    'Float Balance',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
                   if (_pockets.isEmpty)
                     const Card(
                       child: Padding(
@@ -172,35 +189,10 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                       ),
                     )
                   else
-                    ..._pockets.map((pocket) {
-                      final availableMinor = int.tryParse(pocket['availableMinor']?.toString() ?? '0') ?? 0;
-                      final ledgerMinor = int.tryParse(pocket['ledgerMinor']?.toString() ?? '0') ?? 0;
-                      final currency = pocket['currency'] as String? ?? 'USD';
-                      final available = availableMinor / 100;
-                      final ledger = ledgerMinor / 100;
-                      final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
-                      
-                      return Card(
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.account_balance_wallet,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          title: Text(
-                            currency,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text('Available: $currencySymbol${available.toStringAsFixed(2)}'),
-                          trailing: Text(
-                            '$currencySymbol${ledger.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
+                    AgentFloatCard(
+                      cdfFloat: _getCdfFloat(),
+                      usdFloat: _getUsdFloat(),
+                    ),
                   const SizedBox(height: 24),
                   const Text(
                     'Today\'s Commissions',
@@ -400,64 +392,64 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
                     ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Actions',
+                    'Quick Actions',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.person_add),
-                      title: const Text('Enroll Customer'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const EnrollCustomerScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                  AgentActionTile(
+                    icon: Icons.arrow_downward,
+                    label: 'Cash In',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CashInOutScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.arrow_downward, color: Colors.green),
-                      title: const Text('Cash In / Out'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CashInOutScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                  AgentActionTile(
+                    icon: Icons.arrow_upward,
+                    label: 'Cash Out',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CashInOutScreen(),
+                        ),
+                      );
+                    },
                   ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.history),
-                      title: const Text('History'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const AgentHistoryScreen(),
-                          ),
-                        );
-                      },
-                    ),
+                  AgentActionTile(
+                    icon: Icons.payment,
+                    label: 'Pay for customer',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/assisted-pay');
+                    },
                   ),
-                  Card(
-                    child: ListTile(
-                      leading: const Icon(Icons.receipt_long),
-                      title: const Text('Pay for customer'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.pushNamed(context, '/assisted-pay');
-                      },
-                    ),
+                  AgentActionTile(
+                    icon: Icons.person_add,
+                    label: 'Enroll',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EnrollCustomerScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  AgentActionTile(
+                    icon: Icons.history,
+                    label: 'History',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AgentHistoryScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -90,7 +90,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   String _getCdfFloat() {
     final cdfPocket = _pockets.firstWhere(
       (p) => p['currency'] == 'CDF',
-      orElse: () => {'availableMinor': 0},
+      orElse: () => <String, dynamic>{'availableMinor': 0},
     );
     final availableMinor = int.tryParse(cdfPocket['availableMinor']?.toString() ?? '0') ?? 0;
     final available = availableMinor / 100;
@@ -100,7 +100,7 @@ class _AgentHomeScreenState extends State<AgentHomeScreen> {
   String _getUsdFloat() {
     final usdPocket = _pockets.firstWhere(
       (p) => p['currency'] == 'USD',
-      orElse: () => {'availableMinor': 0},
+      orElse: () => <String, dynamic>{'availableMinor': 0},
     );
     final availableMinor = int.tryParse(usdPocket['availableMinor']?.toString() ?? '0') ?? 0;
     final available = availableMinor / 100;

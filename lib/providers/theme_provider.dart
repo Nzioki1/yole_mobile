@@ -32,8 +32,20 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
   // auto switching is disabled until app restart.
   bool autoSwitchEnabled = true;
 
+  bool get _isOfflineDemo {
+    return const String.fromEnvironment('OFFLINE_DEMO') == 'true';
+  }
+
   /// Initialize theme from storage
   Future<void> _initializeTheme() async {
+    if (_isOfflineDemo) {
+      state = state.copyWith(
+        isDarkMode: false,
+        isInitialized: true,
+      );
+      return;
+    }
+
     try {
       final savedTheme = await ThemeStorageService.loadThemeMode();
       state = state.copyWith(
@@ -51,6 +63,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 
   /// Toggle theme and save to storage
   Future<void> toggleTheme() async {
+    if (_isOfflineDemo) return;
     // Manual toggle disables auto switching until restart
     autoSwitchEnabled = false;
     final newTheme = !state.isDarkMode;
@@ -66,6 +79,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 
   /// Set specific theme mode
   Future<void> setThemeMode(bool isDarkMode) async {
+    if (_isOfflineDemo) return;
     // Update state immediately for fast UI response
     state = state.copyWith(isDarkMode: isDarkMode);
 
@@ -83,6 +97,7 @@ class ThemeNotifier extends StateNotifier<ThemeState> {
 
   /// Applies time-based theme if auto switching is enabled
   Future<void> applyTimeBasedThemeIfEnabled(DateTime now) async {
+    if (_isOfflineDemo) return;
     if (!autoSwitchEnabled) return;
     final shouldBeDark = computeIsDarkByTime(now);
     // Only update if different to avoid unnecessary writes

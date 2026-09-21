@@ -136,8 +136,8 @@ void main() {
       await tester.enterText(amountField, '100.00');
       await tester.pumpAndSettle();
 
-      // Should show insufficient float alert
-      expect(find.text('Insufficient float'), findsWidgets);
+      // Should show insufficient float alert (text appears in the error message)
+      expect(find.textContaining('Insufficient float'), findsOneWidget);
       expect(find.byIcon(Icons.warning), findsOneWidget);
     });
 

@@ -279,6 +279,10 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
     );
     final agentFloatAfter = int.parse(agentPocket['availableMinor']?.toString() ?? '0') / 100;
 
+    // For cash-in/out, compute customer balance after
+    final balanceAfterMinor = item['balanceAfterMinor'] as int? ?? 0;
+    final balanceAfter = balanceAfterMinor / 100;
+
     return [
       _buildDetailRow('Customer Name', '${customer['firstName']} ${customer['lastName']}'),
       _buildDetailRow('Phone', customer['phoneE164'] ?? 'N/A'),
@@ -299,11 +303,8 @@ class _AgentHistoryScreenState extends State<AgentHistoryScreen> {
         _buildDetailRow('Commission Rate', '${(commissionBps / 100).toStringAsFixed(2)}%'),
       ],
       const Divider(),
-      if (type == 'AGENT_CASH_IN' || type == 'AGENT_CASH_OUT') ...[
-        final balanceAfterMinor = item['balanceAfterMinor'] as int? ?? 0,
-        final balanceAfter = balanceAfterMinor / 100,
+      if (type == 'AGENT_CASH_IN' || type == 'AGENT_CASH_OUT')
         _buildDetailRow('Customer Balance After', '$symbol${balanceAfter.toStringAsFixed(2)}'),
-      ],
       _buildDetailRow('Agent Float After', '$symbol${agentFloatAfter.toStringAsFixed(2)}'),
       const Divider(),
       _buildDetailRow('Journal ID', item['referenceId'] ?? 'N/A', small: true),

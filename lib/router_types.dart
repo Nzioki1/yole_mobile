@@ -11,13 +11,28 @@ class RouteNames {
   static const String login = '/login';
   static const String register = '/register';
   static const String language = '/language';
+  static const String notifications = '/notifications';
   static const String home = '/home';
   static const String profile = '/profile';
   static const String kyc = '/kyc';
   static const String transactions = '/transactions';
+  static const String transactionDetail = '/transaction-detail';
+  static const String creditApply = '/credit-apply';
+  static const String creditDetail = '/credit-detail';
+  static const String cardIssue = '/card-issue';
+  static const String cardDetail = '/card-detail';
+  static const String remittance = '/remittance';
   static const String favorites = '/favorites';
   static const String emailVerification = '/email-verification';
   static const String forgotPassword = '/forgot-password';
+
+  // Poste Finance Product Routes
+  static const String savings = '/savings';
+  static const String savingsCreateGoal = '/savings/create-goal';
+  static const String savingsGoalDetail = '/savings/goal-detail';
+  static const String insurance = '/insurance';
+  static const String insuranceActivate = '/insurance/activate';
+  static const String budget = '/budget';
 
   // KYC Flow Routes
   static const String kycPhone = '/kyc-phone';

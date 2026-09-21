@@ -6,6 +6,8 @@ import '../widgets/gradient_button.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/kyc_provider.dart';
+import '../services/offline_demo_repository.dart';
+import '../services/core_api_service.dart';
 
 /// KYC Phone Screen - Phone number verification step
 /// Maintains pixel-perfect fidelity to the original Figma design
@@ -128,45 +130,177 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
     final phoneCode = selectedCountry['code'] ?? '';
     final phoneNumber = _phoneController.text.trim();
 
-    // Call API to send OTP
-    final success = await ref.read(otpSendProvider.notifier).sendOtp(
+    try {
+      // Fully offline mock send for offline demo
+      if (CoreApiService.offlineDemo) {
+        // Build E.164 phone number
+        final fullPhone = phoneCode + phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+        
+        // Call offline repository (or no-op - just for completeness)
+        OfflineDemoRepository.instance.requestOtp(phoneE164: fullPhone);
+        
+        // Simulate brief delay
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          setState(() => _isLoading = false);
+          
+          // Navigate to OTP screen with phone data
+          if (widget.onSendOTP != null) {
+            widget.onSendOTP!();
+          } else {
+            Navigator.pushNamed(
+              context,
+              RouteNames.kycOtp,
+              arguments: {
+                'phoneCode': phoneCode,
+                'phoneNumber': phoneNumber,
+              },
+            );
+          }
+        }
+      } else {
+        // Live mode uses otpSendProvider
+        final success = await ref.read(otpSendProvider.notifier).sendOtp(
           phoneCode: phoneCode,
           phone: phoneNumber,
         );
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
 
-      if (success) {
-        // OTP sent successfully, navigate to OTP screen
-        if (widget.onSendOTP != null) {
-          widget.onSendOTP!();
-        } else {
-          Navigator.pushNamed(
-            context,
-            RouteNames.kycOtp,
-            arguments: {
-              'phoneCode': phoneCode,
-              'phoneNumber': phoneNumber,
-            },
-          );
-        }
-      } else {
-        // Show error message
-        final error = ref.read(otpSendProvider).error;
-        if (mounted && error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error),
-              backgroundColor: Theme.of(context).colorScheme.error,
-              duration: const Duration(seconds: 4),
-            ),
-          );
+          if (success) {
+            // OTP sent successfully, navigate to OTP screen
+            if (widget.onSendOTP != null) {
+              widget.onSendOTP!();
+            } else {
+              Navigator.pushNamed(
+                context,
+                RouteNames.kycOtp,
+                arguments: {
+                  'phoneCode': phoneCode,
+                  'phoneNumber': phoneNumber,
+                },
+              );
+            }
+          } else {
+            // Show error message
+            final error = ref.read(otpSendProvider).error;
+            if (mounted && error != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+          }
         }
       }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
+  }
+
+  Future<String?> _showCountryPicker(BuildContext context, ThemeData theme, bool isDark) {
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF19173D) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Title
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Select Country',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const Divider(height: 1),
+              // Countries list
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _countryCodes.length,
+                  itemBuilder: (context, index) {
+                    final country = _countryCodes[index];
+                    final value = '${country['code']}-${country['country']}';
+                    final isSelected = _selectedCountryCode == value;
+                    
+                    return ListTile(
+                      leading: Text(
+                        country['flag']!,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      title: Text(
+                        country['name']!,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : theme.colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            country['code']!,
+                            style: TextStyle(
+                              color: isDark 
+                                  ? Colors.white.withOpacity(0.6)
+                                  : theme.colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                          if (isSelected)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Icon(Icons.check, color: theme.primaryColor),
+                            ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.pop(context, value);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -407,7 +541,7 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // Country Code Selector
+                                      // Country Selection - tap to open sheet
                                       Text(
                                         l10n.country,
                                         style: TextStyle(
@@ -419,96 +553,69 @@ class _KYCPhoneScreenState extends ConsumerState<KYCPhoneScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 8),
-                                      DropdownButtonFormField<String>(
-                                        initialValue:
-                                            _selectedCountryCode.isEmpty
-                                                ? null
-                                                : _selectedCountryCode,
-                                        decoration: InputDecoration(
-                                          hintText: l10n.selectYourCountry,
-                                          hintStyle: TextStyle(
+                                      InkWell(
+                                        onTap: () async {
+                                          final selected = await _showCountryPicker(context, theme, isDark);
+                                          if (selected != null) {
+                                            setState(() {
+                                              _selectedCountryCode = selected;
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                          decoration: BoxDecoration(
                                             color: isDark
-                                                ? Colors.white.withOpacity(0.5)
-                                                : theme.colorScheme.onSurface
-                                                    .withOpacity(0.5),
-                                          ),
-                                          filled: true,
-                                          fillColor: isDark
-                                              ? Colors.white.withOpacity(0.05)
-                                              : theme.inputDecorationTheme
-                                                  .fillColor,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
+                                                ? Colors.white.withOpacity(0.05)
+                                                : theme.colorScheme.outline.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
                                               color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.2)
+                                                  ? Colors.white.withOpacity(0.2)
                                                   : theme.colorScheme.outline,
                                             ),
                                           ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: isDark
-                                                  ? Colors.white
-                                                      .withOpacity(0.2)
-                                                  : theme.colorScheme.outline,
-                                            ),
-                                          ),
-                                        ),
-                                        dropdownColor: isDark
-                                            ? const Color(0xFF19173D)
-                                            : theme.colorScheme.surface,
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.white
-                                              : theme.colorScheme.onSurface,
-                                        ),
-                                        items: _countryCodes.map((country) {
-                                          return DropdownMenuItem<String>(
-                                            value:
-                                                '${country['code']}-${country['country']}',
-                                            child: Row(
-                                              children: [
-                                                Text(
-                                                  country['flag']!,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    country['name']!,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  country['code']!,
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                _selectedCountryData?['flag'] ?? '🌍',
+                                                style: const TextStyle(fontSize: 20),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  _selectedCountryData?['name'] ?? 'Select Country',
                                                   style: TextStyle(
+                                                    fontSize: 16,
                                                     color: isDark
                                                         ? Colors.white
-                                                            .withOpacity(0.6)
-                                                        : theme.colorScheme
-                                                            .onSurface
-                                                            .withOpacity(0.6),
+                                                        : theme.colorScheme.onSurface,
                                                   ),
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        }).toList(),
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _selectedCountryCode = value ?? '';
-                                          });
-                                        },
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                _selectedCountryData?['code'] ?? '',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: isDark
+                                                      ? Colors.white.withOpacity(0.6)
+                                                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Icon(
+                                                Icons.arrow_drop_down,
+                                                color: isDark
+                                                    ? Colors.white.withOpacity(0.6)
+                                                    : theme.colorScheme.onSurface.withOpacity(0.6),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
 
                                       const SizedBox(height: 16),

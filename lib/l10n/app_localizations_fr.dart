@@ -9,7 +9,7 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appTitle => 'YOLE';
+  String get appTitle => 'Poste Finance';
 
   @override
   String get sendMoneyDescription =>
@@ -146,7 +146,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logOut => 'Se Déconnecter';
 
   @override
-  String get joinYoleToday => 'Rejoignez Yole aujourd\'hui';
+  String get joinYoleToday => 'Rejoignez Poste Finance aujourd\'hui';
 
   @override
   String get completed => 'Terminé';
@@ -439,7 +439,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Accéder à votre compte en toute sécurité';
 
   @override
-  String get welcomeToYole => 'Bienvenue sur Yole! 🎉';
+  String get welcomeToYole => 'Bienvenue sur Poste Finance! 🎉';
 
   @override
   String get weSentVerificationLink =>
@@ -750,7 +750,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get britishPound => 'Livre sterling';
 
   @override
-  String get signInToYoleAccount => 'Connectez-vous à votre compte Yole';
+  String get signInToYoleAccount =>
+      'Connectez-vous à votre compte Poste Finance';
 
   @override
   String get passwordHint => 'Entrez votre mot de passe';

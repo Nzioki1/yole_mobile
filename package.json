@@ -1,0 +1,13 @@
+{
+  "name": "yole-platform",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter core-api dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

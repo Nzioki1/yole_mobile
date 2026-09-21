@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'YOLE'**
+  /// **'Poste Finance'**
   String get appTitle;
 
   /// Main description text on splash screen
@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// Create account screen title
   ///
   /// In en, this message translates to:
-  /// **'Join Yole today'**
+  /// **'Join Poste Finance today'**
   String get joinYoleToday;
 
   /// Transaction status - completed
@@ -923,7 +923,7 @@ abstract class AppLocalizations {
   /// Welcome message with celebration emoji
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Yole! 🎉'**
+  /// **'Welcome to Poste Finance! 🎉'**
   String get welcomeToYole;
 
   /// Verification link instruction
@@ -1490,10 +1490,10 @@ abstract class AppLocalizations {
   /// **'British Pound'**
   String get britishPound;
 
-  /// Login screen subtitle with Yole branding
+  /// Login screen subtitle with Poste Finance branding
   ///
   /// In en, this message translates to:
-  /// **'Sign in to your Yole account'**
+  /// **'Sign in to your Poste Finance account'**
   String get signInToYoleAccount;
 
   /// Password field hint/placeholder for login

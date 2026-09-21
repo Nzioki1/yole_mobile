@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/sparkles_core.dart';
 import '../providers/global_locale_provider.dart';
-import '../widgets/yole_logo.dart';
+import '../providers/biometric_provider.dart';
+import '../providers/auth_provider.dart';
 
 /// ======================= API (1:1 with your React props) =======================
 /// - variant: 'dark' | 'light'
@@ -13,11 +14,101 @@ import '../widgets/yole_logo.dart';
 enum SplashVariant { dark, light }
 
 /// Public wrapper expected by routers: `const SplashScreen()`
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  static const _logoAnimationDuration = Duration(milliseconds: 900);
+  bool _biometricAttempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Schedule biometric unlock attempt after frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _attemptBiometricUnlock();
+    });
+  }
+
+  Future<void> _attemptBiometricUnlock() async {
+    // Guard: only run once per mount
+    if (_biometricAttempted) return;
+    _biometricAttempted = true;
+
+    // Wait for logo animation to complete
+    await Future.delayed(_logoAnimationDuration);
+
+    if (!mounted) return;
+
+    final biometricService = ref.read(biometricAuthServiceProvider);
+
+    // Check if biometric is enabled and available
+    final enabled = await biometricService.isEnabled();
+    final available = await biometricService.canCheckBiometrics();
+
+    if (!enabled || !available) {
+      return; // Biometric not enabled or available, stay on splash
+    }
+
+    // Attempt biometric authentication
+    final authenticated = await biometricService.authenticate(
+      reason: 'Unlock Poste Finance',
+    );
+
+    if (!authenticated) {
+      // Authentication failed or cancelled
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric unlock failed. Please log in.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Load unlock payload
+    final payload = await biometricService.getUnlockPayload();
+    if (payload == null) {
+      // No payload stored (shouldn't happen)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Biometric unlock failed. Please log in.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Attempt login with stored credentials
+    final authNotifier = ref.read(authProvider.notifier);
+    final success = await authNotifier.login(payload.email, payload.password);
+
+    if (success && mounted) {
+      // Login successful, navigate to home
+      Navigator.pushReplacementNamed(context, '/home');
+    } else if (mounted) {
+      // On login failure, show error and stay on splash
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Biometric unlock failed. Please log in.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentLocale = ref.watch(currentLocaleProvider);
     final localeService = ref.watch(globalLocaleServiceProvider);
@@ -101,14 +192,22 @@ class SplashScreenFlutter extends ConsumerWidget {
                   // Top Section - Equal air space above logo (flex-1 min-h-[80px])
                   const Expanded(child: _MinHeightBox(minHeight: 80)),
 
-                  // Top Third - YOLE Logo/Title (motion.fade + slide)
+                  // Top Third - Poste Finance Logo/Title (motion.fade + slide)
                   _FadeSlideIn(
                     durationMs: 800,
                     beginOffset: const Offset(0, 30),
                     child: Center(
-                      child: YoleLogo(
-                        isDarkTheme: isDark,
-                        height: 80.0,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.65,
+                        ),
+                        child: Image.asset(
+                          isDark
+                              ? 'assets/brand/poste-finance-logo-light.png'
+                              : 'assets/brand/poste-finance-logo.png',
+                          height: 44,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
@@ -127,37 +226,6 @@ class SplashScreenFlutter extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Tagline
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                    maxWidth: 320), // max-w-xs
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (Widget child,
-                                      Animation<double> animation) {
-                                    return FadeTransition(
-                                        opacity: animation, child: child);
-                                  },
-                                  child: Text(
-                                    l10n.sendMoneyDescription,
-                                    key: ValueKey(l10n.sendMoneyDescription),
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.5,
-                                      letterSpacing: 0.2,
-                                      fontFamily:
-                                          'Inter', // Clean, readable sans-serif
-                                      color: isDark
-                                          ? Colors.white.withOpacity(
-                                              0.70) // text-white/70
-                                          : const Color(
-                                              0xFF475569), // text-slate-600
-                                    ),
-                                  ),
-                                ),
-                              ),
 
                               const SizedBox(
                                   height: 20 + 16), // space-y-5 + pt-4
@@ -320,11 +388,11 @@ class _MinHeightBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, c) => ConstrainedBox(
-        constraints:
-            BoxConstraints(minHeight: minHeight, maxHeight: c.maxHeight),
-      ),
+    // Only minHeight — never couple to parent maxHeight (can be 0 during
+    // warm-up / overlay rebuilds and creates non-normalized constraints).
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: const SizedBox.expand(),
     );
   }
 }

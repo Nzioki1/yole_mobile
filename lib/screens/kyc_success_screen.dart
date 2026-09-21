@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/yole_logo.dart';
 import '../router_types.dart';
 import '../l10n/app_localizations.dart';
 
@@ -185,9 +184,19 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                         position: _slideAnimation,
                         child: Padding(
                           padding: const EdgeInsets.only(top: 32),
-                          child: YoleLogo(
+                          child: Image.asset(
+                            isDark
+                                ? 'assets/brand/poste-finance-logo-light.png'
+                                : 'assets/brand/poste-finance-logo.png',
                             height: 64,
-                            isDarkTheme: isDark,
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Text(
+                              'Poste Finance',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -199,8 +208,10 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                         opacity: _fadeAnimation,
                         child: ScaleTransition(
                           scale: _scaleAnimation,
-                          child: Column(
+                          child: SingleChildScrollView(
+                            child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               // Success Icon with Animation
                               SizedBox(
@@ -409,6 +420,7 @@ class _KYCSuccessScreenState extends ConsumerState<KYCSuccessScreen>
                               ),
                             ],
                           ),
+                        ),
                         ),
                       ),
                     ),

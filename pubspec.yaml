@@ -1,8 +1,8 @@
 name: yole_mobile
-description: "YOLE Mobile Application"
+description: "Poste Finance Mobile Application"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+23
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -38,11 +38,22 @@ dependencies:
   # PesaPal API integration
   webview_flutter: ^4.4.4  # For PesaPal iframe
   http: ^1.1.2              # For API calls
+  demo_universe:
+    path: packages/demo_universe/dart
   crypto: ^3.0.3            # For authentication
   url_launcher: ^6.2.2      # For opening PesaPal in browser
   
   # Secure storage for tokens
   flutter_secure_storage: ^9.0.0
+  
+  # Biometric authentication
+  local_auth: ^2.3.0
+  
+  # UUID for idempotency keys
+  uuid: ^4.5.1
+  
+  # Time formatting for notifications
+  timeago: ^3.7.0
   
   # SVG rendering for pixel-perfect logos
   flutter_svg: ^2.0.9
@@ -58,6 +69,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  
+  assets:
+    - assets/brand/
 
 flutter_native_splash:
   color: "#FFFFFF"

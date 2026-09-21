@@ -42,9 +42,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     const bgBottom = Color(0xFF0A0E1A);
     const cardColor = Color(0xFF1C1F2D);
     const borderColor = Color(0xFF3B3F57);
-    const accentBlue = Color(0xFF4DA3FF);
-    const gradientStart = Color(0xFF3E8BFF);
-    const gradientEnd = Color(0xFF7B4DFF);
+    const accentBlue = Color(0xFF00ACAC);
+    const gradientStart = Color(0xFF00ACAC);
+    const gradientEnd = Color(0xFF008A8A);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -82,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   // Logo
                   Text(
-                    'YOLE',
+                    'Poste Finance',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 48,

@@ -82,7 +82,7 @@ class YoleLogoCustom extends StatelessWidget {
 
     return Center(
       child: Text(
-        'YOLE',
+        'Poste Finance',
         style: TextStyle(
           fontSize: height * 0.6, // Scale with height
           fontWeight: FontWeight.w700,
@@ -198,10 +198,10 @@ class YoleLogoPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..color = isDarkTheme ? Colors.white : Colors.black;
 
-    // Draw simple "YOLE" text as fallback
+    // Draw simple "Poste Finance" text as fallback
     final textPainter = TextPainter(
       text: const TextSpan(
-        text: 'YOLE',
+        text: 'Poste Finance',
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,

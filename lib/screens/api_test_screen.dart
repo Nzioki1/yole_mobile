@@ -8,7 +8,7 @@ class ApiTestScreen extends StatefulWidget {
 
 class _ApiTestScreenState extends State<ApiTestScreen> {
   final TextEditingController _emailController =
-      TextEditingController(text: 'test@yole.com');
+      TextEditingController(text: 'test@postefinance.com');
   final TextEditingController _passwordController =
       TextEditingController(text: 'Test');
   String _log = '';
@@ -119,7 +119,7 @@ class _ApiTestScreenState extends State<ApiTestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Yole Pesa API Tester'),
+        title: Text('Poste Finance API Tester'),
         backgroundColor: Colors.blue[800],
       ),
       body: Padding(

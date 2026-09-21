@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.yole_mobile">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissions MUST be inside <manifest> and BEFORE <application> -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,7 +12,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
     <application
-        android:label="yole_mobile"
+        android:label="Poste Finance"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <!-- Your activities/providers here; Flutter template example: -->

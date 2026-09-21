@@ -1,43 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/app_provider.dart';
-import '../providers/transaction_provider.dart';
-import '../models/transaction_model.dart';
-import '../widgets/status_chip.dart';
+import '../services/core_api_service.dart';
+import '../router_types.dart';
 import '../l10n/app_localizations.dart';
-
-StatusChipVariant mapStatus(TransactionStatus s) {
-  switch (s) {
-    case TransactionStatus.success:
-      return StatusChipVariant.success;
-    case TransactionStatus.processing:
-    case TransactionStatus.pending:
-      return StatusChipVariant.info;
-    case TransactionStatus.failed:
-      return StatusChipVariant.error;
-    case TransactionStatus.cancelled:
-      return StatusChipVariant.warning;
-    case TransactionStatus.delivered:
-      return StatusChipVariant.success;
-  }
-}
-
-String statusText(TransactionStatus s, AppLocalizations l10n) {
-  switch (s) {
-    case TransactionStatus.success:
-      return l10n.completed;
-    case TransactionStatus.processing:
-      return l10n.processing;
-    case TransactionStatus.pending:
-      return l10n.pending;
-    case TransactionStatus.failed:
-      return l10n.failed;
-    case TransactionStatus.cancelled:
-      return l10n.cancelled;
-    case TransactionStatus.delivered:
-      return l10n.delivered;
-  }
-}
+import '../widgets/brand/poste_txn_tile.dart';
 
 class TransactionsHistorySimple extends ConsumerStatefulWidget {
   const TransactionsHistorySimple({super.key});
@@ -49,402 +15,383 @@ class TransactionsHistorySimple extends ConsumerStatefulWidget {
 
 class _TransactionsHistorySimpleState
     extends ConsumerState<TransactionsHistorySimple> {
+  final _api = CoreApiService();
+  bool _loading = false;
+  List<dynamic> _payments = [];
+  String? _error;
+
   @override
   void initState() {
     super.initState();
-    _loadTransactions();
+    _api.init();
+    _loadPayments();
   }
 
-  Future<void> _loadTransactions() async {
-    await ref
-        .read(transactionsListProvider.notifier)
-        .loadTransactions(refresh: true);
-  }
-
-  TransactionStatus _mapApiStatusToTransactionStatus(String apiStatus) {
-    switch (apiStatus.toLowerCase()) {
-      case 'completed':
-      case 'success':
-        return TransactionStatus.success;
-      case 'pending':
-        return TransactionStatus.pending;
-      case 'processing':
-        return TransactionStatus.processing;
-      case 'failed':
-        return TransactionStatus.failed;
-      case 'cancelled':
-        return TransactionStatus.cancelled;
-      case 'delivered':
-        return TransactionStatus.delivered;
-      default:
-        return TransactionStatus.pending;
+  Future<void> _loadPayments() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final payments = await _api.listPayments();
+      setState(() => _payments = payments);
+    } catch (e) {
+      setState(() => _error = e.toString());
+      debugPrint('Error loading payments: $e');
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
-  Widget _buildLoadingState(ThemeData theme, AppState appState) {
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(ThemeData theme, AppState appState, String error) {
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading transactions',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loadTransactions,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTransactionsList(
-      ThemeData theme,
-      AppState appState,
-      AppLocalizations l10n,
-      List<TransactionModel> transactions,
-      TransactionsState transactionsState) {
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(theme, appState, l10n),
-            Expanded(
-              child: transactions.isEmpty
-                  ? _buildEmptyState(theme, appState, l10n)
-                  : _buildTransactionsListView(
-                      theme, appState, l10n, transactions, transactionsState),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTransactionsListView(
-      ThemeData theme,
-      AppState appState,
-      AppLocalizations l10n,
-      List<TransactionModel> transactions,
-      TransactionsState transactionsState) {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: transactions.length,
-      itemBuilder: (context, index) {
-        final transaction = transactions[index];
-        return _buildTransactionTile(theme, appState, l10n, transaction);
-      },
-    );
-  }
-
-  Widget _buildTransactionTile(ThemeData theme, AppState appState,
-      AppLocalizations l10n, TransactionModel transaction) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.brightness == Brightness.dark
-              ? const Color(0xFF2B2F58)
-              : const Color(0xFFE5E7EB),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          _buildAvatar(transaction.recipientName ?? 'Unknown'),
-          const SizedBox(width: 12),
-          // Transaction details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.recipientName ?? 'Unknown',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  transaction.recipientPhone,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(transaction.date),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Amount and status
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${transaction.currency == 'USD' ? '\$' : '€'}${transaction.amount.toStringAsFixed(2)}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              StatusChip(
-                text: _getStatusText(transaction.status),
-                variant: mapStatus(transaction.status),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'Just now';
+  String _getTimeFromPayment(Map<String, dynamic> payment) {
+    final createdAt = payment['createdAt'] as String?;
+    if (createdAt != null) {
+      try {
+        final dateTime = DateTime.parse(createdAt);
+        return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
     }
+    return '00:00';
   }
 
-  String _getStatusText(TransactionStatus status) {
-    switch (status) {
-      case TransactionStatus.success:
-      case TransactionStatus.delivered:
+  String _getStatusLabel(String status) {
+    switch (status.toUpperCase()) {
+      case 'POSTED':
         return 'Completed';
-      case TransactionStatus.pending:
-      case TransactionStatus.processing:
-        return 'Processing';
-      case TransactionStatus.failed:
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
         return 'Failed';
-      case TransactionStatus.cancelled:
-        return 'Cancelled';
+      default:
+        return status;
     }
   }
 
-  StatusChipVariant mapStatus(TransactionStatus status) {
-    switch (status) {
-      case TransactionStatus.success:
-      case TransactionStatus.delivered:
-        return StatusChipVariant.success;
-      case TransactionStatus.pending:
-      case TransactionStatus.processing:
-        return StatusChipVariant.warning;
-      case TransactionStatus.failed:
-        return StatusChipVariant.error;
-      case TransactionStatus.cancelled:
-        return StatusChipVariant.neutral;
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return Icons.swap_horiz;
+      case 'MNO_IN':
+      case 'MNO_OUT':
+        return Icons.phone_android;
+      case 'BANK_IN':
+      case 'BANK_OUT':
+        return Icons.account_balance;
+      case 'BILL_PAY':
+        return Icons.receipt;
+      case 'AIRTIME':
+        return Icons.phone;
+      default:
+        return Icons.payment;
     }
   }
 
-  Widget _buildAvatar(String name) {
-    final initials = name.isNotEmpty
-        ? name.split(' ').map((word) => word[0]).take(2).join().toUpperCase()
-        : '?';
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        color: Color(0xFF3B82F6),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          initials,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'W2W':
+        return 'Wallet Transfer';
+      case 'MNO_IN':
+        return 'Mobile Money Deposit';
+      case 'MNO_OUT':
+        return 'Mobile Money Withdrawal';
+      case 'BANK_IN':
+        return 'Bank Deposit';
+      case 'BANK_OUT':
+        return 'Bank Withdrawal';
+      case 'BILL_PAY':
+        return 'Bill Payment';
+      case 'AIRTIME':
+        return 'Airtime Purchase';
+      default:
+        return type;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final appState = ref.watch(appProvider);
-    final transactionsState = ref.watch(transactionsListProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    // Convert API transactions to UI model or use fallback
-    final List<TransactionModel> transactions;
-
-    if (transactionsState.isLoading && transactionsState.transactions.isEmpty) {
-      // Show loading state
-      return _buildLoadingState(theme, appState);
-    } else if (transactionsState.error != null &&
-        transactionsState.transactions.isEmpty) {
-      // Show error state with fallback data
-      return _buildErrorState(theme, appState, transactionsState.error!);
-    } else {
-      // Use API data or fallback to mock data
-      if (transactionsState.transactions.isNotEmpty) {
-        transactions = transactionsState.transactions.map((apiTransaction) {
-          return TransactionModel(
-            id: apiTransaction.id,
-            recipientName: apiTransaction.recipientName ?? 'Unknown',
-            counterpart: apiTransaction.recipientPhone,
-            amount: apiTransaction.amount,
-            currency: apiTransaction.currency,
-            status: _mapApiStatusToTransactionStatus(apiTransaction.status),
-            date: apiTransaction.createdAt,
-          );
-        }).toList();
-      } else {
-        // Fallback to mock data
-        transactions = _getMockTransactions();
-      }
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
-    return _buildTransactionsList(
-        theme, appState, l10n, transactions, transactionsState);
-  }
-
-  Widget _buildHeader(
-      ThemeData theme, AppState appState, AppLocalizations l10n) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: theme.colorScheme.onSurface,
-            ),
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading transactions',
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  _error!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _loadPayments,
+                child: const Text('Retry'),
+              ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              l10n.allTransactions,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.allTransactions,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
               ),
             ),
+            
+            // Transactions list
+            Expanded(
+              child: _payments.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: theme.colorScheme.onSurface.withOpacity(0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No transactions yet',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadPayments,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _payments.length,
+                        itemBuilder: (context, index) {
+                          final payment = _payments[index] as Map<String, dynamic>;
+                          final paymentId = payment['id'] as String?;
+                          final amountMinor = int.tryParse(payment['amountMinor']?.toString() ?? '0') ?? 0;
+                          final amount = amountMinor / 100;
+                          final currency = payment['currency'] as String? ?? 'USD';
+                          final status = payment['status'] as String? ?? 'PENDING';
+                          final type = payment['type'] as String? ?? 'UNKNOWN';
+                          final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
+                          
+                          return PosteTxnTile(
+                            time: _getTimeFromPayment(payment),
+                            title: _getTypeLabel(type),
+                            amount: '-$currencySymbol${amount.toStringAsFixed(2)}',
+                            subtitle: _getStatusLabel(status),
+                            icon: _getIconForType(type),
+                            onTap: paymentId != null
+                                ? () => Navigator.of(context).pushNamed(
+                                      RouteNames.transactionDetail,
+                                      arguments: {'paymentId': paymentId},
+                                    )
+                                : null,
+                          );
+                        },
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentTile extends StatelessWidget {
+  const _PaymentTile({required this.payment});
+  final Map<String, dynamic> payment;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final paymentId = payment['id'] as String?;
+    final amountMinor = int.tryParse(payment['amountMinor']?.toString() ?? '0') ?? 0;
+    final amount = amountMinor / 100;
+    final currency = payment['currency'] as String? ?? 'USD';
+    final status = payment['status'] as String? ?? 'PENDING';
+    final type = payment['type'] as String? ?? 'UNKNOWN';
+    
+    final currencySymbol = currency == 'CDF' ? 'FC' : '\$';
+    final statusColor = _getStatusColor(status);
+    final statusLabel = _getStatusLabel(status);
+
+    return InkWell(
+      onTap: paymentId != null
+          ? () => Navigator.of(context).pushNamed(
+                RouteNames.transactionDetail,
+                arguments: {'paymentId': paymentId},
+              )
+          : null,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: theme.dividerColor,
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 44,
+              width: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: statusColor.withOpacity(0.1),
+              ),
+              child: Icon(
+                _getIconForType(type),
+                color: statusColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _getTypeLabel(type),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    statusLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: statusColor,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '$currencySymbol${amount.toStringAsFixed(2)}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEmptyState(
-      ThemeData theme, AppState appState, AppLocalizations l10n) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 80,
-            color: theme.colorScheme.onSurface.withOpacity(0.4),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No transactions yet',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Your transaction history will appear here',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
-            ),
-          ),
-        ],
-      ),
-    );
+  Color _getStatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'POSTED':
+        return Colors.green;
+      case 'PENDING':
+      case 'CONFIRMED':
+        return Colors.orange;
+      case 'FAILED':
+        return Colors.red;
+      default:
+        return Colors.blue;
+    }
   }
 
-  List<TransactionModel> _getMockTransactions() {
-    return [
-      TransactionModel(
-        id: 'tx_001',
-        recipientName: 'Marie Koffi',
-        counterpart: '+243123456789',
-        amount: 100.0,
-        currency: 'USD',
-        status: TransactionStatus.delivered,
-        date: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      TransactionModel(
-        id: 'tx_002',
-        recipientName: 'Jean Mukendi',
-        counterpart: '+243987654321',
-        amount: 75.0,
-        currency: 'EUR',
-        status: TransactionStatus.processing,
-        date: DateTime.now().subtract(const Duration(hours: 8)),
-      ),
-      TransactionModel(
-        id: 'tx_003',
-        recipientName: 'Grace Mbuyi',
-        counterpart: '+243456789123',
-        amount: 200.0,
-        currency: 'USD',
-        status: TransactionStatus.delivered,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      TransactionModel(
-        id: 'tx_004',
-        recipientName: 'Pierre Kasongo',
-        counterpart: '+243789123456',
-        amount: 50.0,
-        currency: 'EUR',
-        status: TransactionStatus.failed,
-        date: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-    ];
+  String _getStatusLabel(String status) {
+    switch (status.toUpperCase()) {
+      case 'POSTED':
+        return 'Completed';
+      case 'CONFIRMED':
+        return 'Confirmed';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
+        return 'Failed';
+      default:
+        return status;
+    }
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'W2W':
+        return Icons.swap_horiz;
+      case 'MNO_IN':
+      case 'MNO_OUT':
+        return Icons.phone_android;
+      case 'BANK_IN':
+      case 'BANK_OUT':
+        return Icons.account_balance;
+      case 'BILL_PAY':
+        return Icons.receipt;
+      case 'AIRTIME':
+        return Icons.phone;
+      default:
+        return Icons.payment;
+    }
+  }
+
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'W2W':
+        return 'Wallet Transfer';
+      case 'MNO_IN':
+        return 'Mobile Money Deposit';
+      case 'MNO_OUT':
+        return 'Mobile Money Withdrawal';
+      case 'BANK_IN':
+        return 'Bank Deposit';
+      case 'BANK_OUT':
+        return 'Bank Withdrawal';
+      case 'BILL_PAY':
+        return 'Bill Payment';
+      case 'AIRTIME':
+        return 'Airtime Purchase';
+      default:
+        return type;
+    }
   }
 }

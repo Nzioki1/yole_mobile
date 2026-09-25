@@ -1,0 +1,37 @@
+=== COMMITS (AML plan implementation) ===
+e2c4bf7 docs: append fix note to Task 5 SDD report
+ac18308 fix(admin): gate Users create form with isAdmin
+a343ef5 docs: add SDD report for Task 5 Users page RBAC
+153366b feat(admin): allow all staff roles to view Users list
+014de2c docs: Task 4 implementation report
+220728e feat(admin): customers directory with Customer 360 deep link
+c9ab757 feat(admin): add AML ban list page implementation
+77eeb35 feat(admin): AML ban list page with add and lift
+81086da docs: note SUPPORT trim in Task 2 report
+bd30078 fix(admin): do not expand SUPPORT beyond users/aml/customers
+8e46502 docs: add Task 2 implementation report
+186be3e feat(admin): RBAC and nav for AML ban list and customers directory
+dec855d docs: add Task 1 implementation report
+8ebdf5d feat(demo): seed AML ban list + store list/add/lift and listCustomers
+
+=== STAT ===
+ apps/admin_web/app/dashboard/aml-ban-list/page.tsx | 205 +++++++++++++++++++
+ apps/admin_web/app/dashboard/customers/page.tsx    |  94 +++++++++
+ apps/admin_web/app/dashboard/layout.tsx            |   2 +
+ apps/admin_web/app/dashboard/users/page.tsx        |  54 +++--
+ apps/admin_web/components/sidebar/Sidebar.tsx      |   2 +
+ apps/admin_web/lib/api.ts                          |  20 ++
+ apps/admin_web/lib/offline/store.aml-ban.test.ts   |  55 ++++++
+ apps/admin_web/lib/offline/store.ts                |  45 +++++
+ apps/admin_web/lib/rbac.ts                         |  17 +-
+ docs/demo/DEM-SCRIPT.md                            |   4 +-
+ .../sdd-reports/2026-09-18-aml-task-1-report.md    | 217 +++++++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-2-report.md    | 148 ++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-3-report.md    | 175 +++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-4-report.md    | 205 +++++++++++++++++++
+ .../sdd-reports/2026-09-18-aml-task-5-report.md    | 154 +++++++++++++++
+ packages/demo_universe/dart/assets/universe.json   |  51 +++++
+ packages/demo_universe/dart/lib/universe_json.dart |  60 +++++-
+ packages/demo_universe/data/universe.json          |  51 +++++
+ packages/demo_universe/ts/types.ts                 |  13 ++
+ 19 files changed, 1547 insertions(+), 25 deletions(-)

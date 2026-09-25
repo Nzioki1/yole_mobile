@@ -1,0 +1,190 @@
+=== COMMITS ===
+127d891 docs: add Task 2 SDD report
+a848788 feat(admin): project payroll employees and salary history for offline store
+
+=== STAT ===
+ apps/admin_web/lib/api.ts                          |  5 ++
+ .../lib/offline/store.jean-paul-enrichment.test.ts | 39 ++++++++++
+ apps/admin_web/lib/offline/store.ts                | 60 +++++++++++++---
+ .../sdd-reports/2026-09-18-jp-task-2-report.md     | 84 ++++++++++++++++++++++
+ package-lock.json                                  | 31 ++++++++
+ 5 files changed, 211 insertions(+), 8 deletions(-)
+
+=== DIFF ===
+diff --git a/apps/admin_web/lib/api.ts b/apps/admin_web/lib/api.ts
+index 514ee63..063ed8b 100644
+--- a/apps/admin_web/lib/api.ts
++++ b/apps/admin_web/lib/api.ts
+@@ -317,16 +317,21 @@ export class AdminApiClient {
+         message: 'Demo salary credit posted',
+       };
+     }
+     return this.request(`/v1/admin/payroll/employers/${employerId}/salary/credit`, {
+       method: 'POST',
+     });
+   }
+ 
++  async listSalaryHistory(employerId: string) {
++    if (OFFLINE_DEMO) return this.store().listSalaryHistory(employerId);
++    throw new Error('listSalaryHistory is only available in offline demo');
++  }
++
+   async getDailySummary(date: string) {
+     if (OFFLINE_DEMO) return this.store().getDailySummary(date);
+     if (this.preferSeed()) return getDemoRecon(date);
+     try {
+       return await this.request(`/v1/admin/recon/daily?date=${date}`);
+     } catch {
+       return getDemoRecon(date);
+     }
+diff --git a/apps/admin_web/lib/offline/store.jean-paul-enrichment.test.ts b/apps/admin_web/lib/offline/store.jean-paul-enrichment.test.ts
+index 161ea42..3d6f074 100644
+--- a/apps/admin_web/lib/offline/store.jean-paul-enrichment.test.ts
++++ b/apps/admin_web/lib/offline/store.jean-paul-enrichment.test.ts
+@@ -20,9 +20,48 @@ describe('Jean-Paul demo enrichment seed', () => {
+   });
+ 
+   test('at least 4 pending credit exceptions including Jean-Paul', () => {
+     const store = OfflineDemoStore.createFresh();
+     const list = store.listCreditExceptions();
+     expect(list.length).toBeGreaterThanOrEqual(4);
+     expect(list.some((l) => l.customerId === 'cust_kasee' && l.status === 'PENDING_EXCEPTION')).toBe(true);
+   });
++
++  test('listEmployers projects employees with displayName and import aliases', () => {
++    const store = OfflineDemoStore.createFresh();
++    const employers = store.listEmployers();
++    const poste = employers.find((e) => e.id === 'emp_poste');
++    expect(poste).toBeTruthy();
++    expect(poste!.employees.length).toBeGreaterThanOrEqual(6);
++    
++    const amina = poste!.employees.find((e) => e.customerId === 'cust_amina');
++    expect(amina).toBeTruthy();
++    expect(amina!.displayName).toBe('Amina Payroll');
++    expect(amina!.employeeId).toBe('emp_row_amina');
++    expect(amina!.employeeNumber).toBe('PD-10042');
++    expect(amina!.jobTitle).toBe('Operations Analyst');
++    expect(amina!.grossSalaryCdfMinor).toBe(85000000);
++    expect(amina!.netSalaryCdfMinor).toBe(72000000);
++    expect(amina!.eligibleAdvanceMaxCdfMinor).toBe(36000000);
++    expect(amina!.status).toBe('ACTIVE');
++    expect(amina!.salaryMinor).toBe('72000000');
++    expect(amina!.currency).toBe('CDF');
++
++    const noCustomer = poste!.employees.find((e) => e.employeeNumber === 'PD-10043');
++    expect(noCustomer).toBeTruthy();
++    expect(noCustomer!.displayName).toBe('Teller Supervisor');
++  });
++
++  test('listSalaryHistory filters by employer and projects displayName', () => {
++    const store = OfflineDemoStore.createFresh();
++    const history = store.listSalaryHistory('emp_poste');
++    expect(history.length).toBeGreaterThanOrEqual(3);
++    
++    const aminaEntries = history.filter((h) => h.customerId === 'cust_amina');
++    expect(aminaEntries.length).toBeGreaterThan(0);
++    expect(aminaEntries[0].displayName).toBe('Amina Payroll');
++    expect(aminaEntries[0].employeeId).toBe('emp_row_amina');
++    expect(aminaEntries[0].period).toBeTruthy();
++    expect(aminaEntries[0].grossCdfMinor).toBe(85000000);
++    expect(aminaEntries[0].netCdfMinor).toBe(72000000);
++  });
+ });
+diff --git a/apps/admin_web/lib/offline/store.ts b/apps/admin_web/lib/offline/store.ts
+index 88866a9..e840b30 100644
+--- a/apps/admin_web/lib/offline/store.ts
++++ b/apps/admin_web/lib/offline/store.ts
+@@ -473,24 +473,40 @@ export class OfflineDemoStore {
+     if (!cardId) return this.u.cardAuths.slice();
+     return this.u.cardAuths.filter((a) => a.cardId === cardId);
+   }
+ 
+   listEmployers() {
+     return this.u.employers.map((e) => {
+       const employees = this.u.employees
+         .filter((emp) => emp.employerId === e.id)
+-        .map((emp) => ({
+-          customerId: emp.customerId,
+-          salaryMinor: strMinor(emp.netSalaryCdfMinor),
+-          currency: 'CDF',
+-          employeeNumber: emp.employeeNumber,
+-          jobTitle: emp.jobTitle,
+-          status: emp.status,
+-        }));
++        .map((emp) => {
++          let displayName = emp.employeeNumber;
++          if (emp.customerId) {
++            const customer = this.u.customers.find((c) => c.id === emp.customerId);
++            if (customer) {
++              displayName = `${customer.firstName} ${customer.lastName}`;
++            }
++          } else if (emp.jobTitle) {
++            displayName = emp.jobTitle;
++          }
++          return {
++            employeeId: emp.id,
++            customerId: emp.customerId,
++            employeeNumber: emp.employeeNumber,
++            displayName,
++            jobTitle: emp.jobTitle,
++            grossSalaryCdfMinor: emp.grossSalaryCdfMinor,
++            netSalaryCdfMinor: emp.netSalaryCdfMinor,
++            eligibleAdvanceMaxCdfMinor: emp.eligibleAdvanceMaxCdfMinor,
++            status: emp.status,
++            salaryMinor: strMinor(emp.netSalaryCdfMinor),
++            currency: 'CDF',
++          };
++        });
+       return {
+         ...e,
+         employeeCount: e.employeeCount ?? employees.length,
+         employees,
+       };
+     });
+   }
+ 
+@@ -551,16 +567,44 @@ export class OfflineDemoStore {
+       employerId,
+       credited: true,
+       count: employees.length,
+       totalMinor: strMinor(total),
+       message: 'Offline demo salary credit posted',
+     };
+   }
+ 
++  listSalaryHistory(employerId: string) {
++    const employeeIds = this.u.employees
++      .filter((e) => e.employerId === employerId)
++      .map((e) => e.id);
++    return this.u.salaryHistory
++      .filter((s) => employeeIds.includes(s.employeeId))
++      .map((s) => {
++        const employee = this.u.employees.find((e) => e.id === s.employeeId);
++        let displayName = s.employeeId;
++        if (employee) {
++          if (employee.customerId) {
++            const customer = this.u.customers.find((c) => c.id === employee.customerId);
++            if (customer) {
++              displayName = `${customer.firstName} ${customer.lastName}`;
++            }
++          } else if (employee.jobTitle) {
++            displayName = employee.jobTitle;
++          } else {
++            displayName = employee.employeeNumber;
++          }
++        }
++        return {
++          ...s,
++          displayName,
++        };
++      });
++  }
++
+   getDailySummary(date: string) {
+     const day: ReconDay | undefined =
+       this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];
+     const payments = this.u.payments;
+     const totalVolume = payments.reduce((s, p) => s + Number(p.amountMinor), 0);
+     const eod = day?.eodSnapshot || {};
+     return {
+       date: day?.businessDate || date,

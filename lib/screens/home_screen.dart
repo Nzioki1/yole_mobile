@@ -22,6 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<dynamic> _wallets = [];
   List<dynamic> _recentPayments = [];
   bool _balanceVisible = true;
+  bool? _isKycApproved;
 
   @override
   void initState() {
@@ -29,6 +30,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _api.init();
     _loadWallets();
     _loadRecentPayments();
+    _checkKycStatus();
+  }
+
+  Future<void> _checkKycStatus() async {
+    try {
+      final approved = await _api.isKycApproved();
+      setState(() => _isKycApproved = approved);
+    } catch (e) {
+      debugPrint('Error checking KYC status: $e');
+    }
   }
 
   Future<void> _loadWallets() async {

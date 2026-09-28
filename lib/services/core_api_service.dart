@@ -926,6 +926,35 @@ class CoreApiService {
     }
   }
 
+  /// Withdraw from savings goal
+  Future<Map<String, dynamic>> withdrawFromGoal({
+    required String goalId,
+    required String amountMinor,
+    required String pin,
+  }) async {
+    if (offlineDemo) {
+      return _offline.withdrawFromGoal(
+        goalId: goalId,
+        amountMinor: amountMinor,
+        pin: pin,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/savings/goals/$goalId/withdraw'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+        'pin': pin,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Withdraw from goal failed: ${response.body}');
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Insurance (offline demo only this sprint)
   // ---------------------------------------------------------------------------

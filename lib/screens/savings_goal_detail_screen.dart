@@ -200,6 +200,150 @@ class _SavingsGoalDetailScreenState extends State<SavingsGoalDetailScreen> {
     }
   }
 
+  Future<void> _showWithdrawDialog() async {
+    if (_goal == null) return;
+
+    final depositedMinor = int.tryParse(_goal!['depositedMinor']?.toString() ?? '0') ?? 0;
+    final deposited = depositedMinor / 100;
+
+    final amountController = TextEditingController(
+      text: deposited.toStringAsFixed(2),
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 24,
+          right: 24,
+          top: 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Withdraw Money',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter amount to withdraw from ${_goal!['name']}',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: amountController,
+              decoration: InputDecoration(
+                labelText: 'Amount',
+                hintText: '0.00',
+                prefixIcon: const Icon(Icons.money),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                helperText: 'Available: ${deposited.toStringAsFixed(2)} ${_goal!['currency']}',
+              ),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
+              autofocus: true,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                final amount = double.tryParse(amountController.text);
+                if (amount == null || amount <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid amount')),
+                  );
+                  return;
+                }
+                Navigator.of(context).pop();
+                _confirmWithdraw(amount);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text('Continue'),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmWithdraw(double amount) async {
+    final pin = await PinConfirmSheet.show(
+      context,
+      title: 'Confirm Withdrawal',
+      message: 'Enter your PIN to withdraw from your savings goal',
+    );
+
+    if (pin == null || !mounted) return;
+
+    setState(() => _loading = true);
+
+    try {
+      final amountMinor = (amount * 100).toInt();
+      await _api.withdrawFromGoal(
+        goalId: widget.goalId,
+        amountMinor: amountMinor.toString(),
+        pin: pin,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully withdrew ${amount.toStringAsFixed(2)}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await _loadGoal();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Withdrawal failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -401,23 +545,44 @@ class _SavingsGoalDetailScreenState extends State<SavingsGoalDetailScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: isComplete ? null : _showAddMoneyDialog,
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text(
-                        'Add Money',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isComplete ? null : _showAddMoneyDialog,
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: const Text(
+                            'Add Money',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00ACAC),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            disabledBackgroundColor: Colors.grey[300],
+                            disabledForegroundColor: Colors.grey[600],
+                          ),
+                        ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00ACAC),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        disabledBackgroundColor: Colors.grey[300],
-                        disabledForegroundColor: Colors.grey[600],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: depositedMinor > 0 ? _showWithdrawDialog : null,
+                          icon: const Icon(Icons.remove_circle_outline),
+                          label: const Text(
+                            'Withdraw',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange[600],
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            disabledBackgroundColor: Colors.grey[300],
+                            disabledForegroundColor: Colors.grey[600],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                   if (isComplete) ...[
                     const SizedBox(height: 12),

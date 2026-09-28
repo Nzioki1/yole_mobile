@@ -1354,5 +1354,21 @@
       "autoDepositMinor": 0,
       "createdAt": "2026-09-10T08:00:00Z"
     }
+  ],
+  "termDeposits": [
+    {
+      "id": "td_kasee_001",
+      "customerId": "cust_kasee",
+      "principalMinor": 50000000,
+      "currency": "CDF",
+      "tenorMonths": 6,
+      "annualRate": 0.08,
+      "interestEarnedMinor": 0,
+      "maturityAmountMinor": 52000000,
+      "maturityDate": "2027-03-28T10:00:00Z",
+      "renewalChoice": "MANUAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-09-28T10:00:00Z"
+    }
   ]
 }

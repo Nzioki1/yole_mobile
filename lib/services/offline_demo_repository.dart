@@ -1404,6 +1404,287 @@ class OfflineDemoRepository {
     return _savingsGoalDto(goals[goalIdx]);
   }
 
+  Map<String, dynamic> withdrawFromGoal({
+    required String goalId,
+    required String amountMinor,
+    required String pin,
+  }) {
+    final cid = _requireCustomer();
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    if (!verifyPin(pin: pin)) {
+      throw Exception('Invalid PIN');
+    }
+
+    final goals = _list('savingsGoals');
+    final goalIdx = goals.indexWhere((g) => g['id'] == goalId);
+    if (goalIdx < 0) {
+      throw Exception('Savings goal not found: $goalId');
+    }
+    
+    final goal = goals[goalIdx];
+    if (goal['customerId'] != cid) {
+      throw Exception('Unauthorized: goal belongs to another customer');
+    }
+
+    final amount = _int(amountMinor);
+    final currency = goal['currency'] as String;
+    final currentDeposited = _int(goal['depositedMinor']);
+    
+    if (amount > currentDeposited) {
+      throw Exception('Insufficient balance in goal');
+    }
+
+    final wallets = _list('wallets');
+    final walletIdx = wallets.indexWhere(
+      (w) => w['customerId'] == cid && w['currency'] == currency,
+    );
+    
+    if (walletIdx < 0) {
+      throw Exception('No $currency wallet found');
+    }
+    
+    final wallet = wallets[walletIdx];
+    final availableMinor = _int(wallet['availableMinor']);
+    final newAvailable = availableMinor + amount;
+    final newLedger = _int(wallet['ledgerMinor']) + amount;
+    
+    wallets[walletIdx] = {
+      ...wallet,
+      'availableMinor': newAvailable,
+      'ledgerMinor': newLedger,
+    };
+    _writeList('wallets', wallets);
+
+    final newDeposited = currentDeposited - amount;
+    goals[goalIdx] = {
+      ...goal,
+      'depositedMinor': newDeposited,
+    };
+    _writeList('savingsGoals', goals);
+
+    final journals = _list('journals');
+    journals.add({
+      'id': _nextId('jnl'),
+      'customerId': cid,
+      'walletId': wallet['id'],
+      'type': 'SAVINGS_WITHDRAWAL',
+      'direction': 'CREDIT',
+      'currency': currency,
+      'amountMinor': amount,
+      'balanceAfterMinor': newAvailable,
+      'refType': 'SAVINGS_GOAL',
+      'refId': goalId,
+      'narration': 'Withdrawal from ${goal['name']}',
+      'postedAt': now,
+    });
+    _writeList('journals', journals);
+
+    final notifications = _list('notifications');
+    notifications.add({
+      'id': _nextId('notif'),
+      'customerId': cid,
+      'type': 'SAVINGS_WITHDRAWAL',
+      'title': 'Savings Withdrawal',
+      'message': 'Withdrew ${_formatMinor(amount, currency)} from ${goal['name']}',
+      'read': false,
+      'createdAt': now,
+    });
+    _writeList('notifications', notifications);
+
+    return _savingsGoalDto(goals[goalIdx]);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Term Deposits (Poste Finance MVP1 Priority 5)
+  // ---------------------------------------------------------------------------
+
+  List<dynamic> listTermDeposits() {
+    final cid = _requireCustomer();
+    return _list('termDeposits')
+        .where((td) => td['customerId'] == cid)
+        .map((td) => {
+              ...td,
+              'principalMinor': _str(td['principalMinor']),
+              'interestEarnedMinor': _str(td['interestEarnedMinor'] ?? 0),
+              'maturityAmountMinor': _str(td['maturityAmountMinor']),
+            })
+        .toList();
+  }
+
+  Map<String, dynamic> createTermDeposit({
+    required String principalMinor,
+    required String currency,
+    required int tenorMonths,
+    required double annualRate,
+    required String renewalChoice,
+  }) {
+    final cid = _requireCustomer();
+    final now = DateTime.now().toUtc();
+    final principal = _int(principalMinor);
+    
+    final maturityDate = DateTime(now.year, now.month + tenorMonths, now.day);
+    final interestMinor = (principal * annualRate * tenorMonths / 12).round();
+    final maturityAmount = principal + interestMinor;
+
+    final wallets = _list('wallets');
+    final walletIdx = wallets.indexWhere(
+      (w) => w['customerId'] == cid && w['currency'] == currency,
+    );
+    
+    if (walletIdx < 0) {
+      throw Exception('No $currency wallet found');
+    }
+    
+    final wallet = wallets[walletIdx];
+    final availableMinor = _int(wallet['availableMinor']);
+    
+    if (availableMinor < principal) {
+      throw Exception('Insufficient balance');
+    }
+
+    final newAvailable = availableMinor - principal;
+    final newLedger = _int(wallet['ledgerMinor']) - principal;
+    
+    wallets[walletIdx] = {
+      ...wallet,
+      'availableMinor': newAvailable,
+      'ledgerMinor': newLedger,
+    };
+    _writeList('wallets', wallets);
+
+    final termDepositId = _nextId('td');
+    final termDeposit = <String, dynamic>{
+      'id': termDepositId,
+      'customerId': cid,
+      'principalMinor': principal,
+      'currency': currency,
+      'tenorMonths': tenorMonths,
+      'annualRate': annualRate,
+      'interestEarnedMinor': 0,
+      'maturityAmountMinor': maturityAmount,
+      'maturityDate': maturityDate.toIso8601String(),
+      'renewalChoice': renewalChoice,
+      'status': 'ACTIVE',
+      'createdAt': now.toIso8601String(),
+    };
+    
+    _writeList('termDeposits', _list('termDeposits')..add(termDeposit));
+
+    final journals = _list('journals');
+    journals.add({
+      'id': _nextId('jnl'),
+      'customerId': cid,
+      'walletId': wallet['id'],
+      'type': 'TERM_DEPOSIT_OPEN',
+      'direction': 'DEBIT',
+      'currency': currency,
+      'amountMinor': principal,
+      'balanceAfterMinor': newAvailable,
+      'refType': 'TERM_DEPOSIT',
+      'refId': termDepositId,
+      'narration': 'Term deposit opened',
+      'postedAt': now.toIso8601String(),
+    });
+    _writeList('journals', journals);
+
+    return {
+      ...termDeposit,
+      'principalMinor': _str(principal),
+      'interestEarnedMinor': '0',
+      'maturityAmountMinor': _str(maturityAmount),
+    };
+  }
+
+  Map<String, dynamic> closeTermDepositEarly({
+    required String termDepositId,
+    required String pin,
+  }) {
+    final cid = _requireCustomer();
+    final now = DateTime.now().toUtc();
+
+    if (!verifyPin(pin: pin)) {
+      throw Exception('Invalid PIN');
+    }
+
+    final termDeposits = _list('termDeposits');
+    final tdIdx = termDeposits.indexWhere((td) => td['id'] == termDepositId);
+    if (tdIdx < 0) {
+      throw Exception('Term deposit not found');
+    }
+    
+    final td = termDeposits[tdIdx];
+    if (td['customerId'] != cid) {
+      throw Exception('Unauthorized');
+    }
+
+    if (td['status'] != 'ACTIVE') {
+      throw Exception('Term deposit is not active');
+    }
+
+    final principal = _int(td['principalMinor']);
+    final currency = td['currency'] as String;
+    final maturityDate = DateTime.parse(td['maturityDate'] as String);
+    final penaltyRate = 0.02;
+    final penalty = (principal * penaltyRate).round();
+    final amountToReturn = principal - penalty;
+
+    final wallets = _list('wallets');
+    final walletIdx = wallets.indexWhere(
+      (w) => w['customerId'] == cid && w['currency'] == currency,
+    );
+    
+    if (walletIdx < 0) {
+      throw Exception('Wallet not found');
+    }
+    
+    final wallet = wallets[walletIdx];
+    final availableMinor = _int(wallet['availableMinor']);
+    final newAvailable = availableMinor + amountToReturn;
+    final newLedger = _int(wallet['ledgerMinor']) + amountToReturn;
+    
+    wallets[walletIdx] = {
+      ...wallet,
+      'availableMinor': newAvailable,
+      'ledgerMinor': newLedger,
+    };
+    _writeList('wallets', wallets);
+
+    termDeposits[tdIdx] = {
+      ...td,
+      'status': 'CLOSED_EARLY',
+      'closedAt': now.toIso8601String(),
+      'penaltyMinor': penalty,
+      'returnedMinor': amountToReturn,
+    };
+    _writeList('termDeposits', termDeposits);
+
+    final journals = _list('journals');
+    journals.add({
+      'id': _nextId('jnl'),
+      'customerId': cid,
+      'walletId': wallet['id'],
+      'type': 'TERM_DEPOSIT_CLOSE_EARLY',
+      'direction': 'CREDIT',
+      'currency': currency,
+      'amountMinor': amountToReturn,
+      'balanceAfterMinor': newAvailable,
+      'refType': 'TERM_DEPOSIT',
+      'refId': termDepositId,
+      'narration': 'Term deposit closed early (2% penalty)',
+      'postedAt': now.toIso8601String(),
+    });
+    _writeList('journals', journals);
+
+    return {
+      'success': true,
+      'termDepositId': termDepositId,
+      'principalMinor': _str(principal),
+      'penaltyMinor': _str(penalty),
+      'returnedMinor': _str(amountToReturn),
+    };
+  }
+
   // ---------------------------------------------------------------------------
   // Insurance (Poste Finance)
   // ---------------------------------------------------------------------------

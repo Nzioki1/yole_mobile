@@ -140,7 +140,7 @@ export class OfflineDemoStore {
     this.u = loadUniverse();
   }
 
-  private static readonly STAFF_ROLES = ['ADMIN', 'OPS', 'SUPPORT', 'FINANCE'] as const;
+  private static readonly STAFF_ROLES = ['ADMIN', 'OPS', 'SUPPORT', 'FINANCE', 'EMPLOYER'] as const;
 
   private stripStaffPassword(s: Staff): Omit<Staff, 'password'> {
     const { password: _p, ...rest } = s;
@@ -598,6 +598,65 @@ export class OfflineDemoStore {
           displayName,
         };
       });
+  }
+
+  getEmployer(employerId: string) {
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (!employer) return null;
+    const list = this.listEmployers();
+    return list.find((e) => e.id === employerId) || null;
+  }
+
+  updateEmployee(
+    employeeId: string,
+    data: {
+      jobTitle?: string;
+      grossSalaryCdfMinor?: number;
+      netSalaryCdfMinor?: number;
+      status?: string;
+    },
+  ) {
+    const employee = this.u.employees.find((e) => e.id === employeeId);
+    if (!employee) throw new Error('Employee not found');
+    if (data.jobTitle !== undefined) employee.jobTitle = data.jobTitle;
+    if (data.grossSalaryCdfMinor !== undefined) {
+      employee.grossSalaryCdfMinor = data.grossSalaryCdfMinor;
+      employee.eligibleAdvanceMaxCdfMinor = Math.floor(data.grossSalaryCdfMinor / 2);
+    }
+    if (data.netSalaryCdfMinor !== undefined) employee.netSalaryCdfMinor = data.netSalaryCdfMinor;
+    if (data.status !== undefined) employee.status = data.status;
+    return employee;
+  }
+
+  addEmployee(
+    employerId: string,
+    data: {
+      customerId?: string;
+      employeeNumber: string;
+      jobTitle?: string;
+      grossSalaryCdfMinor: number;
+      netSalaryCdfMinor: number;
+    },
+  ) {
+    const id = `emp_row_${Date.now()}_${data.employeeNumber}`;
+    const employee: Employee = {
+      id,
+      employerId,
+      customerId: data.customerId || null,
+      employeeNumber: data.employeeNumber,
+      jobTitle: data.jobTitle,
+      grossSalaryCdfMinor: data.grossSalaryCdfMinor,
+      netSalaryCdfMinor: data.netSalaryCdfMinor,
+      eligibleAdvanceMaxCdfMinor: Math.floor(data.grossSalaryCdfMinor / 2),
+      status: 'ACTIVE',
+      hiredAt: new Date().toISOString().slice(0, 10),
+    };
+    this.u.employees.push(employee);
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (employer) {
+      employer.employeeCount = this.u.employees.filter((e) => e.employerId === employerId).length;
+    }
+    return employee;
   }
 
   getDailySummary(date: string) {

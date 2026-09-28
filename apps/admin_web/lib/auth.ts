@@ -7,6 +7,7 @@ export enum StaffRole {
   OPS = 'OPS',
   SUPPORT = 'SUPPORT',
   FINANCE = 'FINANCE',
+  EMPLOYER = 'EMPLOYER',
 }
 
 export interface StaffUser {
@@ -15,6 +16,7 @@ export interface StaffUser {
   role: StaffRole;
   firstName?: string;
   lastName?: string;
+  employerId?: string;
 }
 
 export interface JWTPayload {
@@ -22,6 +24,7 @@ export interface JWTPayload {
   email: string;
   role: StaffRole;
   exp: number;
+  employerId?: string;
 }
 
 export const authService = {
@@ -72,6 +75,7 @@ export const authService = {
       id: payload.sub,
       email: payload.email,
       role: payload.role,
+      employerId: payload.employerId,
     };
   },
 

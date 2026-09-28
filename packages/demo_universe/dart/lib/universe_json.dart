@@ -4,11 +4,11 @@ const String kUniverseJson = r'''
   "meta": {
     "version": 1,
     "name": "yole-poste-offline-demo",
-    "description": "Shared offline DEM-01\u2026DEM-12 seed graph for admin, customer, and agent apps",
+    "description": "Shared offline DEM-01…DEM-12 seed graph for admin, customer, and agent apps",
     "honesty": {
-      "globalBadge": "Offline demo \u2014 no live API",
-      "cardsBadge": "MOCK \u2014 not Visa/Mastercard certified",
-      "resilienceBadge": "DEMO STORYBOARD \u2014 not a live HA failover"
+      "globalBadge": "Offline demo — no live API",
+      "cardsBadge": "MOCK — not Visa/Mastercard certified",
+      "resilienceBadge": "DEMO STORYBOARD — not a live HA failover"
     },
     "demBookmarks": {
       "DEM-01": {
@@ -97,6 +97,15 @@ const String kUniverseJson = r'''
       "role": "FINANCE",
       "firstName": "Fiona",
       "lastName": "Finance"
+    },
+    {
+      "id": "staff_employer_poste",
+      "email": "employer@postefinance.com",
+      "password": "Password1!",
+      "role": "EMPLOYER",
+      "employerId": "emp_poste",
+      "firstName": "Jacques",
+      "lastName": "Poste"
     }
   ],
   "customers": [
@@ -635,7 +644,7 @@ const String kUniverseJson = r'''
       "journalId": null,
       "idempotencyKey": "idem_replay_demo_001",
       "createdAt": "2026-09-16T15:00:00Z",
-      "notes": "DEM-05 interrupt/replay \u2014 compensated, no duplicate"
+      "notes": "DEM-05 interrupt/replay — compensated, no duplicate"
     }
   ],
   "agentTransactions": [
@@ -817,7 +826,7 @@ const String kUniverseJson = r'''
       "id": "fx_usd_cdf",
       "base": "USD",
       "quote": "CDF",
-      "rate": 2750.0,
+      "rate": 2750,
       "asOf": "2026-09-16T06:00:00Z"
     },
     {
@@ -836,7 +845,7 @@ const String kUniverseJson = r'''
       "toCurrency": "CDF",
       "fromAmountMinor": 10000,
       "toAmountMinor": 27500000,
-      "rate": 2750.0,
+      "rate": 2750,
       "feeMinor": 0,
       "createdAt": "2026-09-14T08:00:30Z"
     }
@@ -936,7 +945,7 @@ const String kUniverseJson = r'''
       "kind": "FEE",
       "paymentType": "AGENT_CASH_OUT",
       "currency": "CDF",
-      "feePercent": 1.0,
+      "feePercent": 1,
       "minFeeMinor": 1000,
       "maxFeeMinor": 100000,
       "effectiveFrom": "2026-01-01",
@@ -947,7 +956,7 @@ const String kUniverseJson = r'''
       "kind": "FEE",
       "paymentType": "AGENT_CASH_OUT",
       "currency": "USD",
-      "feePercent": 1.0,
+      "feePercent": 1,
       "minFeeMinor": 50,
       "maxFeeMinor": 1000,
       "effectiveFrom": "2026-01-01",
@@ -1067,7 +1076,7 @@ const String kUniverseJson = r'''
       "id": "case_aml_conf_001",
       "type": "AML",
       "confidential": true,
-      "description": "Structured remittance screening pattern \u2014 confidential investigation",
+      "description": "Structured remittance screening pattern — confidential investigation",
       "customerId": "cust_kasee",
       "status": "INVESTIGATION",
       "steps": [

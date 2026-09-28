@@ -125,6 +125,181 @@ class OfflineDemoRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Credit Scoring & Affordability (DEM-19)
+  // ---------------------------------------------------------------------------
+
+  Map<String, dynamic> getCreditScore({String? customerId}) {
+    final cid = customerId ?? _requireCustomer();
+    
+    // Basic scoring model based on demo universe data
+    int score = 500; // Base score
+    
+    // Factor 1: Salary history (30%)
+    final salaryRows = _list('salaryHistory')
+        .where((s) => s['customerId'] == cid)
+        .toList();
+    if (salaryRows.length >= 6) {
+      score += 150;
+    } else if (salaryRows.length >= 3) {
+      score += 100;
+    } else if (salaryRows.length >= 2) {
+      score += 50;
+    }
+    
+    // Factor 2: Loan repayment history (40%)
+    final loans = _list('loans').where((l) => l['customerId'] == cid).toList();
+    final schedules = _list('loanSchedules');
+    int paidOnTime = 0;
+    int totalDue = 0;
+    
+    for (final loan in loans) {
+      final schedule = schedules.firstWhere(
+        (s) => s['id'] == loan['scheduleId'],
+        orElse: () => <String, dynamic>{},
+      );
+      if (schedule.isNotEmpty) {
+        final installments = schedule['installments'] as List? ?? [];
+        for (final inst in installments) {
+          if (inst['status'] == 'PAID') {
+            paidOnTime++;
+            totalDue++;
+          } else if (inst['status'] == 'OVERDUE') {
+            totalDue++;
+          }
+        }
+      }
+    }
+    
+    if (totalDue > 0) {
+      final repaymentRate = paidOnTime / totalDue;
+      if (repaymentRate >= 0.95) {
+        score += 200;
+      } else if (repaymentRate >= 0.80) {
+        score += 100;
+      } else if (repaymentRate >= 0.60) {
+        score += 50;
+      } else {
+        score -= 100; // Penalty for poor repayment
+      }
+    }
+    
+    // Factor 3: Account age (10%)
+    final customer = _list('customers').firstWhere(
+      (c) => c['id'] == cid,
+      orElse: () => <String, dynamic>{},
+    );
+    final createdAt = customer['createdAt'] as String?;
+    if (createdAt != null) {
+      final created = DateTime.parse(createdAt);
+      final now = DateTime.now();
+      final monthsSinceCreation = now.difference(created).inDays ~/ 30;
+      if (monthsSinceCreation >= 12) {
+        score += 50;
+      } else if (monthsSinceCreation >= 6) {
+        score += 30;
+      }
+    }
+    
+    // Factor 4: Wallet activity (10%)
+    final payments = _list('payments')
+        .where((p) => p['customerId'] == cid && p['status'] == 'POSTED')
+        .toList();
+    if (payments.length >= 20) {
+      score += 50;
+    } else if (payments.length >= 10) {
+      score += 30;
+    }
+    
+    // Factor 5: Savings behavior (10%)
+    final goals = _list('savingsGoals')
+        .where((g) => g['customerId'] == cid)
+        .toList();
+    if (goals.isNotEmpty) {
+      score += 50;
+    }
+    
+    // Cap score at 850
+    if (score > 850) score = 850;
+    if (score < 300) score = 300;
+    
+    String rating;
+    if (score >= 750) {
+      rating = 'EXCELLENT';
+    } else if (score >= 650) {
+      rating = 'GOOD';
+    } else if (score >= 550) {
+      rating = 'FAIR';
+    } else {
+      rating = 'POOR';
+    }
+    
+    return {
+      'score': score,
+      'rating': rating,
+      'factors': {
+        'salaryHistory': salaryRows.length,
+        'loanHistory': loans.length,
+        'repaymentRate': totalDue > 0 ? (paidOnTime / totalDue * 100).round() : null,
+        'accountAgeMonths': createdAt != null 
+            ? DateTime.now().difference(DateTime.parse(createdAt)).inDays ~/ 30
+            : 0,
+        'transactionCount': payments.length,
+        'hasSavings': goals.isNotEmpty,
+      },
+    };
+  }
+
+  Map<String, dynamic> checkAffordability({
+    required String principalMinor,
+    required int termMonths,
+    String currency = 'CDF',
+  }) {
+    final cid = _requireCustomer();
+    final principal = _int(principalMinor);
+    
+    // Get most recent salary
+    final salaryRows = _list('salaryHistory')
+        .where((s) => s['customerId'] == cid)
+        .toList();
+    
+    if (salaryRows.isEmpty) {
+      return {
+        'affordable': false,
+        'reason': 'No salary history found',
+      };
+    }
+    
+    // Calculate average salary from last 3 months
+    final recentSalaries = salaryRows.take(3).toList();
+    int totalSalary = 0;
+    for (final s in recentSalaries) {
+      totalSalary += _int(s['netPayCdfMinor']);
+    }
+    final avgMonthlySalary = totalSalary / recentSalaries.length;
+    
+    // Calculate monthly installment (simple interest)
+    final interestRate = 0.15; // 15% annual
+    final monthlyRate = interestRate / 12;
+    final totalRepayment = principal * (1 + (interestRate * termMonths / 12));
+    final monthlyInstallment = totalRepayment / termMonths;
+    
+    // Affordability: installment should not exceed 33% of net salary
+    final maxInstallment = avgMonthlySalary * 0.33;
+    final affordable = monthlyInstallment <= maxInstallment;
+    
+    return {
+      'affordable': affordable,
+      'monthlyInstallmentMinor': monthlyInstallment.round(),
+      'avgMonthlySalaryMinor': avgMonthlySalary.round(),
+      'maxInstallmentMinor': maxInstallment.round(),
+      'installmentToIncomeRatio': (monthlyInstallment / avgMonthlySalary * 100).round(),
+      'reason': affordable
+          ? 'Installment is ${(monthlyInstallment / avgMonthlySalary * 100).round()}% of income (limit: 33%)'
+          : 'Installment would be ${(monthlyInstallment / avgMonthlySalary * 100).round()}% of income (limit: 33%)',
+    };
+  }
+
+  // ---------------------------------------------------------------------------
   // Wallets
   // ---------------------------------------------------------------------------
 
@@ -671,9 +846,44 @@ class OfflineDemoRepository {
     if (eligibility['eligible'] != true) {
       throw Exception('Request loan failed: ${eligibility['reason']}');
     }
+    
+    // Get credit score and affordability
+    final creditScore = getCreditScore();
+    final affordability = checkAffordability(
+      principalMinor: principalMinor,
+      termMonths: termMonths,
+      currency: currency,
+    );
+    
     final loanId = _nextId('loan');
     final now = DateTime.now().toUtc().toIso8601String();
     final principal = _int(principalMinor);
+    
+    // Decision logic
+    String status;
+    String? declineReason;
+    bool disburse = false;
+    
+    final score = creditScore['score'] as int;
+    final affordable = affordability['affordable'] as bool;
+    
+    if (!affordable) {
+      // DECLINED: Not affordable
+      status = 'DECLINED';
+      declineReason = affordability['reason'] as String;
+    } else if (score >= 650) {
+      // APPROVED: Good credit score and affordable
+      status = 'ACTIVE';
+      disburse = true;
+    } else if (score >= 500) {
+      // PENDING: Fair score, needs manual review
+      status = 'PENDING_EXCEPTION';
+      declineReason = 'Credit score ${score} requires manual review (threshold: 650)';
+    } else {
+      // DECLINED: Poor credit score
+      status = 'DECLINED';
+      declineReason = 'Credit score ${score} below minimum threshold (500)';
+    }
     final loan = <String, dynamic>{
       'id': loanId,
       'customerId': cid,

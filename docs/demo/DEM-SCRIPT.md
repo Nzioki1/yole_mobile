@@ -317,3 +317,231 @@ Run with **core-api stopped** and offline flags on. Tick when observed.
 - App runbook: `README_APPS.md` (offline + stop-API section)
 - Legacy Pesapal UX: `user_journey.md` (pointer only — not rewritten)
 - Seed package: `packages/demo_universe/README.md`
+
+---
+
+## NEW: Priority 1-8 Enhanced Journeys
+
+### DEM-13: Employer Portal (Priority 2)
+
+**Login**: `employer@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/employer-portal
+2. View employee list (Jean-Paul, Amina, others)
+3. **Add Employee**:
+   - Click "+ Add Employee"
+   - Employee #: TEST-001
+   - Customer ID: (optional)
+   - Job Title: Test Analyst
+   - Gross Salary (CDF minor): 60000000
+   - Net Salary (CDF minor): 51000000
+   - Click "Save"
+4. **Edit Employee** (Jean-Paul):
+   - Click "Edit" on Jean-Paul's row
+   - Change Job Title to: "Senior Business Analyst"
+   - Change Net Salary to: 70000000
+   - Change Status to: ACTIVE
+   - Click "Save"
+5. **View Salary History**:
+   - Scroll to "Salary Payment History"
+   - See Jul & Aug 2026 payments
+   - Verify Jean-Paul and Amina salaries
+
+**Acceptance**:
+- [x] Employer sees only their employees (emp_poste)
+- [x] Can add new employees
+- [x] Can edit employee details
+- [x] Salary history displays correctly
+
+---
+
+### DEM-14: Savings Withdrawal (Priority 5)
+
+**Login**: `jp.kabila@gmail.com` / `Password1!` (Jean-Paul)
+
+**Pre-req**: Jean-Paul has a savings goal with deposited amount
+
+**Steps**:
+1. Navigate to Home → Savings
+2. Tap existing savings goal
+3. **Withdraw Money**:
+   - Click "Withdraw" button
+   - Enter amount (e.g., 50.00 CDF)
+   - Click "Continue"
+   - Enter PIN: 123456
+   - Confirm
+4. **Verify**:
+   - Goal balance decreased
+   - Wallet balance increased
+   - Notification received: "Withdrew FC 50 from [Goal Name]"
+
+**Acceptance**:
+- [x] Withdraw button enabled when goal has balance
+- [x] Withdrawal credits wallet
+- [x] Goal balance updated
+- [x] Notification sent
+
+---
+
+### DEM-15: Credit Configuration (Priority 6)
+
+**Login**: `finance@postefinance.com` / `Password1!` (Finance role)
+
+**Steps**:
+1. Navigate to /dashboard/credit-config
+2. **View Products**:
+   - See SALARY_ADVANCE, NANO_LOAN, etc.
+   - Note current rates and tenors
+3. **Edit Product**:
+   - Click "Edit" on NANO_LOAN
+   - Change Annual Rate: 0.15 (15%)
+   - Change Max Tenor: 18 months
+   - Change Auto-Approve Max: 5000000 (FC 50K)
+   - Click "Save"
+4. **View Scoring Model**:
+   - See "Retail Credit Scoring Model"
+   - Weights: KYC 30%, Salary 35%, Loan 25%, Savings 10%
+   - Thresholds: Min Score 600, Max Loan FC 1M
+5. **Check Approval**:
+   - Navigate to /dashboard/approvals
+   - See pending approval for credit product update
+
+**Acceptance**:
+- [x] Credit products editable
+- [x] Changes create pending approvals
+- [x] Scoring model visible with weights/thresholds
+
+---
+
+### DEM-16: Audit Log (Priority 8)
+
+**Login**: `admin@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/audit-log
+2. **View Audit Entries**:
+   - See EMPLOYER_APPROVED action
+   - See SALARY_CREDITED action
+   - User emails visible (admin@, finance@)
+   - Timestamps in chronological order
+3. **Inspect Changes**:
+   - Click expand on SALARY_CREDITED
+   - See JSON: {"employeeCount": 12, "totalMinor": 800000000}
+
+**Acceptance**:
+- [x] All system actions logged
+- [x] Maker/approver emails recorded
+- [x] Changes JSON visible
+- [x] Timestamps accurate
+
+---
+
+### DEM-17: Dashboard KPIs (Priority 8)
+
+**Login**: `admin@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/kpis
+2. **View Credit KPIs**:
+   - Active Loans count
+   - Total Portfolio amount (CDF)
+   - Arrears count and amount
+3. **View Savings KPIs**:
+   - Total Savings Goals
+   - Total Deposited amount
+   - Active Term Deposits
+   - Term Deposit total value
+4. **View Employer KPIs**:
+   - Total Employers
+   - Total Employees
+   - Active Employees
+5. **View Salary Reconciliation**:
+   - This Month payments and total
+   - Last Month payments and total
+
+**Acceptance**:
+- [x] All KPI cards display real data
+- [x] Credit portfolio accurate
+- [x] Savings totals correct
+- [x] Salary reconciliation shows monthly breakdown
+
+---
+
+### DEM-18: Loan Repayment (Priority 4)
+
+**Login**: `jp.kabila@gmail.com` / `Password1!` (Jean-Paul)
+
+**Steps**:
+1. Navigate to Home → Credit
+2. Tap active loan (FC 300K principal)
+3. **View Schedule**:
+   - See 3 installments
+   - 2 marked PAID (Aug 28, Sep 28)
+   - 1 marked DUE (Oct 28)
+4. **Make Repayment**:
+   - Click "Make Repayment" button
+   - Enter amount: 10750 (FC 107.50)
+   - Click "Pay"
+   - Enter PIN: 123456
+   - Confirm
+5. **Verify**:
+   - Wallet debited
+   - Outstanding balance reduced
+   - Installment marked PAID
+   - Notification received
+
+**Acceptance**:
+- [x] Schedule displays correctly
+- [x] Overdue installments marked red (if past due date)
+- [x] Repay button available for ACTIVE loans
+- [x] Repayment updates balance and schedule
+- [x] Loan marked REPAID when balance = 0
+
+---
+
+## Offline Demo Acceptance (All Priorities)
+
+### Priority 1: Add Money Fix ✓
+- [x] MNO_IN and BANK_IN credit wallet (not debit)
+- [x] Journal direction = CREDIT for inbound
+- [x] Fee deducted correctly
+
+### Priority 2: Employer Portal ✓
+- [x] Employer login works
+- [x] Employee list filtered by employer
+- [x] Add employee creates record
+- [x] Edit employee updates details
+- [x] Salary history visible
+
+### Priority 3: Salary System ✓
+- [x] Jean-Paul is employee with 2 salaries
+- [x] Admin salary credit reaches wallet
+- [x] Notification sent
+- [x] Eligibility requires 2 salaries (not 1)
+
+### Priority 4: Credit Servicing ✓
+- [x] Loan schedule displays
+- [x] Repay button works
+- [x] Arrears marked red
+- [x] Credit/Cards visible on home
+
+### Priority 5: Savings & Term Deposits ✓
+- [x] Withdraw from savings goal works
+- [x] Term deposits tracked (amount, tenor, rate, maturity)
+- [x] Early exit with penalty
+
+### Priority 6: Credit Config ✓
+- [x] Credit products editable
+- [x] Scoring model visible
+- [x] Changes create approvals
+
+### Priority 7: KYC Gate & Consent ✓
+- [x] Consent records stored
+- [x] Jean-Paul already approved (demo works)
+
+### Priority 8: Audit & KPIs ✓
+- [x] Audit log tracks all actions
+- [x] Dashboard KPIs accurate
+- [x] Salary reconciliation visible
+

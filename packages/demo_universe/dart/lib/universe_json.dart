@@ -721,6 +721,36 @@ const String kUniverseJson = r'''
           "paidAt": null
         }
       ]
+    },
+    {
+      "id": "sched_kasee_001",
+      "loanId": "loan_kasee_active_001",
+      "installments": [
+        {
+          "id": "inst_kasee_1",
+          "dueDate": "2026-08-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
+          "status": "PAID",
+          "paidAt": "2026-08-27T14:00:00Z"
+        },
+        {
+          "id": "inst_kasee_2",
+          "dueDate": "2026-09-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
+          "status": "PAID",
+          "paidAt": "2026-09-25T16:00:00Z"
+        },
+        {
+          "id": "inst_kasee_3",
+          "dueDate": "2026-10-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
+          "status": "DUE",
+          "paidAt": null
+        }
+      ]
     }
   ],
   "loans": [
@@ -788,6 +818,19 @@ const String kUniverseJson = r'''
       "exceptionReason": "Amount significantly above threshold - senior approval needed",
       "thresholdMinor": 3000000,
       "createdAt": "2026-09-17T15:45:00Z"
+    },
+    {
+      "id": "loan_kasee_active_001",
+      "customerId": "cust_kasee",
+      "employerId": "emp_poste",
+      "productId": "prod_salary_advance",
+      "status": "ACTIVE",
+      "principalMinor": 30000000,
+      "currency": "CDF",
+      "scheduleId": "sched_kasee_001",
+      "receivableMinor": 7875000,
+      "disbursedAt": "2026-08-15T11:00:00Z",
+      "createdAt": "2026-08-15T10:55:00Z"
     }
   ],
   "cards": [

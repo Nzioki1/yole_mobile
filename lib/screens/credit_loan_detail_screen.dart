@@ -86,25 +86,32 @@ class _CreditLoanDetailScreenState extends State<CreditLoanDetailScreen> {
                 )
               : RefreshIndicator(
                   onRefresh: _loadLoan,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStatusBanner(theme),
-                        const SizedBox(height: 24),
-                        _buildAmountCard(theme),
-                        const SizedBox(height: 16),
-                        _buildDetailsCard(theme),
-                        const SizedBox(height: 16),
-                        _buildTimelineCard(theme),
-                        if (_loan?['repaymentSchedule'] != null) ...[
-                          const SizedBox(height: 16),
-                          _buildScheduleCard(theme),
-                        ],
-                      ],
-                    ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildStatusBanner(theme),
+                              const SizedBox(height: 24),
+                              _buildAmountCard(theme),
+                              const SizedBox(height: 16),
+                              _buildDetailsCard(theme),
+                              const SizedBox(height: 16),
+                              _buildTimelineCard(theme),
+                              if (_loan?['repaymentSchedule'] != null) ...[
+                                const SizedBox(height: 16),
+                                _buildScheduleCard(theme),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (_canRepay()) _buildRepayButton(theme),
+                    ],
                   ),
                 ),
     );
@@ -396,6 +403,143 @@ class _CreditLoanDetailScreenState extends State<CreditLoanDetailScreen> {
     } catch (_) {
       return dateStr;
     }
+  }
+
+  bool _canRepay() {
+    final status = _loan?['status'];
+    final receivable = int.tryParse(_loan?['receivableMinor']?.toString() ?? '0') ?? 0;
+    return status == 'ACTIVE' && receivable > 0;
+  }
+
+  Widget _buildRepayButton(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _showRepayDialog,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            child: const Text(
+              'Make Repayment',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showRepayDialog() async {
+    final receivable = int.tryParse(_loan?['receivableMinor']?.toString() ?? '0') ?? 0;
+    final currency = _loan?['currency'] ?? 'USD';
+    
+    final amountController = TextEditingController(
+      text: (receivable / 100).toStringAsFixed(0),
+    );
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Make Repayment'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Outstanding Balance: ${_formatCurrency(receivable, currency)}'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Amount ($currency)',
+                hintText: 'Enter amount to pay',
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Pay'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true && mounted) {
+      final amountStr = amountController.text.trim();
+      if (amountStr.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter an amount')),
+        );
+        amountController.dispose();
+        return;
+      }
+
+      final amount = double.tryParse(amountStr);
+      if (amount == null || amount <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid amount')),
+        );
+        amountController.dispose();
+        return;
+      }
+
+      final amountMinor = (amount * 100).toInt();
+      if (amountMinor > receivable) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Amount exceeds outstanding balance')),
+        );
+        amountController.dispose();
+        return;
+      }
+
+      try {
+        setState(() => _loading = true);
+        await _api.repayLoan(
+          loanId: widget.loanId,
+          amountMinor: amountMinor.toString(),
+        );
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Repayment successful')),
+          );
+          await _loadLoan();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Repayment failed: $e')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _loading = false);
+        }
+      }
+    }
+
+    amountController.dispose();
   }
 }
 

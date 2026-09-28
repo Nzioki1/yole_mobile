@@ -498,6 +498,29 @@ class CoreApiService {
     }
   }
 
+  /// Credit: Repay loan
+  Future<Map<String, dynamic>> repayLoan({
+    required String loanId,
+    required String amountMinor,
+  }) async {
+    if (offlineDemo) {
+      return _offline.repayLoan(loanId: loanId, amountMinor: amountMinor);
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/credit/loans/$loanId/repay'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Repay loan failed: ${response.body}');
+    }
+  }
+
   /// Cards: Issue
   Future<Map<String, dynamic>> issueCard({
     required String walletPocketId,

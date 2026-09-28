@@ -725,11 +725,165 @@ class OfflineDemoRepository {
       (x) => x['id'] == loanId,
       orElse: () => throw Exception('Get loan failed: not found'),
     );
+    
+    List<Map<String, dynamic>>? schedule;
+    final scheduleId = l['scheduleId'];
+    if (scheduleId != null) {
+      final schedDoc = _list('loanSchedules').firstWhere(
+        (s) => s['id'] == scheduleId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (schedDoc.isNotEmpty) {
+        final installments = schedDoc['installments'] as List<dynamic>?;
+        if (installments != null) {
+          schedule = installments
+              .map((inst) => Map<String, dynamic>.from(inst as Map))
+              .toList();
+        }
+      }
+    }
+    
     return {
       ...l,
       'principalMinor': _str(l['principalMinor']),
       'receivableMinor': _str(l['receivableMinor']),
+      if (schedule != null) 'repaymentSchedule': schedule,
     };
+  }
+
+  Map<String, dynamic> repayLoan({
+    required String loanId,
+    required String amountMinor,
+  }) {
+    final cid = _requireCustomer();
+    final now = DateTime.now().toUtc().toIso8601String();
+    final amount = _int(amountMinor);
+
+    final loans = _list('loans');
+    final loanIdx = loans.indexWhere((l) => l['id'] == loanId);
+    if (loanIdx < 0) {
+      throw Exception('Loan not found');
+    }
+
+    final loan = loans[loanIdx];
+    final currency = loan['currency'] as String? ?? 'CDF';
+    final receivable = _int(loan['receivableMinor']);
+
+    if (amount > receivable) {
+      throw Exception('Payment amount exceeds outstanding balance');
+    }
+
+    final wallets = _list('wallets');
+    final walletIdx = wallets.indexWhere(
+      (w) => w['customerId'] == cid && w['currency'] == currency,
+    );
+    if (walletIdx < 0) {
+      throw Exception('Wallet not found');
+    }
+
+    final wallet = wallets[walletIdx];
+    final avail = _int(wallet['availableMinor']);
+    if (avail < amount) {
+      throw Exception('Insufficient funds');
+    }
+
+    final newAvail = avail - amount;
+    final ledger = _int(wallet['ledgerMinor']);
+    wallets[walletIdx] = {
+      ...wallet,
+      'availableMinor': newAvail,
+      'ledgerMinor': ledger - amount,
+    };
+    _writeList('wallets', wallets);
+
+    final newReceivable = receivable - amount;
+    loans[loanIdx] = {
+      ...loan,
+      'receivableMinor': newReceivable,
+      if (newReceivable == 0) 'status': 'REPAID',
+      if (newReceivable == 0) 'repaidAt': now,
+    };
+    _writeList('loans', loans);
+
+    final scheduleId = loan['scheduleId'];
+    if (scheduleId != null) {
+      final schedules = _list('loanSchedules');
+      final schedIdx = schedules.indexWhere((s) => s['id'] == scheduleId);
+      if (schedIdx >= 0) {
+        final sched = schedules[schedIdx];
+        final installments = List<Map<String, dynamic>>.from(
+          (sched['installments'] as List<dynamic>?)
+                  ?.map((e) => Map<String, dynamic>.from(e as Map)) ??
+              [],
+        );
+
+        int remaining = amount;
+        for (final inst in installments) {
+          if (remaining <= 0) break;
+          if (inst['status'] == 'PAID') continue;
+
+          final instAmount =
+              _int(inst['principalMinor']) + _int(inst['interestMinor']);
+          if (remaining >= instAmount) {
+            inst['status'] = 'PAID';
+            inst['paidAt'] = now;
+            remaining -= instAmount;
+          }
+        }
+
+        schedules[schedIdx] = {
+          ...sched,
+          'installments': installments,
+        };
+        _writeList('loanSchedules', schedules);
+      }
+    }
+
+    final journals = _list('journals');
+    journals.add({
+      'id': _nextId('jnl'),
+      'customerId': cid,
+      'walletId': wallet['id'],
+      'type': 'LOAN_REPAYMENT',
+      'direction': 'DEBIT',
+      'currency': currency,
+      'amountMinor': amount,
+      'balanceAfterMinor': newAvail,
+      'refType': 'LOAN',
+      'refId': loanId,
+      'narration': 'Offline demo loan repayment',
+      'postedAt': now,
+    });
+    _writeList('journals', journals);
+
+    final notifications = _list('notifications');
+    notifications.add({
+      'id': _nextId('notif'),
+      'customerId': cid,
+      'type': 'LOAN_REPAYMENT',
+      'title': 'Loan Repayment Successful',
+      'message':
+          'Payment of ${_formatMinor(amount, currency)} has been applied to your loan.',
+      'read': false,
+      'createdAt': now,
+    });
+    _writeList('notifications', notifications);
+
+    return {
+      'success': true,
+      'loanId': loanId,
+      'amountPaid': _str(amount),
+      'remainingBalance': _str(newReceivable),
+      'status': newReceivable == 0 ? 'REPAID' : loan['status'],
+    };
+  }
+
+  String _formatMinor(int minor, String currency) {
+    if (currency == 'CDF') {
+      return 'FC ${(minor / 100).toStringAsFixed(0)}';
+    } else {
+      return '\$${(minor / 100).toStringAsFixed(2)}';
+    }
   }
 
   // ---------------------------------------------------------------------------

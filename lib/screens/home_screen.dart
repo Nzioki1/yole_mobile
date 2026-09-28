@@ -563,6 +563,16 @@ class _QuickActionsGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).pushNamed(RouteNames.savings),
         ),
         PosteQuickAction(
+          icon: Icons.account_balance_wallet,
+          label: 'Credit',
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.credit),
+        ),
+        PosteQuickAction(
+          icon: Icons.credit_card,
+          label: 'Cards',
+          onTap: () => Navigator.of(context).pushNamed(RouteNames.cards),
+        ),
+        PosteQuickAction(
           icon: Icons.shield,
           label: 'Insurance',
           onTap: () => Navigator.of(context).pushNamed(RouteNames.insurance),

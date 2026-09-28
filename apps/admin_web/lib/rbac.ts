@@ -21,7 +21,10 @@ export type ModuleRoute =
   | '/dashboard/users'
   | '/dashboard/aml-ban-list'
   | '/dashboard/customers'
-  | '/dashboard/employer-portal';
+  | '/dashboard/employer-portal'
+  | '/dashboard/credit-config'
+  | '/dashboard/audit-log'
+  | '/dashboard/kpis';
 
 const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard',

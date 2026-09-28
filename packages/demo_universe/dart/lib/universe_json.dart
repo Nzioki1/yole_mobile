@@ -1372,6 +1372,53 @@ const String kUniverseJson = r'''
       "status": "ACTIVE",
       "createdAt": "2026-09-28T10:00:00Z"
     }
+  ],
+  "consentRecords": [
+    {
+      "id": "consent_kasee_reg",
+      "customerId": "cust_kasee",
+      "type": "TERMS_AND_CONDITIONS",
+      "consentText": "I agree to the Poste Finance terms and conditions",
+      "consented": true,
+      "consentedAt": "2026-08-15T10:30:00Z",
+      "context": "REGISTRATION"
+    },
+    {
+      "id": "consent_kasee_kyc",
+      "customerId": "cust_kasee",
+      "type": "DATA_PROCESSING",
+      "consentText": "I consent to the processing of my personal data for KYC purposes",
+      "consented": true,
+      "consentedAt": "2026-08-15T10:35:00Z",
+      "context": "KYC_SUBMISSION"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "audit_001",
+      "userId": "staff_admin",
+      "userEmail": "admin@postefinance.com",
+      "action": "EMPLOYER_APPROVED",
+      "resourceType": "EMPLOYER",
+      "resourceId": "emp_poste",
+      "changes": {
+        "status": "APPROVED"
+      },
+      "timestamp": "2026-06-01T08:00:00Z"
+    },
+    {
+      "id": "audit_002",
+      "userId": "staff_finance",
+      "userEmail": "finance@postefinance.com",
+      "action": "SALARY_CREDITED",
+      "resourceType": "PAYROLL",
+      "resourceId": "emp_poste",
+      "changes": {
+        "employeeCount": 12,
+        "totalMinor": 800000000
+      },
+      "timestamp": "2026-08-28T10:00:00Z"
+    }
   ]
 }
 ''';

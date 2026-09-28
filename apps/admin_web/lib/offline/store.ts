@@ -754,6 +754,60 @@ export class OfflineDemoStore {
     ];
   }
 
+  listAuditLogs() {
+    return (this.u as any).auditLogs || [];
+  }
+
+  getDashboardKPIs() {
+    const loans = this.u.loans;
+    const activeLoans = loans.filter(l => l.status === 'ACTIVE');
+    const totalPortfolio = activeLoans.reduce((sum, l) => sum + (l.receivableMinor || 0), 0);
+    
+    const savingsGoals = (this.u as any).savingsGoals || [];
+    const totalDeposited = savingsGoals.reduce((sum: number, g: any) => sum + (g.depositedMinor || 0), 0);
+    
+    const termDeposits = (this.u as any).termDeposits || [];
+    const activeTermDeposits = termDeposits.filter((td: any) => td.status === 'ACTIVE');
+    const termDepositTotal = activeTermDeposits.reduce((sum: number, td: any) => sum + (td.principalMinor || 0), 0);
+    
+    const employees = this.u.employees;
+    const activeEmployees = employees.filter(e => e.status === 'ACTIVE');
+    
+    const salaryHistory = this.u.salaryHistory;
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const lastMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+    
+    const thisMonthSalaries = salaryHistory.filter(s => s.period === thisMonth);
+    const lastMonthSalaries = salaryHistory.filter(s => s.period === lastMonth);
+    
+    return {
+      credit: {
+        activeLoans: activeLoans.length,
+        totalPortfolioMinor: totalPortfolio,
+        arrearsCount: 0,
+        arrearsMinor: 0,
+      },
+      savings: {
+        totalGoals: savingsGoals.length,
+        totalDepositedMinor: totalDeposited,
+        activeTermDeposits: activeTermDeposits.length,
+        termDepositMinor: termDepositTotal,
+      },
+      employer: {
+        totalEmployers: this.u.employers.length,
+        totalEmployees: employees.length,
+        activeEmployees: activeEmployees.length,
+      },
+      salary: {
+        lastMonthPayments: lastMonthSalaries.length,
+        lastMonthTotalMinor: lastMonthSalaries.reduce((sum, s) => sum + s.netCdfMinor, 0),
+        thisMonthPayments: thisMonthSalaries.length,
+        thisMonthTotalMinor: thisMonthSalaries.reduce((sum, s) => sum + s.netCdfMinor, 0),
+      },
+    };
+  }
+
   getDailySummary(date: string) {
     const day: ReconDay | undefined =
       this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];

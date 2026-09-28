@@ -455,6 +455,7 @@ class OfflineDemoRepository {
             (existingIdx >= 0 ? payments[existingIdx]['type'] : 'W2W'))
         as String;
 
+    final isInbound = type.endsWith('_IN');
     final wallets = _list('wallets');
     final wi = wallets.indexWhere(
       (w) => w['customerId'] == cid && w['currency'] == currency,
@@ -465,13 +466,24 @@ class OfflineDemoRepository {
       walletId = wallets[wi]['id'] as String;
       final avail = _int(wallets[wi]['availableMinor']);
       final ledger = _int(wallets[wi]['ledgerMinor']);
-      final debit = amount + fee;
-      balanceAfter = avail - debit;
-      wallets[wi] = {
-        ...wallets[wi],
-        'availableMinor': balanceAfter,
-        'ledgerMinor': ledger - debit,
-      };
+      
+      if (isInbound) {
+        final credit = amount - fee;
+        balanceAfter = avail + credit;
+        wallets[wi] = {
+          ...wallets[wi],
+          'availableMinor': balanceAfter,
+          'ledgerMinor': ledger + credit,
+        };
+      } else {
+        final debit = amount + fee;
+        balanceAfter = avail - debit;
+        wallets[wi] = {
+          ...wallets[wi],
+          'availableMinor': balanceAfter,
+          'ledgerMinor': ledger - debit,
+        };
+      }
       _writeList('wallets', wallets);
     }
 
@@ -482,9 +494,9 @@ class OfflineDemoRepository {
       'customerId': cid,
       'walletId': walletId,
       'type': 'PAYMENT',
-      'direction': 'DEBIT',
+      'direction': isInbound ? 'CREDIT' : 'DEBIT',
       'currency': currency,
-      'amountMinor': amount,
+      'amountMinor': isInbound ? (amount - fee) : amount,
       'balanceAfterMinor': balanceAfter,
       'refType': 'PAYMENT',
       'refId': paymentId,

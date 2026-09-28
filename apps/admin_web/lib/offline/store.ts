@@ -699,6 +699,61 @@ export class OfflineDemoStore {
     return employee;
   }
 
+  listCreditProducts() {
+    return this.u.products.map((p) => ({
+      ...p,
+      annualRate: (p as any).annualRate || 0.12,
+      maxTenorMonths: (p as any).maxTenorMonths || 12,
+    }));
+  }
+
+  updateCreditProduct(
+    productId: string,
+    data: {
+      annualRate?: number;
+      maxTenorMonths?: number;
+      autoApproveMaxMinor?: number;
+      status?: string;
+    },
+  ) {
+    const product = this.u.products.find((p) => p.id === productId);
+    if (!product) throw new Error('Product not found');
+    
+    Object.assign(product, data);
+    
+    this.u.pendingApprovals.push({
+      id: `apr_prod_${Date.now()}`,
+      type: 'CREDIT_PRODUCT_UPDATE',
+      resourceId: productId,
+      resourceType: 'PRODUCT',
+      proposedChanges: data,
+      status: 'PENDING',
+      createdBy: 'current_user',
+      createdAt: new Date().toISOString(),
+    } as any);
+    
+    return product;
+  }
+
+  listScoringConfigs() {
+    return [
+      {
+        id: 'score_retail_001',
+        name: 'Retail Credit Scoring Model',
+        weights: {
+          kycScore: 0.30,
+          salaryHistory: 0.35,
+          loanHistory: 0.25,
+          savingsBalance: 0.10,
+        },
+        thresholds: {
+          minScore: 600,
+          maxLoanMinor: 100000000,
+        },
+      },
+    ];
+  }
+
   getDailySummary(date: string) {
     const day: ReconDay | undefined =
       this.u.reconDays.find((r) => r.businessDate === date) || this.u.reconDays[0];

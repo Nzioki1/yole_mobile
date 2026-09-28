@@ -891,16 +891,51 @@ class OfflineDemoRepository {
       'productId': type.toUpperCase().contains('SALARY')
           ? 'prod_salary_advance'
           : 'prod_micro_loan',
-      'status': 'ACTIVE',
+      'status': status,
       'principalMinor': principal,
       'currency': currency,
       'termMonths': termMonths,
-      'scheduleId': _nextId('sched'),
-      'receivableMinor': principal,
-      'disbursedAt': now,
+      'scheduleId': status == 'ACTIVE' ? _nextId('sched') : null,
+      'receivableMinor': status == 'ACTIVE' ? principal : 0,
+      'disbursedAt': status == 'ACTIVE' ? now : null,
       'createdAt': now,
+      'declineReason': declineReason,
+      'creditScore': score,
+      'affordabilityCheck': affordability,
     };
     _writeList('loans', _list('loans')..add(loan));
+    
+    // If PENDING, create approval record
+    if (status == 'PENDING_EXCEPTION') {
+      final approvals = _list('pendingApprovals');
+      approvals.add({
+        'id': _nextId('appr'),
+        'type': 'CREDIT_EXCEPTION',
+        'entityType': 'LOAN',
+        'entityId': loanId,
+        'requestedBy': cid,
+        'requestedAt': now,
+        'status': 'PENDING',
+        'reason': declineReason,
+        'metadata': {
+          'principalMinor': principal,
+          'termMonths': termMonths,
+          'creditScore': score,
+          'affordability': affordability,
+        },
+      });
+      _writeList('pendingApprovals', approvals);
+    }
+
+    // Only disburse if APPROVED
+    if (!disburse) {
+      return {
+        'loan': loan,
+        'status': status,
+        'reason': declineReason,
+        'creditScore': creditScore,
+      };
+    }
 
     final wallets = _list('wallets');
     final wi = wallets.indexWhere(

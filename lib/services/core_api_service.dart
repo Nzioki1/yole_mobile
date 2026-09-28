@@ -319,6 +319,49 @@ class CoreApiService {
     return false;
   }
 
+  /// Get credit score
+  Future<Map<String, dynamic>> getCreditScore() async {
+    if (offlineDemo) {
+      return _offline.getCreditScore();
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/credit/score'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to get credit score: ${response.body}');
+  }
+
+  /// Check affordability for loan
+  Future<Map<String, dynamic>> checkAffordability({
+    required String principalMinor,
+    required int termMonths,
+    String currency = 'CDF',
+  }) async {
+    if (offlineDemo) {
+      return _offline.checkAffordability(
+        principalMinor: principalMinor,
+        termMonths: termMonths,
+        currency: currency,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/credit/affordability'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'principalMinor': principalMinor,
+        'termMonths': termMonths,
+        'currency': currency,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to check affordability: ${response.body}');
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     if (offlineDemo) {

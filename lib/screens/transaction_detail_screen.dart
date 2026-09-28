@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../services/core_api_service.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -92,6 +93,77 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     }
   }
 
+  String _formatReceiptText() {
+    if (_payment == null) return '';
+    
+    final type = _payment!['type'] as String? ?? 'UNKNOWN';
+    final status = _payment!['status'] as String? ?? '';
+    final amountMinor = _payment!['amountMinor'] as String? ?? '0';
+    final feeMinor = _payment!['feeMinor'] as String? ?? '0';
+    final currency = _payment!['currency'] as String? ?? 'USD';
+    final createdAt = _payment!['createdAt'] as String? ?? '';
+    final metadata = _payment!['metadata'] as Map<String, dynamic>? ?? {};
+    
+    final amount = (int.tryParse(amountMinor) ?? 0) / 100;
+    final fee = (int.tryParse(feeMinor) ?? 0) / 100;
+    final total = amount + fee;
+    
+    final buffer = StringBuffer();
+    buffer.writeln('═══════════════════════════');
+    buffer.writeln('   YOLE POSTE FINANCE');
+    buffer.writeln('   TRANSACTION RECEIPT');
+    buffer.writeln('═══════════════════════════');
+    buffer.writeln();
+    buffer.writeln('Transaction ID:');
+    buffer.writeln('  ${widget.paymentId}');
+    buffer.writeln();
+    buffer.writeln('Type: ${_getPaymentTypeLabel(type)}');
+    buffer.writeln('Status: ${_getStatusLabel(status)}');
+    buffer.writeln('Date: $createdAt');
+    buffer.writeln();
+    buffer.writeln('─────────────────────────');
+    buffer.writeln('Amount:        $currency ${amount.toStringAsFixed(2)}');
+    buffer.writeln('Fee:           $currency ${fee.toStringAsFixed(2)}');
+    buffer.writeln('─────────────────────────');
+    buffer.writeln('Total:         $currency ${total.toStringAsFixed(2)}');
+    buffer.writeln('─────────────────────────');
+    buffer.writeln();
+    
+    if (metadata.isNotEmpty) {
+      buffer.writeln('Details:');
+      metadata.forEach((key, value) {
+        if (value != null) {
+          final label = key.replaceAll('_', ' ').split(' ').map((w) => 
+            w[0].toUpperCase() + w.substring(1)).join(' ');
+          buffer.writeln('  $label: $value');
+        }
+      });
+      buffer.writeln();
+    }
+    
+    buffer.writeln('═══════════════════════════');
+    buffer.writeln('Offline demo — no live API');
+    buffer.writeln('═══════════════════════════');
+    
+    return buffer.toString();
+  }
+
+  Future<void> _shareReceipt() async {
+    try {
+      final receiptText = _formatReceiptText();
+      await Share.share(
+        receiptText,
+        subject: 'YOLE Transaction Receipt - ${widget.paymentId}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share receipt: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,9 +176,15 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0,
         actions: [
-          if (_payment != null)
+          if (_payment != null) ...[
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Share Receipt',
+              onPressed: _shareReceipt,
+            ),
             IconButton(
               icon: const Icon(Icons.copy),
+              tooltip: 'Copy ID',
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: widget.paymentId));
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -114,6 +192,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                 );
               },
             ),
+          ],
         ],
       ),
       body: _loading

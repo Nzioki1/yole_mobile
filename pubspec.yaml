@@ -60,6 +60,9 @@ dependencies:
   
   # Cached network images for better performance
   cached_network_image: ^3.3.1
+  
+  # Share functionality for receipts
+  share_plus: ^7.2.1
 
 dev_dependencies:
   flutter_test:

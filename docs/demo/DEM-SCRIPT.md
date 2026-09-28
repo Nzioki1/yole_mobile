@@ -317,3 +317,458 @@ Run with **core-api stopped** and offline flags on. Tick when observed.
 - App runbook: `README_APPS.md` (offline + stop-API section)
 - Legacy Pesapal UX: `user_journey.md` (pointer only — not rewritten)
 - Seed package: `packages/demo_universe/README.md`
+
+---
+
+## NEW: Priority 1-8 Enhanced Journeys
+
+### DEM-13: Employer Portal (Priority 2)
+
+**Login**: `employer@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/employer-portal
+2. View employee list (Jean-Paul, Amina, others)
+3. **Add Employee**:
+   - Click "+ Add Employee"
+   - Employee #: TEST-001
+   - Customer ID: (optional)
+   - Job Title: Test Analyst
+   - Gross Salary (CDF minor): 60000000
+   - Net Salary (CDF minor): 51000000
+   - Click "Save"
+4. **Edit Employee** (Jean-Paul):
+   - Click "Edit" on Jean-Paul's row
+   - Change Job Title to: "Senior Business Analyst"
+   - Change Net Salary to: 70000000
+   - Change Status to: ACTIVE
+   - Click "Save"
+5. **View Salary History**:
+   - Scroll to "Salary Payment History"
+   - See Jul & Aug 2026 payments
+   - Verify Jean-Paul and Amina salaries
+
+**Acceptance**:
+- [x] Employer sees only their employees (emp_poste)
+- [x] Can add new employees
+- [x] Can edit employee details
+- [x] Salary history displays correctly
+
+---
+
+### DEM-14: Savings Withdrawal (Priority 5)
+
+**Login**: `jp.kabila@gmail.com` / `Password1!` (Jean-Paul)
+
+**Pre-req**: Jean-Paul has a savings goal with deposited amount
+
+**Steps**:
+1. Navigate to Home → Savings
+2. Tap existing savings goal
+3. **Withdraw Money**:
+   - Click "Withdraw" button
+   - Enter amount (e.g., 50.00 CDF)
+   - Click "Continue"
+   - Enter PIN: 123456
+   - Confirm
+4. **Verify**:
+   - Goal balance decreased
+   - Wallet balance increased
+   - Notification received: "Withdrew FC 50 from [Goal Name]"
+
+**Acceptance**:
+- [x] Withdraw button enabled when goal has balance
+- [x] Withdrawal credits wallet
+- [x] Goal balance updated
+- [x] Notification sent
+
+---
+
+### DEM-15: Credit Configuration (Priority 6)
+
+**Login**: `finance@postefinance.com` / `Password1!` (Finance role)
+
+**Steps**:
+1. Navigate to /dashboard/credit-config
+2. **View Products**:
+   - See SALARY_ADVANCE, NANO_LOAN, etc.
+   - Note current rates and tenors
+3. **Edit Product**:
+   - Click "Edit" on NANO_LOAN
+   - Change Annual Rate: 0.15 (15%)
+   - Change Max Tenor: 18 months
+   - Change Auto-Approve Max: 5000000 (FC 50K)
+   - Click "Save"
+4. **View Scoring Model**:
+   - See "Retail Credit Scoring Model"
+   - Weights: KYC 30%, Salary 35%, Loan 25%, Savings 10%
+   - Thresholds: Min Score 600, Max Loan FC 1M
+5. **Check Approval**:
+   - Navigate to /dashboard/approvals
+   - See pending approval for credit product update
+
+**Acceptance**:
+- [x] Credit products editable
+- [x] Changes create pending approvals
+- [x] Scoring model visible with weights/thresholds
+
+---
+
+### DEM-16: Audit Log (Priority 8)
+
+**Login**: `admin@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/audit-log
+2. **View Audit Entries**:
+   - See EMPLOYER_APPROVED action
+   - See SALARY_CREDITED action
+   - User emails visible (admin@, finance@)
+   - Timestamps in chronological order
+3. **Inspect Changes**:
+   - Click expand on SALARY_CREDITED
+   - See JSON: {"employeeCount": 12, "totalMinor": 800000000}
+
+**Acceptance**:
+- [x] All system actions logged
+- [x] Maker/approver emails recorded
+- [x] Changes JSON visible
+- [x] Timestamps accurate
+
+---
+
+### DEM-17: Dashboard KPIs (Priority 8)
+
+**Login**: `admin@postefinance.com` / `Password1!`
+
+**Steps**:
+1. Navigate to /dashboard/kpis
+2. **View Credit KPIs**:
+   - Active Loans count
+   - Total Portfolio amount (CDF)
+   - Arrears count and amount
+3. **View Savings KPIs**:
+   - Total Savings Goals
+   - Total Deposited amount
+   - Active Term Deposits
+   - Term Deposit total value
+4. **View Employer KPIs**:
+   - Total Employers
+   - Total Employees
+   - Active Employees
+5. **View Salary Reconciliation**:
+   - This Month payments and total
+   - Last Month payments and total
+
+**Acceptance**:
+- [x] All KPI cards display real data
+- [x] Credit portfolio accurate
+- [x] Savings totals correct
+- [x] Salary reconciliation shows monthly breakdown
+
+---
+
+### DEM-18: Loan Repayment (Priority 4)
+
+**Login**: `jp.kabila@gmail.com` / `Password1!` (Jean-Paul)
+
+**Steps**:
+1. Navigate to Home → Credit
+2. Tap active loan (FC 300K principal)
+3. **View Schedule**:
+   - See 3 installments
+   - 2 marked PAID (Aug 28, Sep 28)
+   - 1 marked DUE (Oct 28)
+4. **Make Repayment**:
+   - Click "Make Repayment" button
+   - Enter amount: 10750 (FC 107.50)
+   - Click "Pay"
+   - Enter PIN: 123456
+   - Confirm
+5. **Verify**:
+   - Wallet debited
+   - Outstanding balance reduced
+   - Installment marked PAID
+   - Notification received
+
+**Acceptance**:
+- [x] Schedule displays correctly
+- [x] Overdue installments marked red (if past due date)
+- [x] Repay button available for ACTIVE loans
+- [x] Repayment updates balance and schedule
+- [x] Loan marked REPAID when balance = 0
+
+---
+
+## Offline Demo Acceptance (All Priorities)
+
+### Priority 1: Add Money Fix ✓
+- [x] MNO_IN and BANK_IN credit wallet (not debit)
+- [x] Journal direction = CREDIT for inbound
+- [x] Fee deducted correctly
+
+### Priority 2: Employer Portal ✓
+- [x] Employer login works
+- [x] Employee list filtered by employer
+- [x] Add employee creates record
+- [x] Edit employee updates details
+- [x] Salary history visible
+
+### Priority 3: Salary System ✓
+- [x] Jean-Paul is employee with 2 salaries
+- [x] Admin salary credit reaches wallet
+- [x] Notification sent
+- [x] Eligibility requires 2 salaries (not 1)
+
+### Priority 4: Credit Servicing ✓
+- [x] Loan schedule displays
+- [x] Repay button works
+- [x] Arrears marked red
+- [x] Credit/Cards visible on home
+
+### Priority 5: Savings & Term Deposits ✓
+- [x] Withdraw from savings goal works
+- [x] Term deposits tracked (amount, tenor, rate, maturity)
+- [x] Early exit with penalty
+
+### Priority 6: Credit Config ✓
+- [x] Credit products editable
+- [x] Scoring model visible
+- [x] Changes create approvals
+
+### Priority 7: KYC Gate & Consent ✓
+- [x] Consent records stored
+- [x] Jean-Paul already approved (demo works)
+
+### Priority 8: Audit & KPIs ✓
+- [x] Audit log tracks all actions
+- [x] Dashboard KPIs accurate
+- [x] Salary reconciliation visible
+
+
+---
+
+## DEM-19: KYC Wallet Gate
+
+**Goal**: Demonstrate wallet activation gated by KYC approval status.
+
+**Actors**: Marie Pending (pending KYC), Jean-Paul Kasongo (approved KYC), Admin
+
+**Steps**:
+1. **Mobile**: Login as `pending.kyc@demo.com / Password1!`
+2. Home screen shows orange **"Complete KYC to Activate Wallet"** banner
+3. Try to send payment → blocked with error: _"KYC not approved. Please complete KYC verification to activate your wallet."_
+4. Try to add to savings → blocked with same error
+5. **Admin**: Open Customer 360 for `cust_pending_kyc`
+6. Review KYC submission (if seeded) and approve KYC status → `APPROVED`
+7. **Mobile**: Refresh → banner disappears, wallet unlocked
+8. Send payment → succeeds
+9. **Verify**: Login as `jeanpaul@demo.com` (already approved) → no banner, all functions work
+
+**Expected**:
+- Non-approved KYC customers cannot send, pay, or withdraw
+- Clear UI state and error messages
+- Admin shows wallet status tied to KYC
+- Approved customers use wallet normally
+
+---
+
+## DEM-20: Mobile Retail Credit with Scoring
+
+**Goal**: Demonstrate credit score calculation, affordability check, and explicit loan outcomes (APPROVED / PENDING / DECLINED).
+
+**Actors**: Poor Credit, Fair Credit, Jean-Paul (good credit), Admin
+
+**Test Scenarios**:
+
+### Scenario A: Good Credit → APPROVED
+1. **Mobile**: Login as `jeanpaul@demo.com / Password1!`
+2. Navigate to **Credit** screen
+3. View credit score: ~700+ (GOOD or EXCELLENT)
+4. View factors: 6+ salary periods, good repayment, account age
+5. Apply for salary advance: CDF 100,000 / 3 months
+6. **Expected**: **APPROVED** instantly, funds disbursed to wallet
+7. **Admin**: Check Loans list → loan status `ACTIVE`
+
+### Scenario B: Fair Credit → PENDING (Manual Review)
+1. **Mobile**: Login as `fair.credit@demo.com / Password1!`
+2. Navigate to **Credit** screen
+3. View credit score: ~600 (FAIR)
+4. View factors: 3 salary periods, 4-month account age
+5. Apply for salary advance: CDF 150,000 / 6 months
+6. **Expected**: **PENDING** outcome with message: _"Credit score 600 requires manual review (threshold: 650)"_
+7. **Admin**: Navigate to **Approvals** → see pending credit exception
+8. Review application details (score, affordability, salary history)
+9. Approve → loan disbursed
+10. **Mobile**: Refresh → loan appears in active loans
+
+### Scenario C: Poor Credit / Unaffordable → DECLINED
+1. **Mobile**: Login as `poor.credit@demo.com / Password1!`
+2. Navigate to **Credit** screen
+3. View credit score: ~500 (POOR) — no salary history
+4. Try to apply for loan → blocked: _"No payroll salary history linked — salary advance requires employer payroll"_
+5. Alternatively, test unaffordable amount:
+   - Login as `fair.credit@demo.com`
+   - Apply for CDF 1,000,000 / 3 months
+   - **Expected**: **DECLINED** with reason: _"Installment would be 67% of income (limit: 33%)"_
+
+**Expected**:
+- Credit score displayed with rating (EXCELLENT / GOOD / FAIR / POOR)
+- Factors breakdown (salary, repayment, account age, activity, savings)
+- Affordability check: max installment ≤ 33% of net salary
+- Decision outcomes:
+  - APPROVED: score ≥650 + affordable → instant disbursal
+  - PENDING: score 500-649 + affordable → manual review queue
+  - DECLINED: score <500 OR not affordable → clear reason
+
+---
+
+## DEM-21: Shareable & Downloadable Receipts
+
+**Goal**: Demonstrate receipt sharing on mobile and CSV download in admin.
+
+### Mobile Receipt Sharing
+1. **Mobile**: Login as any customer
+2. Complete a transaction (send money, pay bill, add to savings)
+3. Navigate to **Transaction History** → select completed transaction
+4. Tap **Share** icon (top right)
+5. Native share sheet appears
+6. **Expected**: Formatted receipt text:
+   ```
+   ═══════════════════════════
+      YOLE POSTE FINANCE
+      TRANSACTION RECEIPT
+   ═══════════════════════════
+   
+   Transaction ID: pay_xxx
+   Type: Wallet to Wallet
+   Status: Completed
+   Date: 2026-09-28T...
+   
+   ─────────────────────────
+   Amount:        CDF 100.00
+   Fee:           CDF 2.00
+   ─────────────────────────
+   Total:         CDF 102.00
+   ─────────────────────────
+   
+   Details:
+     Recipient: +243999...
+   
+   ═══════════════════════════
+   Offline demo — no live API
+   ═══════════════════════════
+   ```
+7. Share via SMS, WhatsApp, email, or copy to clipboard
+
+### Admin CSV Download
+1. **Admin**: Login and navigate to **Dashboard → Payments**
+2. Search/filter payments (e.g., status: POSTED, last 30 days)
+3. Click **Download CSV** button
+4. Browser downloads `payments-YYYY-MM-DD.csv`
+5. Open in Excel/Sheets
+6. **Expected**: CSV with columns:
+   - ID, Customer ID, Type, Status, Currency, Amount, Fee, Total, Created At
+7. Verify amounts formatted as decimals (e.g., 100.50)
+
+**Expected**:
+- Mobile: Share receipt as formatted text (works offline)
+- Admin: Client-side CSV generation (no API call)
+- Receipts include honesty banner
+
+---
+
+## DEM-22: Employer Approval Step
+
+**Goal**: Demonstrate employer onboarding with maker-checker approval before payroll upload.
+
+**Actors**: Admin (maker), Admin (checker)
+
+**Steps**:
+1. **Admin**: Login and navigate to **Dashboard → Employers**
+2. Click **Create Employer**
+3. Enter details:
+   - Name: Test Mining Corp
+   - Tax ID: TAX-TEST-001
+4. Submit → Employer created with status: **PENDING_APPROVAL**
+5. Navigate to **Dashboard → Approvals**
+6. See approval record:
+   - Type: EMPLOYER_ONBOARDING
+   - Entity: Test Mining Corp
+   - Status: PENDING
+7. Try to upload payroll for pending employer → **blocked** with error: _"Employer pending approval. Complete onboarding approval before uploading payroll."_
+8. **Admin (checker)**: Review approval record
+9. Click **Approve** → Employer status → `APPROVED`
+10. Navigate back to **Employers** → upload payroll → **succeeds**
+11. Payroll credits employee wallets
+
+**Seeded Test Employer**:
+- **emp_pending_mining**: Lumumbashi Mining Corp
+- Status: PENDING_APPROVAL
+- Already in approvals queue
+
+**Expected**:
+- New employers created with PENDING_APPROVAL status
+- Approval record created in maker-checker queue
+- Payroll upload blocked until approved
+- Clear error message when blocked
+- Approved employers can process payroll
+
+---
+
+## DEM-23: Per-Employer Credit Arrangements
+
+**Goal**: Demonstrate employer-specific credit products and limits.
+
+**Actors**: Jean-Paul (Kinshasa Elec), Marie (Goma Health), Admin
+
+**Steps**:
+1. **Admin**: Navigate to **Dashboard → Employers**
+2. Select **Kinshasa Electric**
+3. View/edit **Credit Arrangements**:
+   - Max Advance %: 50% of salary
+   - Interest Rate: 12% annual (preferential)
+   - Min Tenure: 3 months
+4. Select **Goma Health Clinic**
+5. View/edit **Credit Arrangements**:
+   - Max Advance %: 40% of salary
+   - Interest Rate: 15% annual (standard)
+   - Min Tenure: 2 months
+6. **Mobile (Jean-Paul)**: Login as `jeanpaul@demo.com`
+7. Navigate to **Credit** → check eligibility
+8. **Expected**: Max advance capped at 50% of CDF 800K salary = **CDF 400K**
+9. Interest rate: **12%** (preferential)
+10. **Mobile (Marie)**: Login as `fair.credit@demo.com` (Goma Health)
+11. Navigate to **Credit** → check eligibility
+12. **Expected**: Max advance capped at 40% of CDF 450K salary = **CDF 180K**
+13. Interest rate: **15%** (standard)
+
+**Expected**:
+- Employer-specific arrangements override default limits
+- Max advance calculated as % of avg salary (last 3 months)
+- Lower of employee limit or employer cap applies
+- Custom interest rates applied per employer
+- Admin UI to configure per employer
+
+---
+
+## Updated Offline Acceptance Checklist
+
+All features must work in offline demo mode with no live backend:
+- ✅ Customer registration & login
+- ✅ Wallet balance display
+- ✅ Payment quote & confirm with journal entries
+- ✅ Savings goals (create, fund, close)
+- ✅ Term deposits (create, interest calc, early exit)
+- ✅ Loan request & disbursement
+- ✅ Loan repayment with schedule
+- ✅ Admin employer portal
+- ✅ Admin salary upload & credit
+- ✅ Admin credit config CRUD
+- ✅ Admin audit log display
+- ✅ Admin KPIs dashboard
+- ✅ **KYC wallet gate enforcement (DEM-19)**
+- ✅ **Credit scoring & decision outcomes (DEM-20)**
+- ✅ **Receipt sharing (mobile) & CSV download (admin) (DEM-21)**
+- ✅ **Employer approval step (DEM-22)**
+- ✅ **Per-employer credit arrangements (DEM-23)**

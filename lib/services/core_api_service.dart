@@ -303,6 +303,65 @@ class CoreApiService {
     }
   }
 
+  /// Check if KYC is approved
+  Future<bool> isKycApproved() async {
+    if (offlineDemo) {
+      return _offline.isKycApproved();
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/kyc/status'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['kycStatus'] == 'APPROVED';
+    }
+    return false;
+  }
+
+  /// Get credit score
+  Future<Map<String, dynamic>> getCreditScore() async {
+    if (offlineDemo) {
+      return _offline.getCreditScore();
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/credit/score'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to get credit score: ${response.body}');
+  }
+
+  /// Check affordability for loan
+  Future<Map<String, dynamic>> checkAffordability({
+    required String principalMinor,
+    required int termMonths,
+    String currency = 'CDF',
+  }) async {
+    if (offlineDemo) {
+      return _offline.checkAffordability(
+        principalMinor: principalMinor,
+        termMonths: termMonths,
+        currency: currency,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/credit/affordability'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'principalMinor': principalMinor,
+        'termMonths': termMonths,
+        'currency': currency,
+      }),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    throw Exception('Failed to check affordability: ${response.body}');
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     if (offlineDemo) {
@@ -495,6 +554,29 @@ class CoreApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Get loan failed: ${response.body}');
+    }
+  }
+
+  /// Credit: Repay loan
+  Future<Map<String, dynamic>> repayLoan({
+    required String loanId,
+    required String amountMinor,
+  }) async {
+    if (offlineDemo) {
+      return _offline.repayLoan(loanId: loanId, amountMinor: amountMinor);
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/credit/loans/$loanId/repay'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Repay loan failed: ${response.body}');
     }
   }
 
@@ -900,6 +982,35 @@ class CoreApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Add money to goal failed: ${response.body}');
+    }
+  }
+
+  /// Withdraw from savings goal
+  Future<Map<String, dynamic>> withdrawFromGoal({
+    required String goalId,
+    required String amountMinor,
+    required String pin,
+  }) async {
+    if (offlineDemo) {
+      return _offline.withdrawFromGoal(
+        goalId: goalId,
+        amountMinor: amountMinor,
+        pin: pin,
+      );
+    }
+    final response = await _client.post(
+      Uri.parse('$baseUrl/v1/savings/goals/$goalId/withdraw'),
+      headers: _getHeaders(),
+      body: jsonEncode({
+        'amountMinor': amountMinor,
+        'pin': pin,
+      }),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Withdraw from goal failed: ${response.body}');
     }
   }
 

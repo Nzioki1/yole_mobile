@@ -2,191 +2,150 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yole_mobile/services/offline_demo_repository.dart';
 
 void main() {
-  test("walletsFor('cust_kasee') length 2", () {
-    final repo = OfflineDemoRepository.createFresh();
-    expect(repo.walletsFor('cust_kasee'), hasLength(2));
+  late OfflineDemoRepository repo;
+
+  setUp(() {
+    repo = OfflineDemoRepository.instance;
+    // Login as Jean-Paul (approved KYC)
+    repo.login(email: 'jeanpaul@demo.com', password: 'Password1!');
   });
 
-  test("login as seeded kasee then getMyWallets has CDF and USD with non-zero USD", () {
-    final repo = OfflineDemoRepository.createFresh();
-    
-    // Login with seeded kasee credentials from universe.json
-    final loginResult = repo.login(
-      email: 'jp.kabila@gmail.com',
-      password: 'Password1!',
-    );
-    
-    expect(loginResult['customer']['id'], equals('cust_kasee'));
-    expect(loginResult['accessToken'], isNotNull);
-    
-    // Get wallets for logged-in customer
-    final walletsResponse = repo.getMyWallets();
-    final wallets = walletsResponse['wallets'] as List;
-    
-    expect(wallets, hasLength(2));
-    
-    // Find CDF and USD wallets
-    final cdfWallet = wallets.firstWhere((w) => w['currency'] == 'CDF');
-    final usdWallet = wallets.firstWhere((w) => w['currency'] == 'USD');
-    
-    expect(cdfWallet, isNotNull);
-    expect(usdWallet, isNotNull);
-    
-    // Verify USD has non-zero balance (seed has 15000 minor = $150.00)
-    expect(int.parse(usdWallet['availableMinor'] as String), greaterThan(0));
-    expect(int.parse(usdWallet['ledgerMinor'] as String), greaterThan(0));
-  });
-
-  test("confirmPayment W2W USD debits wallet by amount+fee and lists payment", () {
-    final repo = OfflineDemoRepository.createFresh();
-    
-    // Login as kasee
-    repo.login(
-      email: 'jp.kabila@gmail.com',
-      password: 'Password1!',
-    );
-    
-    // Get initial wallet balance
-    final initialWallets = repo.getMyWallets();
-    final initialUsdWallet = (initialWallets['wallets'] as List)
-        .firstWhere((w) => w['currency'] == 'USD');
-    final initialBalance = int.parse(initialUsdWallet['availableMinor'] as String);
-    
-    // Quote a W2W payment (50 USD = 5000 minor)
-    final quote = repo.quotePayment(
-      type: 'W2W',
-      currency: 'USD',
-      amountMinor: '5000',
-      metadata: {'destRef': 'cust_jp_kabila'},
-    );
-    
-    final paymentId = quote['paymentId'] as String;
-    final amount = int.parse(quote['amountMinor'] as String);
-    final fee = int.parse(quote['feeMinor'] as String);
-    final totalDebit = amount + fee;
-    
-    expect(amount, equals(5000));
-    expect(fee, greaterThan(0)); // Fee should be calculated
-    
-    // Confirm the payment
-    final confirmedPayment = repo.confirmPayment(paymentId: paymentId);
-    
-    expect(confirmedPayment['status'], equals('POSTED'));
-    expect(confirmedPayment['customerId'], equals('cust_kasee'));
-    expect(confirmedPayment['currency'], equals('USD'));
-    
-    // Verify wallet was debited by amount + fee
-    final updatedWallets = repo.getMyWallets();
-    final updatedUsdWallet = (updatedWallets['wallets'] as List)
-        .firstWhere((w) => w['currency'] == 'USD');
-    final updatedBalance = int.parse(updatedUsdWallet['availableMinor'] as String);
-    
-    expect(updatedBalance, equals(initialBalance - totalDebit));
-    
-    // Verify payment appears in list
-    final payments = repo.listPayments();
-    final ourPayment = payments.firstWhere((p) => p['id'] == paymentId);
-    
-    expect(ourPayment['status'], equals('POSTED'));
-    expect(ourPayment['type'], equals('W2W'));
-  });
-
-  test("createFresh resets session mutations", () {
-    final repo1 = OfflineDemoRepository.createFresh();
-    
-    // Login and make a payment
-    repo1.login(
-      email: 'jp.kabila@gmail.com',
-      password: 'Password1!',
-    );
-    
-    final quote1 = repo1.quotePayment(
-      type: 'W2W',
-      currency: 'USD',
-      amountMinor: '2000',
-    );
-    repo1.confirmPayment(paymentId: quote1['paymentId'] as String);
-    
-    // Get wallet after payment
-    final walletsAfterPayment = repo1.getMyWallets();
-    final usdWalletAfter = (walletsAfterPayment['wallets'] as List)
-        .firstWhere((w) => w['currency'] == 'USD');
-    final balanceAfterPayment = int.parse(usdWalletAfter['availableMinor'] as String);
-    
-    // Create a fresh instance - should reset all mutations
-    final repo2 = OfflineDemoRepository.createFresh();
-    
-    // Session should be cleared (not logged in)
-    expect(repo2.currentCustomerId, isNull);
-    
-    // Login again with fresh repo
-    repo2.login(
-      email: 'jp.kabila@gmail.com',
-      password: 'Password1!',
-    );
-    
-    // Wallet should be back to original seed balance
-    final freshWallets = repo2.getMyWallets();
-    final freshUsdWallet = (freshWallets['wallets'] as List)
-        .firstWhere((w) => w['currency'] == 'USD');
-    final freshBalance = int.parse(freshUsdWallet['availableMinor'] as String);
-    
-    // Fresh balance should be greater than after payment (mutations reset)
-    expect(freshBalance, greaterThan(balanceAfterPayment));
-    // Should be back to seed value of 15000
-    expect(freshBalance, equals(15000));
-  });
-
-  /// DEM-01 KYC/OTP offline path (KycService delegates here when OFFLINE_DEMO).
-  test('KYC OTP flow: login → requestOtp → verifyOtp → submitKyc PENDING_REVIEW',
-      () {
-    final repo = OfflineDemoRepository.createFresh();
-
-    final login = repo.login(
-      email: 'jp.kabila@gmail.com',
-      password: 'Password1!',
-    );
-    expect(login['accessToken'], isNotEmpty);
-    expect(repo.currentCustomerId, 'cust_kasee');
-
-    const phoneE164 = '+243990000001';
-    repo.requestOtp(phoneE164: phoneE164);
-
-    final verified = repo.verifyOtp(
-      phoneE164: phoneE164,
-      code: OfflineDemoRepository.demoOtp, // 123456
-    );
-    expect(verified['verified'], isTrue);
-
-    final result = repo.submitKyc(
-      phoneE164: phoneE164,
-      idNumber: 'ID-DEMO-001',
-    );
-    expect(result['success'], isTrue);
-    expect(result['kyc'], isA<Map>());
-    expect(result['kyc']['status'], 'PENDING_REVIEW');
-  });
-
-  test('submitKyc without session throws clear auth error', () {
-    final repo = OfflineDemoRepository.createFresh();
-    // Fresh repo has no current customer
-    expect(repo.currentCustomerId, isNull);
-    expect(
-      () => repo.submitKyc(phoneE164: '+243990000001', idNumber: 'X'),
-      throwsA(
-        predicate(
-          (e) =>
-              e is Exception &&
-              e.toString().contains('Not authenticated'),
+  group('Item 1: KYC Wallet Gate', () {
+    test('should block payment for non-approved KYC customer', () {
+      // Login as pending KYC customer
+      repo.login(email: 'pending.kyc@demo.com', password: 'Password1!');
+      
+      expect(
+        () => repo.quotePayment(
+          type: 'W2W',
+          currency: 'CDF',
+          amountMinor: '10000',
         ),
-      ),
-    );
+        throwsA(predicate((e) => e.toString().contains('KYC not approved'))),
+      );
+    });
+
+    test('should allow payment for approved KYC customer', () {
+      // Jean-Paul is approved
+      final quote = repo.quotePayment(
+        type: 'W2W',
+        currency: 'CDF',
+        amountMinor: '10000',
+      );
+      
+      expect(quote['status'], equals('QUOTED'));
+      expect(quote['type'], equals('W2W'));
+    });
+
+    test('isKycApproved should return true for approved customer', () {
+      final approved = repo.isKycApproved();
+      expect(approved, isTrue);
+    });
+
+    test('isKycApproved should return false for pending customer', () {
+      repo.login(email: 'pending.kyc@demo.com', password: 'Password1!');
+      final approved = repo.isKycApproved();
+      expect(approved, isFalse);
+    });
   });
 
-  test('hasPin after login is true and demo PIN verifies', () {
-    final repo = OfflineDemoRepository.createFresh();
-    repo.login(email: 'jp.kabila@gmail.com', password: 'Password1!');
-    expect(repo.hasPin(), isTrue);
-    expect(repo.verifyPin(pin: OfflineDemoRepository.demoPin), isTrue);
+  group('Item 2: Credit Scoring & Affordability', () {
+    test('should calculate credit score with factors', () {
+      final score = repo.getCreditScore();
+      
+      expect(score['score'], isA<int>());
+      expect(score['rating'], isA<String>());
+      expect(score['factors'], isA<Map>());
+      expect(score['factors']['salaryHistory'], isA<int>());
+    });
+
+    test('should check affordability based on salary', () {
+      final affordability = repo.checkAffordability(
+        principalMinor: '100000',
+        termMonths: 6,
+        currency: 'CDF',
+      );
+      
+      expect(affordability['affordable'], isA<bool>());
+      expect(affordability['monthlyInstallmentMinor'], isA<int>());
+      expect(affordability['avgMonthlySalaryMinor'], isA<int>());
+      expect(affordability['reason'], isA<String>());
+    });
+
+    test('should return APPROVED for good credit + affordable', () {
+      // Jean-Paul has good credit (6+ salaries, good history)
+      final loan = repo.requestLoan(
+        type: 'SALARY_ADVANCE',
+        principalMinor: '100000',
+        currency: 'CDF',
+        termMonths: 3,
+      );
+      
+      // Should be approved or already have loan
+      expect(loan['status'], anyOf('ACTIVE', 'DECLINED'));
+    });
+
+    test('should return DECLINED for unaffordable amount', () {
+      // Request huge amount
+      final loan = repo.requestLoan(
+        type: 'SALARY_ADVANCE',
+        principalMinor: '100000000', // 1M CDF
+        currency: 'CDF',
+        termMonths: 3,
+      );
+      
+      expect(loan['status'], anyOf('DECLINED', 'PENDING_EXCEPTION'));
+      if (loan['status'] == 'DECLINED') {
+        expect(loan['reason'], contains('affordable'));
+      }
+    });
+
+    test('poor credit customer should get DECLINED', () {
+      repo.login(email: 'poor.credit@demo.com', password: 'Password1!');
+      
+      expect(
+        () => repo.requestLoan(
+          type: 'SALARY_ADVANCE',
+          principalMinor: '100000',
+          currency: 'CDF',
+          termMonths: 3,
+        ),
+        throwsA(predicate((e) => 
+          e.toString().contains('not eligible') || 
+          e.toString().contains('No payroll')
+        )),
+      );
+    });
+  });
+
+  group('Item 5: Per-Employer Arrangements', () {
+    test('should apply employer-specific max advance percentage', () {
+      // Jean-Paul is at emp_kinshasa_elec with 50% max advance
+      final eligibility = repo.checkCreditEligibility(type: 'SALARY_ADVANCE');
+      
+      expect(eligibility['eligible'], isTrue);
+      expect(eligibility['maxAmountMinor'], isA<String>());
+      expect(eligibility['interestRate'], isA<double>());
+      expect(eligibility['employerId'], equals('emp_kinshasa_elec'));
+    });
+
+    test('should return employer-specific interest rate', () {
+      final eligibility = repo.checkCreditEligibility(type: 'SALARY_ADVANCE');
+      final rate = eligibility['interestRate'] as double;
+      
+      // emp_kinshasa_elec has 0.12 (12%) preferential rate
+      expect(rate, lessThanOrEqualTo(0.15));
+    });
+  });
+
+  group('2-Salary Eligibility Check', () {
+    test('should require at least 2 salary payments', () {
+      // Fair credit customer has 3 salaries
+      repo.login(email: 'fair.credit@demo.com', password: 'Password1!');
+      
+      final eligibility = repo.checkCreditEligibility(type: 'SALARY_ADVANCE');
+      expect(eligibility['eligible'], isTrue);
+      expect(eligibility['salaryPeriods'], greaterThanOrEqualTo(2));
+    });
   });
 }

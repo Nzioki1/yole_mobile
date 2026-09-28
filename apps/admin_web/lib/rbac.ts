@@ -20,7 +20,11 @@ export type ModuleRoute =
   | '/dashboard/export'
   | '/dashboard/users'
   | '/dashboard/aml-ban-list'
-  | '/dashboard/customers';
+  | '/dashboard/customers'
+  | '/dashboard/employer-portal'
+  | '/dashboard/credit-config'
+  | '/dashboard/audit-log'
+  | '/dashboard/kpis';
 
 const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard',
@@ -43,6 +47,10 @@ const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard/users',
   '/dashboard/aml-ban-list',
   '/dashboard/customers',
+  '/dashboard/employer-portal',
+  '/dashboard/credit-config',
+  '/dashboard/audit-log',
+  '/dashboard/kpis',
 ];
 
 export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
@@ -90,6 +98,10 @@ export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {
     '/dashboard/users',
     '/dashboard/aml-ban-list',
     '/dashboard/customers',
+  ],
+  [StaffRole.EMPLOYER]: [
+    '/dashboard',
+    '/dashboard/employer-portal',
   ],
 };
 

@@ -9,6 +9,34 @@ export default function PaymentsSearchPage() {
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ customerId: '', status: '', type: '' });
 
+  const downloadCsv = () => {
+    if (payments.length === 0) return;
+    
+    const headers = ['ID', 'Customer ID', 'Type', 'Status', 'Currency', 'Amount', 'Fee', 'Total', 'Created At'];
+    const rows = payments.map(p => [
+      p.id,
+      p.customerId,
+      p.type,
+      p.status,
+      p.currency,
+      (parseInt(p.amountMinor || '0') / 100).toFixed(2),
+      (parseInt(p.feeMinor || '0') / 100).toFixed(2),
+      (parseInt(p.totalMinor || '0') / 100).toFixed(2),
+      p.createdAt,
+    ]);
+    
+    const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `payments-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSearch = async () => {
     setLoading(true);
     try {
@@ -87,7 +115,15 @@ export default function PaymentsSearchPage() {
 
       <Panel>
         <PanelHeader>
-          {payments.length} {payments.length === 1 ? 'payment' : 'payments'} found
+          <div className="d-flex justify-content-between align-items-center">
+            <span>{payments.length} {payments.length === 1 ? 'payment' : 'payments'} found</span>
+            {payments.length > 0 && (
+              <button className="btn btn-sm btn-outline-primary" onClick={downloadCsv}>
+                <i className="bi bi-download me-1"></i>
+                Download CSV
+              </button>
+            )}
+          </div>
         </PanelHeader>
         <PanelBody className="p-0">
           {loading ? (

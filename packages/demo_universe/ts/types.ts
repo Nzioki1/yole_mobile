@@ -31,6 +31,7 @@ export interface Staff {
   role: string;
   firstName?: string;
   lastName?: string;
+  employerId?: string;
 }
 
 export interface Customer {

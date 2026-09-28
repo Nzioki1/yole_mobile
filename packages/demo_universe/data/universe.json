@@ -2,11 +2,11 @@
   "meta": {
     "version": 1,
     "name": "yole-poste-offline-demo",
-    "description": "Shared offline DEM-01\u2026DEM-12 seed graph for admin, customer, and agent apps",
+    "description": "Shared offline DEM-01…DEM-12 seed graph for admin, customer, and agent apps",
     "honesty": {
-      "globalBadge": "Offline demo \u2014 no live API",
-      "cardsBadge": "MOCK \u2014 not Visa/Mastercard certified",
-      "resilienceBadge": "DEMO STORYBOARD \u2014 not a live HA failover"
+      "globalBadge": "Offline demo — no live API",
+      "cardsBadge": "MOCK — not Visa/Mastercard certified",
+      "resilienceBadge": "DEMO STORYBOARD — not a live HA failover"
     },
     "demBookmarks": {
       "DEM-01": {
@@ -95,6 +95,15 @@
       "role": "FINANCE",
       "firstName": "Fiona",
       "lastName": "Finance"
+    },
+    {
+      "id": "staff_employer_poste",
+      "email": "employer@postefinance.com",
+      "password": "Password1!",
+      "role": "EMPLOYER",
+      "employerId": "emp_poste",
+      "firstName": "Jacques",
+      "lastName": "Poste"
     }
   ],
   "customers": [
@@ -182,6 +191,19 @@
       "enrolledByAgentId": "agent-002",
       "createdAt": "2026-09-08T11:30:00Z",
       "insurancePolicies": []
+    },
+    {
+      "id": "cust_pending_kyc",
+      "email": "pending.kyc@demo.com",
+      "password": "Password1!",
+      "phoneE164": "+243990999999",
+      "firstName": "Marie",
+      "lastName": "Pending",
+      "segment": "OPEN",
+      "status": "ACTIVE",
+      "kycStatus": "PENDING_REVIEW",
+      "enrolledByAgentId": null,
+      "createdAt": "2026-09-27T14:00:00Z"
     }
   ],
   "wallets": [
@@ -219,6 +241,24 @@
       "availableMinor": 42000,
       "ledgerMinor": 42000,
       "blockedMinor": 5000,
+      "pendingMinor": 0
+    },
+    {
+      "id": "wal_pending_cdf",
+      "customerId": "cust_pending_kyc",
+      "currency": "CDF",
+      "availableMinor": 0,
+      "ledgerMinor": 0,
+      "blockedMinor": 0,
+      "pendingMinor": 0
+    },
+    {
+      "id": "wal_pending_usd",
+      "customerId": "cust_pending_kyc",
+      "currency": "USD",
+      "availableMinor": 0,
+      "ledgerMinor": 0,
+      "blockedMinor": 0,
       "pendingMinor": 0
     }
   ],
@@ -268,15 +308,25 @@
       "id": "emp_poste",
       "name": "Poste Demo SARL",
       "taxId": "CD-POSTE-001",
-      "employeeCount": 12,
-      "createdAt": "2026-06-01T08:00:00Z"
+      "employeeCount": 7,
+      "createdAt": "2026-06-01T08:00:00Z",
+      "status": "APPROVED"
     },
     {
       "id": "emp_congo_mining",
       "name": "Congo Mining Corp",
       "taxId": "TAX001234",
       "employeeCount": 145,
-      "createdAt": "2026-07-10T08:00:00Z"
+      "createdAt": "2026-07-10T08:00:00Z",
+      "status": "APPROVED"
+    },
+    {
+      "id": "emp_pending_mining",
+      "name": "Lumumbashi Mining Corp",
+      "taxId": "TAX-LMC-2026",
+      "employeeCount": 0,
+      "status": "PENDING_APPROVAL",
+      "createdAt": "2026-09-27T15:00:00Z"
     }
   ],
   "employees": [
@@ -387,6 +437,18 @@
       "eligibleAdvanceMaxCdfMinor": 36000000,
       "status": "ACTIVE",
       "hiredAt": "2025-01-20"
+    },
+    {
+      "id": "emp_row_kasee",
+      "employerId": "emp_poste",
+      "customerId": "cust_kasee",
+      "employeeNumber": "PD-10050",
+      "jobTitle": "Business Analyst",
+      "grossSalaryCdfMinor": 75000000,
+      "netSalaryCdfMinor": 65000000,
+      "eligibleAdvanceMaxCdfMinor": 32500000,
+      "status": "ACTIVE",
+      "hiredAt": "2025-06-01"
     }
   ],
   "salaryHistory": [
@@ -469,6 +531,24 @@
       "period": "2026-08",
       "grossCdfMinor": 110000000,
       "netCdfMinor": 92000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_kasee_2026_07",
+      "employeeId": "emp_row_kasee",
+      "customerId": "cust_kasee",
+      "period": "2026-07",
+      "grossCdfMinor": 75000000,
+      "netCdfMinor": 65000000,
+      "paidAt": "2026-07-28T10:00:00Z"
+    },
+    {
+      "id": "sal_kasee_2026_08",
+      "employeeId": "emp_row_kasee",
+      "customerId": "cust_kasee",
+      "period": "2026-08",
+      "grossCdfMinor": 75000000,
+      "netCdfMinor": 65000000,
       "paidAt": "2026-08-28T10:00:00Z"
     }
   ],
@@ -633,7 +713,7 @@
       "journalId": null,
       "idempotencyKey": "idem_replay_demo_001",
       "createdAt": "2026-09-16T15:00:00Z",
-      "notes": "DEM-05 interrupt/replay \u2014 compensated, no duplicate"
+      "notes": "DEM-05 interrupt/replay — compensated, no duplicate"
     }
   ],
   "agentTransactions": [
@@ -676,6 +756,36 @@
           "dueDate": "2026-10-28",
           "principalMinor": 10000000,
           "interestMinor": 500000,
+          "status": "DUE",
+          "paidAt": null
+        }
+      ]
+    },
+    {
+      "id": "sched_kasee_001",
+      "loanId": "loan_kasee_active_001",
+      "installments": [
+        {
+          "id": "inst_kasee_1",
+          "dueDate": "2026-08-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
+          "status": "PAID",
+          "paidAt": "2026-08-27T14:00:00Z"
+        },
+        {
+          "id": "inst_kasee_2",
+          "dueDate": "2026-09-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
+          "status": "PAID",
+          "paidAt": "2026-09-25T16:00:00Z"
+        },
+        {
+          "id": "inst_kasee_3",
+          "dueDate": "2026-10-28",
+          "principalMinor": 10000000,
+          "interestMinor": 750000,
           "status": "DUE",
           "paidAt": null
         }
@@ -747,6 +857,19 @@
       "exceptionReason": "Amount significantly above threshold - senior approval needed",
       "thresholdMinor": 3000000,
       "createdAt": "2026-09-17T15:45:00Z"
+    },
+    {
+      "id": "loan_kasee_active_001",
+      "customerId": "cust_kasee",
+      "employerId": "emp_poste",
+      "productId": "prod_salary_advance",
+      "status": "ACTIVE",
+      "principalMinor": 30000000,
+      "currency": "CDF",
+      "scheduleId": "sched_kasee_001",
+      "receivableMinor": 7875000,
+      "disbursedAt": "2026-08-15T11:00:00Z",
+      "createdAt": "2026-08-15T10:55:00Z"
     }
   ],
   "cards": [
@@ -815,7 +938,7 @@
       "id": "fx_usd_cdf",
       "base": "USD",
       "quote": "CDF",
-      "rate": 2750.0,
+      "rate": 2750,
       "asOf": "2026-09-16T06:00:00Z"
     },
     {
@@ -834,7 +957,7 @@
       "toCurrency": "CDF",
       "fromAmountMinor": 10000,
       "toAmountMinor": 27500000,
-      "rate": 2750.0,
+      "rate": 2750,
       "feeMinor": 0,
       "createdAt": "2026-09-14T08:00:30Z"
     }
@@ -934,7 +1057,7 @@
       "kind": "FEE",
       "paymentType": "AGENT_CASH_OUT",
       "currency": "CDF",
-      "feePercent": 1.0,
+      "feePercent": 1,
       "minFeeMinor": 1000,
       "maxFeeMinor": 100000,
       "effectiveFrom": "2026-01-01",
@@ -945,7 +1068,7 @@
       "kind": "FEE",
       "paymentType": "AGENT_CASH_OUT",
       "currency": "USD",
-      "feePercent": 1.0,
+      "feePercent": 1,
       "minFeeMinor": 50,
       "maxFeeMinor": 1000,
       "effectiveFrom": "2026-01-01",
@@ -1058,6 +1181,20 @@
       "makerStaffId": "staff_ops",
       "status": "PENDING",
       "createdAt": "2026-09-16T08:30:00Z"
+    },
+    {
+      "id": "appr_emp_mining",
+      "type": "EMPLOYER_ONBOARDING",
+      "entityType": "EMPLOYER",
+      "entityId": "emp_pending_mining",
+      "requestedBy": "system",
+      "requestedAt": "2026-09-27T15:00:00Z",
+      "status": "PENDING",
+      "reason": "New employer onboarding: Lumumbashi Mining Corp",
+      "metadata": {
+        "employerName": "Lumumbashi Mining Corp",
+        "taxId": "TAX-LMC-2026"
+      }
     }
   ],
   "cases": [
@@ -1065,7 +1202,7 @@
       "id": "case_aml_conf_001",
       "type": "AML",
       "confidential": true,
-      "description": "Structured remittance screening pattern \u2014 confidential investigation",
+      "description": "Structured remittance screening pattern — confidential investigation",
       "customerId": "cust_kasee",
       "status": "INVESTIGATION",
       "steps": [
@@ -1271,6 +1408,69 @@
       "autoDepositEnabled": false,
       "autoDepositMinor": 0,
       "createdAt": "2026-09-10T08:00:00Z"
+    }
+  ],
+  "termDeposits": [
+    {
+      "id": "td_kasee_001",
+      "customerId": "cust_kasee",
+      "principalMinor": 50000000,
+      "currency": "CDF",
+      "tenorMonths": 6,
+      "annualRate": 0.08,
+      "interestEarnedMinor": 0,
+      "maturityAmountMinor": 52000000,
+      "maturityDate": "2027-03-28T10:00:00Z",
+      "renewalChoice": "MANUAL",
+      "status": "ACTIVE",
+      "createdAt": "2026-09-28T10:00:00Z"
+    }
+  ],
+  "consentRecords": [
+    {
+      "id": "consent_kasee_reg",
+      "customerId": "cust_kasee",
+      "type": "TERMS_AND_CONDITIONS",
+      "consentText": "I agree to the Poste Finance terms and conditions",
+      "consented": true,
+      "consentedAt": "2026-08-15T10:30:00Z",
+      "context": "REGISTRATION"
+    },
+    {
+      "id": "consent_kasee_kyc",
+      "customerId": "cust_kasee",
+      "type": "DATA_PROCESSING",
+      "consentText": "I consent to the processing of my personal data for KYC purposes",
+      "consented": true,
+      "consentedAt": "2026-08-15T10:35:00Z",
+      "context": "KYC_SUBMISSION"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "audit_001",
+      "userId": "staff_admin",
+      "userEmail": "admin@postefinance.com",
+      "action": "EMPLOYER_APPROVED",
+      "resourceType": "EMPLOYER",
+      "resourceId": "emp_poste",
+      "changes": {
+        "status": "APPROVED"
+      },
+      "timestamp": "2026-06-01T08:00:00Z"
+    },
+    {
+      "id": "audit_002",
+      "userId": "staff_finance",
+      "userEmail": "finance@postefinance.com",
+      "action": "SALARY_CREDITED",
+      "resourceType": "PAYROLL",
+      "resourceId": "emp_poste",
+      "changes": {
+        "employeeCount": 12,
+        "totalMinor": 800000000
+      },
+      "timestamp": "2026-08-28T10:00:00Z"
     }
   ]
 }

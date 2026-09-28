@@ -140,7 +140,7 @@ export class OfflineDemoStore {
     this.u = loadUniverse();
   }
 
-  private static readonly STAFF_ROLES = ['ADMIN', 'OPS', 'SUPPORT', 'FINANCE'] as const;
+  private static readonly STAFF_ROLES = ['ADMIN', 'OPS', 'SUPPORT', 'FINANCE', 'EMPLOYER'] as const;
 
   private stripStaffPassword(s: Staff): Omit<Staff, 'password'> {
     const { password: _p, ...rest } = s;
@@ -512,14 +512,33 @@ export class OfflineDemoStore {
 
   createEmployer(data: { name: string; taxId: string }) {
     const id = `emp_demo_${Date.now()}`;
+    const now = new Date().toISOString();
     const employer: Employer = {
       id,
       name: data.name,
       taxId: data.taxId,
       employeeCount: 0,
-      createdAt: new Date().toISOString(),
+      status: 'PENDING_APPROVAL',
+      createdAt: now,
     };
     this.u.employers.push(employer);
+    
+    // Create maker-checker approval record
+    this.u.pendingApprovals.push({
+      id: `appr_emp_${Date.now()}`,
+      type: 'EMPLOYER_ONBOARDING',
+      entityType: 'EMPLOYER',
+      entityId: id,
+      requestedBy: 'system',
+      requestedAt: now,
+      status: 'PENDING',
+      reason: `New employer onboarding: ${data.name}`,
+      metadata: {
+        employerName: data.name,
+        taxId: data.taxId,
+      },
+    });
+    
     return { ...employer, employees: [] as Employee[] };
   }
 
@@ -549,26 +568,75 @@ export class OfflineDemoStore {
   }
 
   creditSalaries(employerId: string) {
+    // Check employer approval status
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (employer?.status === 'PENDING_APPROVAL') {
+      throw new Error('Employer pending approval. Complete onboarding approval before uploading payroll.');
+    }
+    if (employer?.status === 'SUSPENDED' || employer?.status === 'INACTIVE') {
+      throw new Error(`Employer is ${employer.status}. Cannot process payroll.`);
+    }
+    
     const employees = this.u.employees.filter((e) => e.employerId === employerId);
     let total = 0;
+    const now = new Date().toISOString();
+    const period = now.slice(0, 7);
+
     for (const emp of employees) {
       total += emp.netSalaryCdfMinor;
+      
       this.u.salaryHistory.push({
         id: `sal_demo_${Date.now()}_${emp.id}`,
         employeeId: emp.id,
         customerId: emp.customerId,
-        period: new Date().toISOString().slice(0, 7),
+        period,
         grossCdfMinor: emp.grossSalaryCdfMinor,
         netCdfMinor: emp.netSalaryCdfMinor,
-        paidAt: new Date().toISOString(),
+        paidAt: now,
       });
+
+      if (emp.customerId) {
+        const wallet = this.u.wallets.find(
+          (w) => w.customerId === emp.customerId && w.currency === 'CDF'
+        );
+        if (wallet) {
+          wallet.availableMinor += emp.netSalaryCdfMinor;
+          wallet.ledgerMinor += emp.netSalaryCdfMinor;
+
+          this.u.journals.push({
+            id: `jnl_sal_${Date.now()}_${emp.id}`,
+            customerId: emp.customerId,
+            walletId: wallet.id,
+            type: 'SALARY_CREDIT',
+            direction: 'CREDIT',
+            currency: 'CDF',
+            amountMinor: emp.netSalaryCdfMinor,
+            balanceAfterMinor: wallet.availableMinor,
+            refType: 'SALARY',
+            refId: `sal_demo_${Date.now()}_${emp.id}`,
+            narration: `Salary payment for ${period}`,
+            postedAt: now,
+          });
+
+          this.u.notifications.push({
+            id: `notif_sal_${Date.now()}_${emp.customerId}`,
+            customerId: emp.customerId,
+            type: 'SALARY_RECEIVED',
+            title: 'Salary Received',
+            message: `Your salary of FC ${(emp.netSalaryCdfMinor / 100).toLocaleString()} has been credited to your wallet.`,
+            read: false,
+            createdAt: now,
+          });
+        }
+      }
     }
+
     return {
       employerId,
       credited: true,
       count: employees.length,
       totalMinor: strMinor(total),
-      message: 'Offline demo salary credit posted',
+      message: 'Offline demo salary credit posted to wallets and journals',
     };
   }
 
@@ -598,6 +666,174 @@ export class OfflineDemoStore {
           displayName,
         };
       });
+  }
+
+  getEmployer(employerId: string) {
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (!employer) return null;
+    const list = this.listEmployers();
+    return list.find((e) => e.id === employerId) || null;
+  }
+
+  updateEmployee(
+    employeeId: string,
+    data: {
+      jobTitle?: string;
+      grossSalaryCdfMinor?: number;
+      netSalaryCdfMinor?: number;
+      status?: string;
+    },
+  ) {
+    const employee = this.u.employees.find((e) => e.id === employeeId);
+    if (!employee) throw new Error('Employee not found');
+    if (data.jobTitle !== undefined) employee.jobTitle = data.jobTitle;
+    if (data.grossSalaryCdfMinor !== undefined) {
+      employee.grossSalaryCdfMinor = data.grossSalaryCdfMinor;
+      employee.eligibleAdvanceMaxCdfMinor = Math.floor(data.grossSalaryCdfMinor / 2);
+    }
+    if (data.netSalaryCdfMinor !== undefined) employee.netSalaryCdfMinor = data.netSalaryCdfMinor;
+    if (data.status !== undefined) employee.status = data.status;
+    return employee;
+  }
+
+  addEmployee(
+    employerId: string,
+    data: {
+      customerId?: string;
+      employeeNumber: string;
+      jobTitle?: string;
+      grossSalaryCdfMinor: number;
+      netSalaryCdfMinor: number;
+    },
+  ) {
+    const id = `emp_row_${Date.now()}_${data.employeeNumber}`;
+    const employee: Employee = {
+      id,
+      employerId,
+      customerId: data.customerId || null,
+      employeeNumber: data.employeeNumber,
+      jobTitle: data.jobTitle,
+      grossSalaryCdfMinor: data.grossSalaryCdfMinor,
+      netSalaryCdfMinor: data.netSalaryCdfMinor,
+      eligibleAdvanceMaxCdfMinor: Math.floor(data.grossSalaryCdfMinor / 2),
+      status: 'ACTIVE',
+      hiredAt: new Date().toISOString().slice(0, 10),
+    };
+    this.u.employees.push(employee);
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (employer) {
+      employer.employeeCount = this.u.employees.filter((e) => e.employerId === employerId).length;
+    }
+    return employee;
+  }
+
+  listCreditProducts() {
+    return this.u.products.map((p) => ({
+      ...p,
+      annualRate: (p as any).annualRate || 0.12,
+      maxTenorMonths: (p as any).maxTenorMonths || 12,
+    }));
+  }
+
+  updateCreditProduct(
+    productId: string,
+    data: {
+      annualRate?: number;
+      maxTenorMonths?: number;
+      autoApproveMaxMinor?: number;
+      status?: string;
+    },
+  ) {
+    const product = this.u.products.find((p) => p.id === productId);
+    if (!product) throw new Error('Product not found');
+    
+    Object.assign(product, data);
+    
+    this.u.pendingApprovals.push({
+      id: `apr_prod_${Date.now()}`,
+      type: 'CREDIT_PRODUCT_UPDATE',
+      resourceId: productId,
+      resourceType: 'PRODUCT',
+      proposedChanges: data,
+      status: 'PENDING',
+      createdBy: 'current_user',
+      createdAt: new Date().toISOString(),
+    } as any);
+    
+    return product;
+  }
+
+  listScoringConfigs() {
+    return [
+      {
+        id: 'score_retail_001',
+        name: 'Retail Credit Scoring Model',
+        weights: {
+          kycScore: 0.30,
+          salaryHistory: 0.35,
+          loanHistory: 0.25,
+          savingsBalance: 0.10,
+        },
+        thresholds: {
+          minScore: 600,
+          maxLoanMinor: 100000000,
+        },
+      },
+    ];
+  }
+
+  listAuditLogs() {
+    return (this.u as any).auditLogs || [];
+  }
+
+  getDashboardKPIs() {
+    const loans = this.u.loans;
+    const activeLoans = loans.filter(l => l.status === 'ACTIVE');
+    const totalPortfolio = activeLoans.reduce((sum, l) => sum + (l.receivableMinor || 0), 0);
+    
+    const savingsGoals = (this.u as any).savingsGoals || [];
+    const totalDeposited = savingsGoals.reduce((sum: number, g: any) => sum + (g.depositedMinor || 0), 0);
+    
+    const termDeposits = (this.u as any).termDeposits || [];
+    const activeTermDeposits = termDeposits.filter((td: any) => td.status === 'ACTIVE');
+    const termDepositTotal = activeTermDeposits.reduce((sum: number, td: any) => sum + (td.principalMinor || 0), 0);
+    
+    const employees = this.u.employees;
+    const activeEmployees = employees.filter(e => e.status === 'ACTIVE');
+    
+    const salaryHistory = this.u.salaryHistory;
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const lastMonth = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+    
+    const thisMonthSalaries = salaryHistory.filter(s => s.period === thisMonth);
+    const lastMonthSalaries = salaryHistory.filter(s => s.period === lastMonth);
+    
+    return {
+      credit: {
+        activeLoans: activeLoans.length,
+        totalPortfolioMinor: totalPortfolio,
+        arrearsCount: 0,
+        arrearsMinor: 0,
+      },
+      savings: {
+        totalGoals: savingsGoals.length,
+        totalDepositedMinor: totalDeposited,
+        activeTermDeposits: activeTermDeposits.length,
+        termDepositMinor: termDepositTotal,
+      },
+      employer: {
+        totalEmployers: this.u.employers.length,
+        totalEmployees: employees.length,
+        activeEmployees: activeEmployees.length,
+      },
+      salary: {
+        lastMonthPayments: lastMonthSalaries.length,
+        lastMonthTotalMinor: lastMonthSalaries.reduce((sum, s) => sum + s.netCdfMinor, 0),
+        thisMonthPayments: thisMonthSalaries.length,
+        thisMonthTotalMinor: thisMonthSalaries.reduce((sum, s) => sum + s.netCdfMinor, 0),
+      },
+    };
   }
 
   getDailySummary(date: string) {

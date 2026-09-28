@@ -589,7 +589,7 @@ class OfflineDemoRepository {
           .where((s) => s['customerId'] == cid)
           .toList();
 
-      if (employee != null && salaryRows.isNotEmpty) {
+      if (employee != null && salaryRows.length >= 2) {
         return {
           'eligible': true,
           'type': type,
@@ -599,6 +599,16 @@ class OfflineDemoRepository {
           'employerId': employee['employerId'],
           'reason':
               'Eligible from ${salaryRows.length} salary period(s) at ${employee['employerId']}',
+        };
+      }
+      if (employee != null && salaryRows.isNotEmpty) {
+        return {
+          'eligible': false,
+          'type': type,
+          'maxAmountMinor': '0',
+          'salaryPeriods': salaryRows.length,
+          'reason':
+              'Need at least 2 salary payments (you have ${salaryRows.length})',
         };
       }
       return {

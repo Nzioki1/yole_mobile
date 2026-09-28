@@ -551,24 +551,64 @@ export class OfflineDemoStore {
   creditSalaries(employerId: string) {
     const employees = this.u.employees.filter((e) => e.employerId === employerId);
     let total = 0;
+    const now = new Date().toISOString();
+    const period = now.slice(0, 7);
+
     for (const emp of employees) {
       total += emp.netSalaryCdfMinor;
+      
       this.u.salaryHistory.push({
         id: `sal_demo_${Date.now()}_${emp.id}`,
         employeeId: emp.id,
         customerId: emp.customerId,
-        period: new Date().toISOString().slice(0, 7),
+        period,
         grossCdfMinor: emp.grossSalaryCdfMinor,
         netCdfMinor: emp.netSalaryCdfMinor,
-        paidAt: new Date().toISOString(),
+        paidAt: now,
       });
+
+      if (emp.customerId) {
+        const wallet = this.u.wallets.find(
+          (w) => w.customerId === emp.customerId && w.currency === 'CDF'
+        );
+        if (wallet) {
+          wallet.availableMinor += emp.netSalaryCdfMinor;
+          wallet.ledgerMinor += emp.netSalaryCdfMinor;
+
+          this.u.journals.push({
+            id: `jnl_sal_${Date.now()}_${emp.id}`,
+            customerId: emp.customerId,
+            walletId: wallet.id,
+            type: 'SALARY_CREDIT',
+            direction: 'CREDIT',
+            currency: 'CDF',
+            amountMinor: emp.netSalaryCdfMinor,
+            balanceAfterMinor: wallet.availableMinor,
+            refType: 'SALARY',
+            refId: `sal_demo_${Date.now()}_${emp.id}`,
+            narration: `Salary payment for ${period}`,
+            postedAt: now,
+          });
+
+          this.u.notifications.push({
+            id: `notif_sal_${Date.now()}_${emp.customerId}`,
+            customerId: emp.customerId,
+            type: 'SALARY_RECEIVED',
+            title: 'Salary Received',
+            message: `Your salary of FC ${(emp.netSalaryCdfMinor / 100).toLocaleString()} has been credited to your wallet.`,
+            read: false,
+            createdAt: now,
+          });
+        }
+      }
     }
+
     return {
       employerId,
       credited: true,
       count: employees.length,
       totalMinor: strMinor(total),
-      message: 'Offline demo salary credit posted',
+      message: 'Offline demo salary credit posted to wallets and journals',
     };
   }
 

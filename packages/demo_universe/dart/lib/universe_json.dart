@@ -279,7 +279,7 @@ const String kUniverseJson = r'''
       "id": "emp_poste",
       "name": "Poste Demo SARL",
       "taxId": "CD-POSTE-001",
-      "employeeCount": 12,
+      "employeeCount": 7,
       "createdAt": "2026-06-01T08:00:00Z"
     },
     {
@@ -398,6 +398,18 @@ const String kUniverseJson = r'''
       "eligibleAdvanceMaxCdfMinor": 36000000,
       "status": "ACTIVE",
       "hiredAt": "2025-01-20"
+    },
+    {
+      "id": "emp_row_kasee",
+      "employerId": "emp_poste",
+      "customerId": "cust_kasee",
+      "employeeNumber": "PD-10050",
+      "jobTitle": "Business Analyst",
+      "grossSalaryCdfMinor": 75000000,
+      "netSalaryCdfMinor": 65000000,
+      "eligibleAdvanceMaxCdfMinor": 32500000,
+      "status": "ACTIVE",
+      "hiredAt": "2025-06-01"
     }
   ],
   "salaryHistory": [
@@ -480,6 +492,24 @@ const String kUniverseJson = r'''
       "period": "2026-08",
       "grossCdfMinor": 110000000,
       "netCdfMinor": 92000000,
+      "paidAt": "2026-08-28T10:00:00Z"
+    },
+    {
+      "id": "sal_kasee_2026_07",
+      "employeeId": "emp_row_kasee",
+      "customerId": "cust_kasee",
+      "period": "2026-07",
+      "grossCdfMinor": 75000000,
+      "netCdfMinor": 65000000,
+      "paidAt": "2026-07-28T10:00:00Z"
+    },
+    {
+      "id": "sal_kasee_2026_08",
+      "employeeId": "emp_row_kasee",
+      "customerId": "cust_kasee",
+      "period": "2026-08",
+      "grossCdfMinor": 75000000,
+      "netCdfMinor": 65000000,
       "paidAt": "2026-08-28T10:00:00Z"
     }
   ],

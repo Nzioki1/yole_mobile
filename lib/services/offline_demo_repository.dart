@@ -102,6 +102,28 @@ class OfflineDemoRepository {
     return cid;
   }
 
+  void _requireKycApproved({String? customerId}) {
+    final cid = customerId ?? _requireCustomer();
+    final customer = _list('customers').firstWhere(
+      (c) => c['id'] == cid,
+      orElse: () => <String, dynamic>{},
+    );
+    final kycStatus = customer['kycStatus'] as String? ?? 'PENDING';
+    if (kycStatus != 'APPROVED') {
+      throw Exception('KYC not approved. Please complete KYC verification to activate your wallet.');
+    }
+  }
+
+  bool isKycApproved({String? customerId}) {
+    final cid = customerId ?? _currentCustomerId;
+    if (cid == null) return false;
+    final customer = _list('customers').firstWhere(
+      (c) => c['id'] == cid,
+      orElse: () => <String, dynamic>{},
+    );
+    return customer['kycStatus'] == 'APPROVED';
+  }
+
   // ---------------------------------------------------------------------------
   // Wallets
   // ---------------------------------------------------------------------------
@@ -405,6 +427,7 @@ class OfflineDemoRepository {
     Map<String, dynamic>? metadata,
   }) {
     final cid = _requireCustomer();
+    _requireKycApproved();
     final amount = _int(amountMinor);
     final fee = _calcFee(type, amount);
     final quoteId = _nextId('pay');
@@ -1321,6 +1344,7 @@ class OfflineDemoRepository {
     required String pin,
   }) {
     final cid = _requireCustomer();
+    _requireKycApproved();
     final now = DateTime.now().toUtc().toIso8601String();
 
     if (!verifyPin(pin: pin)) {
@@ -1410,6 +1434,7 @@ class OfflineDemoRepository {
     required String pin,
   }) {
     final cid = _requireCustomer();
+    _requireKycApproved();
     final now = DateTime.now().toUtc().toIso8601String();
 
     if (!verifyPin(pin: pin)) {

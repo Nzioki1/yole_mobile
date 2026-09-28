@@ -48,6 +48,9 @@ const ALL_ADMIN: ModuleRoute[] = [
   '/dashboard/aml-ban-list',
   '/dashboard/customers',
   '/dashboard/employer-portal',
+  '/dashboard/credit-config',
+  '/dashboard/audit-log',
+  '/dashboard/kpis',
 ];
 
 export const ROLE_PERMISSIONS: Record<StaffRole, ModuleRoute[]> = {

@@ -193,6 +193,19 @@ const String kUniverseJson = r'''
       "enrolledByAgentId": "agent-002",
       "createdAt": "2026-09-08T11:30:00Z",
       "insurancePolicies": []
+    },
+    {
+      "id": "cust_pending_kyc",
+      "email": "pending.kyc@demo.com",
+      "password": "Password1!",
+      "phoneE164": "+243990999999",
+      "firstName": "Marie",
+      "lastName": "Pending",
+      "segment": "OPEN",
+      "status": "ACTIVE",
+      "kycStatus": "PENDING_REVIEW",
+      "enrolledByAgentId": null,
+      "createdAt": "2026-09-27T14:00:00Z"
     }
   ],
   "wallets": [
@@ -230,6 +243,24 @@ const String kUniverseJson = r'''
       "availableMinor": 42000,
       "ledgerMinor": 42000,
       "blockedMinor": 5000,
+      "pendingMinor": 0
+    },
+    {
+      "id": "wal_pending_cdf",
+      "customerId": "cust_pending_kyc",
+      "currency": "CDF",
+      "availableMinor": 0,
+      "ledgerMinor": 0,
+      "blockedMinor": 0,
+      "pendingMinor": 0
+    },
+    {
+      "id": "wal_pending_usd",
+      "customerId": "cust_pending_kyc",
+      "currency": "USD",
+      "availableMinor": 0,
+      "ledgerMinor": 0,
+      "blockedMinor": 0,
       "pendingMinor": 0
     }
   ],

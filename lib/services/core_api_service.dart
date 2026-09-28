@@ -303,6 +303,22 @@ class CoreApiService {
     }
   }
 
+  /// Check if KYC is approved
+  Future<bool> isKycApproved() async {
+    if (offlineDemo) {
+      return _offline.isKycApproved();
+    }
+    final response = await _client.get(
+      Uri.parse('$baseUrl/v1/kyc/status'),
+      headers: _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['kycStatus'] == 'APPROVED';
+    }
+    return false;
+  }
+
   /// Wallets: Get my wallets
   Future<Map<String, dynamic>> getMyWallets() async {
     if (offlineDemo) {

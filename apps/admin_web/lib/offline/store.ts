@@ -512,14 +512,33 @@ export class OfflineDemoStore {
 
   createEmployer(data: { name: string; taxId: string }) {
     const id = `emp_demo_${Date.now()}`;
+    const now = new Date().toISOString();
     const employer: Employer = {
       id,
       name: data.name,
       taxId: data.taxId,
       employeeCount: 0,
-      createdAt: new Date().toISOString(),
+      status: 'PENDING_APPROVAL',
+      createdAt: now,
     };
     this.u.employers.push(employer);
+    
+    // Create maker-checker approval record
+    this.u.pendingApprovals.push({
+      id: `appr_emp_${Date.now()}`,
+      type: 'EMPLOYER_ONBOARDING',
+      entityType: 'EMPLOYER',
+      entityId: id,
+      requestedBy: 'system',
+      requestedAt: now,
+      status: 'PENDING',
+      reason: `New employer onboarding: ${data.name}`,
+      metadata: {
+        employerName: data.name,
+        taxId: data.taxId,
+      },
+    });
+    
     return { ...employer, employees: [] as Employee[] };
   }
 
@@ -549,6 +568,15 @@ export class OfflineDemoStore {
   }
 
   creditSalaries(employerId: string) {
+    // Check employer approval status
+    const employer = this.u.employers.find((e) => e.id === employerId);
+    if (employer?.status === 'PENDING_APPROVAL') {
+      throw new Error('Employer pending approval. Complete onboarding approval before uploading payroll.');
+    }
+    if (employer?.status === 'SUSPENDED' || employer?.status === 'INACTIVE') {
+      throw new Error(`Employer is ${employer.status}. Cannot process payroll.`);
+    }
+    
     const employees = this.u.employees.filter((e) => e.employerId === employerId);
     let total = 0;
     const now = new Date().toISOString();

@@ -115,7 +115,15 @@ export default function PaymentsSearchPage() {
 
       <Panel>
         <PanelHeader>
-          {payments.length} {payments.length === 1 ? 'payment' : 'payments'} found
+          <div className="d-flex justify-content-between align-items-center">
+            <span>{payments.length} {payments.length === 1 ? 'payment' : 'payments'} found</span>
+            {payments.length > 0 && (
+              <button className="btn btn-sm btn-outline-primary" onClick={downloadCsv}>
+                <i className="bi bi-download me-1"></i>
+                Download CSV
+              </button>
+            )}
+          </div>
         </PanelHeader>
         <PanelBody className="p-0">
           {loading ? (

@@ -788,15 +788,49 @@ class OfflineDemoRepository {
           .toList();
 
       if (employee != null && salaryRows.length >= 2) {
+        final employerId = employee['employerId'] as String?;
+        int maxAmountMinor = _int(employee['eligibleAdvanceMaxCdfMinor']);
+        double interestRate = 0.15; // Default 15% annual
+        
+        // Apply per-employer arrangements
+        if (employerId != null) {
+          final employer = _list('employers').firstWhere(
+            (emp) => emp['id'] == employerId,
+            orElse: () => <String, dynamic>{},
+          );
+          
+          final arrangements = employer['creditArrangements'] as Map<String, dynamic>?;
+          if (arrangements != null) {
+            // Apply employer-specific max advance % of salary
+            final maxAdvancePct = (arrangements['maxAdvancePct'] as num?)?.toDouble();
+            if (maxAdvancePct != null && salaryRows.isNotEmpty) {
+              final avgSalary = salaryRows.take(3).fold<int>(
+                0, (sum, s) => sum + _int(s['netPayCdfMinor'])
+              ) / salaryRows.take(3).length;
+              final employerMax = (avgSalary * maxAdvancePct / 100).round();
+              if (employerMax < maxAmountMinor) {
+                maxAmountMinor = employerMax;
+              }
+            }
+            
+            // Apply employer-specific interest rate
+            final customRate = (arrangements['interestRate'] as num?)?.toDouble();
+            if (customRate != null) {
+              interestRate = customRate;
+            }
+          }
+        }
+        
         return {
           'eligible': true,
           'type': type,
-          'maxAmountMinor': _str(employee['eligibleAdvanceMaxCdfMinor']),
+          'maxAmountMinor': maxAmountMinor.toString(),
           'currency': 'CDF',
           'salaryPeriods': salaryRows.length,
-          'employerId': employee['employerId'],
+          'employerId': employerId,
+          'interestRate': interestRate,
           'reason':
-              'Eligible from ${salaryRows.length} salary period(s) at ${employee['employerId']}',
+              'Eligible from ${salaryRows.length} salary period(s) at ${employerId}',
         };
       }
       if (employee != null && salaryRows.isNotEmpty) {

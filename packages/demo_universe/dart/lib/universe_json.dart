@@ -311,14 +311,24 @@ const String kUniverseJson = r'''
       "name": "Poste Demo SARL",
       "taxId": "CD-POSTE-001",
       "employeeCount": 7,
-      "createdAt": "2026-06-01T08:00:00Z"
+      "createdAt": "2026-06-01T08:00:00Z",
+      "status": "APPROVED"
     },
     {
       "id": "emp_congo_mining",
       "name": "Congo Mining Corp",
       "taxId": "TAX001234",
       "employeeCount": 145,
-      "createdAt": "2026-07-10T08:00:00Z"
+      "createdAt": "2026-07-10T08:00:00Z",
+      "status": "APPROVED"
+    },
+    {
+      "id": "emp_pending_mining",
+      "name": "Lumumbashi Mining Corp",
+      "taxId": "TAX-LMC-2026",
+      "employeeCount": 0,
+      "status": "PENDING_APPROVAL",
+      "createdAt": "2026-09-27T15:00:00Z"
     }
   ],
   "employees": [
@@ -1173,6 +1183,20 @@ const String kUniverseJson = r'''
       "makerStaffId": "staff_ops",
       "status": "PENDING",
       "createdAt": "2026-09-16T08:30:00Z"
+    },
+    {
+      "id": "appr_emp_mining",
+      "type": "EMPLOYER_ONBOARDING",
+      "entityType": "EMPLOYER",
+      "entityId": "emp_pending_mining",
+      "requestedBy": "system",
+      "requestedAt": "2026-09-27T15:00:00Z",
+      "status": "PENDING",
+      "reason": "New employer onboarding: Lumumbashi Mining Corp",
+      "metadata": {
+        "employerName": "Lumumbashi Mining Corp",
+        "taxId": "TAX-LMC-2026"
+      }
     }
   ],
   "cases": [
